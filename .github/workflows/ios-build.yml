@@ -1,29 +1,79 @@
-name: iOS build & logic tests
+name: iOS build, tests & screenshots
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+
       - name: Select newest Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)" && xcodebuild -version
+
       - name: Game logic tests
-        run: ./Tools/test.sh
+        run: ./Tools/test.sh | tee tests.log
+
       - name: Build app (iOS Simulator, no signing)
         run: |
-          set -o pipefail
+          set +e
           xcodebuild -project HamsterAges.xcodeproj -scheme HamsterAges \
-            -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" || true
-          grep -q "BUILD SUCCEEDED" build.log
-      - name: Upload build log
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO build > build.log 2>&1
+          status=$?
+          grep -E "^/.*(error|warning): " build.log | sed -E 's#^.*/HamsterAges/##' | sort -u > diagnostics.txt || true
+          # Surface compiler errors as annotations (readable through the checks API).
+          grep -E "error: " diagnostics.txt | head -40 | while IFS= read -r line; do echo "::error::$line"; done
+          echo "::notice::warnings=$(grep -c 'warning: ' diagnostics.txt) errors=$(grep -c 'error: ' diagnostics.txt)"
+          exit $status
+
+      - name: Screenshots in the simulator
+        run: |
+          set -x
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --cellularBars 4 || true
+          APP=$(find build/Build/Products -name "HamsterAges.app" -maxdepth 3 | head -1)
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p shots
+          shot() { # name, wait seconds, launch args...
+            local name=$1 wait=$2; shift 2
+            xcrun simctl terminate "$UDID" com.valkhim.hamsterages || true
+            xcrun simctl launch "$UDID" com.valkhim.hamsterages "$@"
+            sleep "$wait"
+            xcrun simctl io "$UDID" screenshot "shots/$name.png"
+          }
+          shot 1-home 8 -demo
+          shot 2-card-pick 6 -demo -screen battle
+          shot 3-battle-early 20 -demo -screen battle -autoplay
+          sleep 35; xcrun simctl io "$UDID" screenshot shots/4-battle-mid.png
+          sleep 45; xcrun simctl io "$UDID" screenshot shots/5-battle-late.png
+          shot 6-heroes 6 -demo -screen heroes
+          shot 7-upgrades 6 -demo -screen upgrades
+          shot 8-quests 6 -demo -screen quests
+          shot 9-shop 6 -demo -screen shop
+          xcrun simctl uninstall "$UDID" com.valkhim.hamsterages
+          xcrun simctl install "$UDID" "$APP"
+          shot 10-first-launch 8
+          xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "HamsterAges"' --style compact > sim.log 2>&1 || true
+
+      - name: Publish logs & screenshots to the ci-artifacts branch
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
+        run: |
+          mkdir -p /tmp/out && cp -R shots /tmp/out/ 2>/dev/null || true
+          cp build.log diagnostics.txt tests.log sim.log /tmp/out/ 2>/dev/null || true
+          git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
+          git checkout --orphan ci-artifacts
+          git rm -rf . -q
+          cp -R /tmp/out/. .
+          git add -A
+          git commit -q -m "CI artifacts for ${GITHUB_SHA::7}"
+          git push -f origin ci-artifacts

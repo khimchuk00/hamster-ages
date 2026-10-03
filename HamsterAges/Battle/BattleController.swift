@@ -104,6 +104,13 @@ final class BattleController {
         Analytics.log(.battleStart(stage: stage, attempt: progress.battlesPlayed + 1))
         refreshHUD()
         offerCards(title: "Opening Card")
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-autoplay") {
+            // CI screenshots: a bot plays the player's side at double speed.
+            sim.controllers[.player] = BattleAI(thinkInterval: 0.6, evolveDelay: 1, usesCards: true)
+            speed = 2
+        }
+        #endif
     }
 
     // MARK: Frame loop (called from BattleScene.update)
@@ -339,6 +346,11 @@ final class BattleController {
     private func offerCards(title: String) {
         cardOfferTitle = title
         cardOffer = sim.drawCards(for: .player)
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-autoplay"), let first = cardOffer?.first {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.pick(first) }
+        }
+        #endif
     }
 
     func pick(_ card: Card) {

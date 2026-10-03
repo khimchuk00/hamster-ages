@@ -6,9 +6,16 @@ struct HamsterAgesApp: App {
         WindowGroup {
             RootView()
                 .onAppear {
+                    #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("-demo") { AppServices.progress.debugDemoState() }
+                    #endif
                     Analytics.trackAppOpen()
                     Music.shared.prewarm()
+                    #if DEBUG
+                    if !ProcessInfo.processInfo.arguments.contains("-demo") { GameCenter.authenticate() }
+                    #else
                     GameCenter.authenticate()
+                    #endif
                 }
         }
     }
@@ -56,6 +63,15 @@ struct RootView: View {
                 }
                 .transition(.opacity)
             }
+        }
+        .onAppear {
+            #if DEBUG
+            // CI screenshots: `-screen battle` jumps straight into a battle.
+            let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "-screen"), i + 1 < args.count, args[i + 1] == "battle" {
+                battle = BattleController(stage: store.progress.stage, progress: store.progress)
+            }
+            #endif
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { store.refreshDailyState() }

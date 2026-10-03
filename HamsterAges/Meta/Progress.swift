@@ -389,6 +389,27 @@ final class ProgressStore {
     }
 
     #if DEBUG
+    /// Mid-game save used for CI screenshots (`-demo` launch argument).
+    func debugDemoState() {
+        var p = PlayerProgress()
+        p.seeds = 2_340
+        p.stage = 12
+        p.highestStage = 12
+        p.wins = 14
+        p.battlesPlayed = 18
+        p.tutorialDone = true
+        p.upgrades = ["baseArmor": 4, "training": 5, "weapons": 5, "foraging": 3, "scholar": 2]
+        p.generals = ["sirNibbles": 3, "archie": 2, "ironBelly": 1, "queenSqueak": 1]
+        p.equippedGeneral = "queenSqueak"
+        p.stars = [1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3]
+        p.lastFarmCollect = Date.now.addingTimeInterval(-3 * 3600)
+        p.lastDailyClaim = .now
+        p.dailyStreak = 3
+        progress = p
+        refreshDailyState()
+        save()
+    }
+
     func debugSkipStages(_ n: Int) {
         progress.stage += n
         progress.highestStage = max(progress.highestStage, progress.stage)

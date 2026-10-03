@@ -241,6 +241,18 @@ struct HomeView: View {
         }
         .onAppear {
             store.refreshDailyState()
+            #if DEBUG
+            let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "-screen"), i + 1 < args.count {
+                switch args[i + 1] {
+                case "heroes": showGenerals = true
+                case "upgrades": showUpgrades = true
+                case "shop": showShop = true
+                case "quests": showQuests = true
+                default: break
+                }
+            }
+            #endif
             Music.shared.play(.menu)
             GameCenter.setAccessPoint(visible: true)
             withAnimation(.easeInOut(duration: 0.45).repeatForever()) { bob = true }
