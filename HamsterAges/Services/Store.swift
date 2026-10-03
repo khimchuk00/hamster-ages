@@ -49,7 +49,7 @@ final class Store {
             let list = try await Product.products(for: ProductID.allCases.map(\.rawValue))
             products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
         } catch {
-            lastError = "Store unavailable"
+            lastError = L10n.t("Store unavailable")
         }
     }
 

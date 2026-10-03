@@ -51,11 +51,11 @@ struct ShopView: View {
 }
 
 private struct ShopCard: View {
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
     let icon: String
     let color: Color
-    let badge: String?
+    let badge: LocalizedStringKey?
     let product: Product?
     let action: () -> Void
 

@@ -66,20 +66,34 @@ struct ChunkyButtonStyle: ButtonStyle {
 }
 
 /// Text with a dark outline — readable on any background.
+/// Literals are localized (`LocalizedStringKey`); `String` values are shown verbatim (localize them via `L10n`).
 struct OutlinedText: View {
-    let text: String
+    private let key: LocalizedStringKey?
+    private let plain: String
     var size: CGFloat = 20
     var color: Color = .white
     var outline: Color = Theme.ink
+
+    init(text: LocalizedStringKey, size: CGFloat = 20, color: Color = .white, outline: Color = Theme.ink) {
+        key = text; plain = ""
+        self.size = size; self.color = color; self.outline = outline
+    }
+
+    init<S: StringProtocol>(text: S, size: CGFloat = 20, color: Color = .white, outline: Color = Theme.ink) {
+        key = nil; plain = String(text)
+        self.size = size; self.color = color; self.outline = outline
+    }
+
+    private var label: Text { key.map { Text($0) } ?? Text(verbatim: plain) }
 
     var body: some View {
         ZStack {
             ForEach(0..<8, id: \.self) { i in
                 let a = Double(i) / 8 * 2 * .pi
-                Text(text).font(Theme.font(size)).foregroundStyle(outline)
+                label.font(Theme.font(size)).foregroundStyle(outline)
                     .offset(x: cos(a) * size * 0.08, y: sin(a) * size * 0.08)
             }
-            Text(text).font(Theme.font(size)).foregroundStyle(color)
+            label.font(Theme.font(size)).foregroundStyle(color)
         }
     }
 }

@@ -116,7 +116,7 @@ private struct BattleHUD: View {
                         .tutorialAnchor(.evolve)
                 }
                 Spacer(minLength: 4)
-                BaseBar(title: c.mode == .survival ? "Rat Fortress · Wave \(c.wave)" : "Rats · \(GameConfig.eraNames[c.enemyEra])",
+                BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : L10n.f("Rats · %@", GameConfig.eraNames[c.enemyEra]),
                         fraction: c.enemyHP, color: Theme.red, text: c.mode == .survival ? "∞" : nil, mirrored: true)
                 RoundIconButton(icon: c.speed > 1 ? "forward.fill" : "play.fill", label: c.speed > 1 ? "×2" : "×1") { c.toggleSpeed() }
             }
@@ -357,9 +357,9 @@ private struct TurretButton: View {
     let onSell: () -> Void
 
     private var label: (String, Int?) {
-        if !info.unlocked { return ("Unlock", unlockCost) }
-        guard let e = info.era else { return ("Turret", cost) }
-        return e < era ? ("Upgrade", cost) : ("Ready", nil)
+        if !info.unlocked { return (L10n.t("Unlock"), unlockCost) }
+        guard let e = info.era else { return (L10n.t("Turret"), cost) }
+        return e < era ? (L10n.t("Upgrade"), cost) : (L10n.t("Ready"), nil)
     }
 
     var body: some View {
@@ -630,14 +630,24 @@ private struct ResultView: View {
     @State private var loadingAd = false
     @State private var shownStars = 0
 
+    private func clock(_ t: Double) -> String { String(format: "%d:%02d", Int(t) / 60, Int(t) % 60) }
+
+    private var modeTitle: String {
+        switch result.mode {
+        case .survival: return L10n.t("Survival")
+        case .challenge: return L10n.t("Daily Challenge")
+        case .campaign: return L10n.f("Stage %lld", result.stage)
+        }
+    }
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea()
             VStack(spacing: 12) {
                 if result.mode == .survival {
-                    OutlinedText(text: "SURVIVED " + String(format: "%d:%02d", Int(result.duration) / 60, Int(result.duration) % 60), size: 36, color: Theme.gold)
+                    OutlinedText(text: L10n.f("SURVIVED %@", clock(result.duration)), size: 36, color: Theme.gold)
                     let best = store.progress.bestSurvival ?? 0
-                    Text(abs(best - result.duration) < 0.01 ? "🏆 New personal best! Wave \(result.wave)" : "Wave \(result.wave) · Best \(String(format: "%d:%02d", Int(best) / 60, Int(best) % 60))")
+                    Text(abs(best - result.duration) < 0.01 ? L10n.f("🏆 New personal best! Wave %lld", result.wave) : L10n.f("Wave %lld · Best %@", result.wave, clock(best)))
                         .font(Theme.font(15)).foregroundStyle(.white)
                 } else {
                 OutlinedText(text: result.won ? "VICTORY!" : "DEFEAT", size: 40, color: result.won ? Theme.gold : Theme.red)
@@ -658,9 +668,9 @@ private struct ResultView: View {
                         .font(Theme.font(14)).foregroundStyle(.white.opacity(0.85))
                 }
                 HStack(spacing: 16) {
-                    Label(result.mode == .survival ? "Survival" : result.mode == .challenge ? "Daily Challenge" : "Stage \(result.stage)", systemImage: "flag.fill")
+                    Label(modeTitle, systemImage: "flag.fill")
                     Label("\(result.kills) kills", systemImage: "scope")
-                    Label(String(format: "%d:%02d", Int(result.duration) / 60, Int(result.duration) % 60), systemImage: "clock.fill")
+                    Label(clock(result.duration), systemImage: "clock.fill")
                 }
                 .font(Theme.font(12)).foregroundStyle(.white.opacity(0.8))
                 if let event = LiveEvents.activeTitle() {

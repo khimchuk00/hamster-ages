@@ -103,7 +103,7 @@ final class BattleController {
         scene = BattleScene(controller: self)
         Analytics.log(.battleStart(stage: stage, attempt: progress.battlesPlayed + 1))
         refreshHUD()
-        offerCards(title: "Opening Card")
+        offerCards(title: L10n.t("Opening Card"))
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-autoplay") {
             // CI screenshots: a bot plays the player's side at double speed.
@@ -129,19 +129,19 @@ final class BattleController {
                 case .evolved(side: .player, era: let newEra):
                     Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
                     flashBanner(GameConfig.eraNames[newEra].uppercased() + "!")
-                    offerCards(title: "Evolved to \(GameConfig.eraNames[newEra])")
+                    offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
                 case .lastStand(side: .player):
-                    flashBanner("LAST STAND!")
+                    flashBanner(L10n.t("LAST STAND!"))
                 case .waveUp(level: let w):
-                    flashBanner("WAVE \(w)! RATS GROW STRONGER")
+                    flashBanner(L10n.f("WAVE %lld! RATS GROW STRONGER", w))
                 case .bossSpawned:
-                    flashBanner("THE RAT KING APPROACHES!")
+                    flashBanner(L10n.t("THE RAT KING APPROACHES!"))
                     Haptics.boom()
                 case .suddenDeathStarted:
-                    flashBanner("SUDDEN DEATH! BASES CRUMBLE")
+                    flashBanner(L10n.t("SUDDEN DEATH! BASES CRUMBLE"))
                     Haptics.boom()
                 case .overtimeStarted:
-                    flashBanner("OVERTIME! TURRETS DOWN")
+                    flashBanner(L10n.t("OVERTIME! TURRETS DOWN"))
                     Haptics.boom()
                 default: break
                 }
@@ -262,7 +262,7 @@ final class BattleController {
             if case .evolved(side: .player, era: let newEra) = e {
                 Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
                 flashBanner(GameConfig.eraNames[newEra].uppercased() + "!")
-                offerCards(title: "Evolved to \(GameConfig.eraNames[newEra])")
+                offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
             }
         }
         refreshHUD()
@@ -324,7 +324,7 @@ final class BattleController {
         scene.handle(sim.events)
         sim.events.removeAll()
         reviveOffer = false
-        flashBanner("BASE RESTORED!")
+        flashBanner(L10n.t("BASE RESTORED!"))
         Analytics.log(.adRewarded(placement: "revive"))
         Haptics.success()
         refreshHUD()

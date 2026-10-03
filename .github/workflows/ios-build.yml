@@ -34,6 +34,12 @@ jobs:
           echo "::notice::warnings=$(grep -c 'warning: ' diagnostics.txt) errors=$(grep -c 'error: ' diagnostics.txt)"
           exit $status
 
+      - name: Collect localizable strings
+        run: |
+          mkdir -p loc
+          find build -name "*.stringsdata" -exec cp {} loc/ \; || true
+          ls loc | head -50
+
       - name: Screenshots in the simulator
         run: |
           set -x
@@ -68,7 +74,7 @@ jobs:
       - name: Publish logs & screenshots to the ci-artifacts branch
         if: always()
         run: |
-          mkdir -p /tmp/out && cp -R shots /tmp/out/ 2>/dev/null || true
+          mkdir -p /tmp/out && cp -R shots loc /tmp/out/ 2>/dev/null || true
           cp build.log diagnostics.txt tests.log sim.log /tmp/out/ 2>/dev/null || true
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan ci-artifacts

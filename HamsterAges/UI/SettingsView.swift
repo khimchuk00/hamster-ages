@@ -100,7 +100,7 @@ struct SettingsView: View {
 }
 
 private struct SettingToggle: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     @Binding var isOn: Bool
 

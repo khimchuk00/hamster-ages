@@ -7,21 +7,25 @@ struct GeneralsView: View {
     @State private var reveal: CrateResult?
     @State private var selected: GeneralID?
 
-    private let columns = [GridItem(.adaptive(minimum: 120), spacing: 10)]
+    private let columns = [GridItem(.adaptive(minimum: 104), spacing: 8)]
 
     var body: some View {
         let p = store.progress
         ZStack {
             Color(hex: 0x241B36).ignoresSafeArea()
-            HStack(alignment: .top, spacing: 16) {
-                // Collection grid
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        OutlinedText(text: "Generals", size: 26, color: Theme.gold)
-                        Spacer()
-                        CurrencyPill(icon: "🌻", value: p.seeds)
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    OutlinedText(text: "Generals", size: 26, color: Theme.gold)
+                    Spacer()
+                    CurrencyPill(icon: "🌻", value: p.seeds)
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
+                            .frame(width: 36, height: 36).background(Circle().fill(Color.white.opacity(0.15)))
                     }
-                    ScrollView {
+                }
+                HStack(alignment: .top, spacing: 16) {
+                    // Collection grid
+                    ScrollView(showsIndicators: false) {
                         LazyVGrid(columns: columns, spacing: 10) {
                             ForEach(GeneralID.allCases) { g in
                                 GeneralTile(general: g, level: p.generalLevel(g), equipped: p.equipped == g,
@@ -30,54 +34,47 @@ struct GeneralsView: View {
                             }
                         }
                     }
-                }
 
-                // Detail + crates
-                VStack(spacing: 12) {
-                    HStack {
-                        Spacer()
-                        Button { dismiss() } label: {
-                            Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
-                                .frame(width: 36, height: 36).background(Circle().fill(Color.white.opacity(0.15)))
-                        }
-                    }
-                    if let g = selected ?? p.equipped {
-                        ScrollView(showsIndicators: false) {
-                        GeneralDetail(general: g, level: p.generalLevel(g), equipped: p.equipped == g) {
-                            store.equip(g)
-                            Haptics.success()
-                        }
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    VStack(spacing: 8) {
-                        Text("Hamster Crate").font(Theme.font(15)).foregroundStyle(.white)
-                        Text("Rare 70% · Epic 25% · Legendary 5%")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(.white.opacity(0.7))
-                        HStack(spacing: 8) {
-                            Button {
-                                if let r = store.openCrate(free: false) { show(r) } else { Haptics.fail() }
-                            } label: { Text("🌻 \(Generals.crateCost)").font(Theme.font(14)) }
-                            .buttonStyle(ChunkyButtonStyle(color: p.seeds >= Generals.crateCost ? Theme.green : Theme.disabled, cornerRadius: 12, depth: 3))
-
-                            if store.freeCrateAvailable() {
-                                Button {
-                                    ads.showRewarded(placement: "free_crate") { ok in
-                                        if ok, let r = store.openCrate(free: true) {
-                                            Analytics.log(.adRewarded(placement: "free_crate"))
-                                            show(r)
-                                        }
-                                    }
-                                } label: { Label("Free", systemImage: "play.rectangle.fill").font(Theme.font(14)) }
-                                .buttonStyle(ChunkyButtonStyle(color: Theme.purple, cornerRadius: 12, depth: 3))
+                    // Detail + crates
+                    VStack(spacing: 10) {
+                        if let g = selected ?? p.equipped {
+                            ScrollView(showsIndicators: false) {
+                                GeneralDetail(general: g, level: p.generalLevel(g), equipped: p.equipped == g) {
+                                    store.equip(g)
+                                    Haptics.success()
+                                }
                             }
                         }
+                        Spacer(minLength: 0)
+                        VStack(spacing: 6) {
+                            Text("Hamster Crate").font(Theme.font(15)).foregroundStyle(.white)
+                            Text("Rare 70% · Epic 25% · Legendary 5%")
+                                .font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(.white.opacity(0.7))
+                            HStack(spacing: 8) {
+                                Button {
+                                    if let r = store.openCrate(free: false) { show(r) } else { Haptics.fail() }
+                                } label: { Text("🌻 \(Generals.crateCost)").font(Theme.font(14)) }
+                                .buttonStyle(ChunkyButtonStyle(color: p.seeds >= Generals.crateCost ? Theme.green : Theme.disabled, cornerRadius: 12, depth: 3, compact: true))
+
+                                if store.freeCrateAvailable() {
+                                    Button {
+                                        ads.showRewarded(placement: "free_crate") { ok in
+                                            if ok, let r = store.openCrate(free: true) {
+                                                Analytics.log(.adRewarded(placement: "free_crate"))
+                                                show(r)
+                                            }
+                                        }
+                                    } label: { Label("Free", systemImage: "play.rectangle.fill").font(Theme.font(14)) }
+                                    .buttonStyle(ChunkyButtonStyle(color: Theme.purple, cornerRadius: 12, depth: 3, compact: true))
+                                }
+                            }
+                        }
+                        .padding(10)
+                        .frame(maxWidth: .infinity)
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.07)))
                     }
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.07)))
+                    .frame(width: 260)
                 }
-                .frame(width: 250)
             }
             .padding(16)
 

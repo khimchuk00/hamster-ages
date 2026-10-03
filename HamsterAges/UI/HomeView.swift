@@ -48,7 +48,7 @@ struct HomeView: View {
                             Sound.shared.play(.coin)
                             if let c = r.crate {
                                 GameCenter.sync(progress: store.progress)
-                                starToast = "\(c.general.name) \(c.isNew ? "joined!" : "Lv \(c.newLevel)")"
+                                starToast = c.isNew ? L10n.f("%@ joined!", c.general.name) : L10n.f("%@ Lv %lld", c.general.name, c.newLevel)
                             } else {
                                 starToast = "+\(r.seeds) 🌻"
                             }
@@ -60,7 +60,7 @@ struct HomeView: View {
                                     Image(systemName: "gift.fill").font(.system(size: 20)).foregroundStyle(Theme.gold)
                                     VStack(alignment: .leading, spacing: 0) {
                                         Text("STARTER PACK").font(Theme.font(13)).foregroundStyle(Theme.gold)
-                                        Text("3,000 🌻 + No Ads" + (shop.product(.starterPack).map { " · \($0.displayPrice)" } ?? ""))
+                                        Text(L10n.t("3,000 🌻 + No Ads") + (shop.product(.starterPack).map { " · \($0.displayPrice)" } ?? ""))
                                             .font(Theme.font(11)).foregroundStyle(.white)
                                     }
                                 }
@@ -194,7 +194,7 @@ struct HomeView: View {
                                 Button { onPlay(.survival) } label: {
                                     VStack(spacing: 0) {
                                         Text("SURVIVAL").font(Theme.font(13))
-                                        Text(p.bestSurvival.map { "Best \(Int($0) / 60):\(String(format: "%02d", Int($0) % 60))" } ?? "Endless")
+                                        Text(p.bestSurvival.map { L10n.f("Best %@", String(format: "%d:%02d", Int($0) / 60, Int($0) % 60)) } ?? L10n.t("Endless"))
                                             .font(Theme.font(9))
                                     }
                                     .frame(width: 82)
@@ -206,7 +206,7 @@ struct HomeView: View {
                                 Button { onPlay(.challenge) } label: {
                                     VStack(spacing: 0) {
                                         Text("DAILY").font(Theme.font(13))
-                                        Text(isOpen ? DailyChallenge.modifier(for: .now).title : "Cleared ✓").font(Theme.font(9))
+                                        Text(isOpen ? DailyChallenge.modifier(for: .now).title : L10n.t("Cleared ✓")).font(Theme.font(9))
                                     }
                                     .frame(width: 82)
                                 }
@@ -233,7 +233,7 @@ struct HomeView: View {
                     }
                     .padding(14)
                     .frame(width: 280)
-                    .background(RoundedRectangle(cornerRadius: 24).fill(Theme.panel))
+                    .background(RoundedRectangle(cornerRadius: 24).fill(Color(hex: 0x2B2140, opacity: 0.95)))
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
@@ -457,7 +457,7 @@ private struct StarRoadPill: View {
 
 /// Small bouncing callout used for first-session hints on the home screen.
 private struct CoachBubble: View {
-    let text: String
+    let text: LocalizedStringKey
     @State private var bounce = false
 
     var body: some View {

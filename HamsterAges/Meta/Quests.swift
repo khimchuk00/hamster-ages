@@ -36,13 +36,13 @@ enum QuestKind: String, Codable, CaseIterable {
 
     var title: String {
         switch self {
-        case .winBattles: return "Win \(target) battles"
-        case .trainUnits: return "Train \(target) hamsters"
-        case .killRats: return "Defeat \(target) rats"
-        case .useSpecial: return "Use special attacks \(target) times"
-        case .evolve: return "Evolve \(target) times"
-        case .openCrate: return "Open a Hamster Crate"
-        case .buyUpgrade: return "Buy \(target) upgrades"
+        case .winBattles: return L10n.f("Win %lld battles", target)
+        case .trainUnits: return L10n.f("Train %lld hamsters", target)
+        case .killRats: return L10n.f("Defeat %lld rats", target)
+        case .useSpecial: return L10n.f("Use special attacks %lld times", target)
+        case .evolve: return L10n.f("Evolve %lld times", target)
+        case .openCrate: return L10n.t("Open a Hamster Crate")
+        case .buyUpgrade: return L10n.f("Buy %lld upgrades", target)
         }
     }
 
@@ -132,7 +132,7 @@ enum LiveEvents {
 
     static func seedMultiplier(now: Date = .now) -> Double { isWeekend(now) ? 1.5 : 1 }
 
-    static func activeTitle(now: Date = .now) -> String? { isWeekend(now) ? "Weekend Seed Festival ×1.5" : nil }
+    static func activeTitle(now: Date = .now) -> String? { isWeekend(now) ? L10n.t("Weekend Seed Festival ×1.5") : nil }
 }
 
 /// One hand-crafted-by-seed battle per day: same stage, twist, starting cards and RNG for everyone that day.

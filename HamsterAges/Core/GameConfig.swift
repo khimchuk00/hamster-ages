@@ -100,7 +100,7 @@ public enum GameConfig {
     public static let survivalRampInterval: Double = 30
     public static let survivalRamp: Double = 1.12
 
-    public static let eraNames = ["Stone Age", "Medieval", "Gunpowder", "Modern", "Future"]
+    public static let eraNames = ["Stone Age", "Medieval", "Gunpowder", "Modern", "Future"].map(L10n.t)
     /// Cost scale per era, power scale grows slightly faster so newer eras are more cost-efficient.
     static let costScale: [Double] = [1, 2.4, 5.5, 12, 26]
     static let powerBonus: [Double] = [1, 1.15, 1.32, 1.52, 1.75]
@@ -113,9 +113,9 @@ public enum GameConfig {
         ["Duelist", "Musketeer", "Cannoneer"],
         ["Trooper", "Rifler", "Tank"],
         ["Plasma Blade", "Blaster", "Mech"],
-    ]
-    static let turretNames = ["Rock Catapult", "Ballista", "Cannon", "Machine Gun", "Laser Tower"]
-    static let specialNames = ["Meteor Shower", "Arrow Storm", "Barrage", "Air Strike", "Orbital Laser"]
+    ].map { $0.map(L10n.t) }
+    static let turretNames = ["Rock Catapult", "Ballista", "Cannon", "Machine Gun", "Laser Tower"].map(L10n.t)
+    static let specialNames = ["Meteor Shower", "Arrow Storm", "Barrage", "Air Strike", "Orbital Laser"].map(L10n.t)
 
     private static func makeEra(_ i: Int) -> EraDef {
         let c = costScale[i]
@@ -150,27 +150,27 @@ public enum HeroAbility: String, CaseIterable, Codable {
 
     public var title: String {
         switch self {
-        case .charge: return "Charge!"
-        case .volley: return "Volley"
-        case .picnic: return "Picnic"
-        case .eureka: return "Eureka"
-        case .overclock: return "Overclock"
-        case .bulwark: return "Bulwark"
-        case .royalDecree: return "Royal Decree"
-        case .bigBang: return "Big Bang"
+        case .charge: return L10n.t("Charge!")
+        case .volley: return L10n.t("Volley")
+        case .picnic: return L10n.t("Picnic")
+        case .eureka: return L10n.t("Eureka")
+        case .overclock: return L10n.t("Overclock")
+        case .bulwark: return L10n.t("Bulwark")
+        case .royalDecree: return L10n.t("Royal Decree")
+        case .bigBang: return L10n.t("Big Bang")
         }
     }
 
     public var detail: String {
         switch self {
-        case .charge: return "Melee units deal +50% damage for 10s"
-        case .volley: return "Arrows hit every rat on the field"
-        case .picnic: return "Instantly gain 30s worth of food"
-        case .eureka: return "Gain a big chunk of XP"
-        case .overclock: return "Units attack and move 50% faster for 8s"
-        case .bulwark: return "Heal all units 50% and the base 15%"
-        case .royalDecree: return "3 free warriors join the fight"
-        case .bigBang: return "Your special attack recharges instantly"
+        case .charge: return L10n.f("Melee units deal +50%% damage for 10s")
+        case .volley: return L10n.t("Arrows hit every rat on the field")
+        case .picnic: return L10n.t("Instantly gain 30s worth of food")
+        case .eureka: return L10n.t("Gain a big chunk of XP")
+        case .overclock: return L10n.f("Units attack and move 50%% faster for 8s")
+        case .bulwark: return L10n.f("Heal all units 50%% and the base 15%%")
+        case .royalDecree: return L10n.t("3 free warriors join the fight")
+        case .bigBang: return L10n.t("Your special attack recharges instantly")
         }
     }
 
@@ -187,24 +187,24 @@ public enum StageModifier: String, CaseIterable, Codable {
     public var title: String {
         switch self {
         case .none: return ""
-        case .goldRush: return "Gold Rush"
-        case .swarm: return "Rat Swarm"
-        case .giants: return "Giants"
-        case .siegeFog: return "Siege Fog"
-        case .armored: return "Armored Rats"
-        case .blitz: return "Blitz"
+        case .goldRush: return L10n.t("Gold Rush")
+        case .swarm: return L10n.t("Rat Swarm")
+        case .giants: return L10n.t("Giants")
+        case .siegeFog: return L10n.t("Siege Fog")
+        case .armored: return L10n.t("Armored Rats")
+        case .blitz: return L10n.t("Blitz")
         }
     }
 
     public var detail: String {
         switch self {
         case .none: return ""
-        case .goldRush: return "Everyone earns +30% food and XP"
-        case .swarm: return "Hordes of cheap rat warriors"
-        case .giants: return "Rats field more, tougher heavy units"
-        case .siegeFog: return "No turrets for either side"
-        case .armored: return "Rats have +25% HP, −10% damage"
-        case .blitz: return "Everything moves and trains 30% faster"
+        case .goldRush: return L10n.f("Everyone earns +30%% food and XP")
+        case .swarm: return L10n.t("Hordes of cheap rat warriors")
+        case .giants: return L10n.t("Rats field more, tougher heavy units")
+        case .siegeFog: return L10n.t("No turrets for either side")
+        case .armored: return L10n.f("Rats have +25%% HP, −10%% damage")
+        case .blitz: return L10n.f("Everything moves and trains 30%% faster")
         }
     }
 

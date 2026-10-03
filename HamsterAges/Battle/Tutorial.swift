@@ -12,12 +12,12 @@ enum TutorialStep: Int, CaseIterable {
 
     var text: String {
         switch self {
-        case .train: return "Tap the Clubber to train your first hamster warrior!"
-        case .earn: return "Hamsters march on their own. Defeat rats to earn 🌽 food and XP."
-        case .turret: return "Build a turret — it shoots any rat that gets close to your base."
-        case .special: return "Rats incoming! Unleash your special attack."
-        case .evolve: return "Enough XP! Evolve to unlock stronger units and a new base."
-        case .finish: return "Destroy the rat base to win. Good luck, commander!"
+        case .train: return L10n.t("Tap the Clubber to train your first hamster warrior!")
+        case .earn: return L10n.t("Hamsters march on their own. Defeat rats to earn 🌽 food and XP.")
+        case .turret: return L10n.t("Build a turret — it shoots any rat that gets close to your base.")
+        case .special: return L10n.t("Rats incoming! Unleash your special attack.")
+        case .evolve: return L10n.t("Enough XP! Evolve to unlock stronger units and a new base.")
+        case .finish: return L10n.t("Destroy the rat base to win. Good luck, commander!")
         }
     }
 

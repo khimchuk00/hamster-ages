@@ -10,14 +10,14 @@ enum MetaUpgrade: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .baseArmor: return "Base Armor"
-        case .rations: return "Rations"
-        case .foraging: return "Foraging"
-        case .training: return "Training"
-        case .weapons: return "Weapons"
-        case .scholar: return "Scholar"
-        case .engineering: return "Engineering"
-        case .charm: return "Lucky Charm"
+        case .baseArmor: return L10n.t("Base Armor")
+        case .rations: return L10n.t("Rations")
+        case .foraging: return L10n.t("Foraging")
+        case .training: return L10n.t("Training")
+        case .weapons: return L10n.t("Weapons")
+        case .scholar: return L10n.t("Scholar")
+        case .engineering: return L10n.t("Engineering")
+        case .charm: return L10n.t("Lucky Charm")
         }
     }
 
@@ -39,14 +39,14 @@ enum MetaUpgrade: String, Codable, CaseIterable, Identifiable {
     func effectText(level: Int) -> String {
         let l = Double(level)
         switch self {
-        case .baseArmor: return "Base HP +\(Int(8 * l))%"
-        case .rations: return "Start food +\(Int(20 * l))"
-        case .foraging: return "Food income +\(Int(5 * l))%"
-        case .training: return "Unit HP +\(Int(5 * l))%"
-        case .weapons: return "Unit damage +\(Int(5 * l))%"
-        case .scholar: return "XP gain +\(Int(5 * l))%"
-        case .engineering: return "Turret damage +\(Int(6 * l))%"
-        case .charm: return "\(level) card reroll\(level == 1 ? "" : "s") per battle"
+        case .baseArmor: return L10n.f("Base HP +%lld%%", Int(8 * l))
+        case .rations: return L10n.f("Start food +%lld", Int(20 * l))
+        case .foraging: return L10n.f("Food income +%lld%%", Int(5 * l))
+        case .training: return L10n.f("Unit HP +%lld%%", Int(5 * l))
+        case .weapons: return L10n.f("Unit damage +%lld%%", Int(5 * l))
+        case .scholar: return L10n.f("XP gain +%lld%%", Int(5 * l))
+        case .engineering: return L10n.f("Turret damage +%lld%%", Int(6 * l))
+        case .charm: return level == 1 ? L10n.t("1 card reroll per battle") : L10n.f("%lld card rerolls per battle", level)
         }
     }
 

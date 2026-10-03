@@ -35,8 +35,8 @@ enum Reminders {
             let full = last.addingTimeInterval(SeedFarm.capHours * 3600)
             if full > .now.addingTimeInterval(600) {
                 schedule(id: "farm_full", at: full,
-                         title: "Your Seed Farm is full! 🌻",
-                         body: "\(SeedFarm.capacity(highestStage: p.highestStage)) seeds are waiting. Collect them before the hamsters eat them all.")
+                         title: L10n.t("Your Seed Farm is full! 🌻"),
+                         body: L10n.f("%lld seeds are waiting. Collect them before the hamsters eat them all.", SeedFarm.capacity(highestStage: p.highestStage)))
             }
         }
 
@@ -45,16 +45,16 @@ enum Reminders {
         if let tomorrow = cal.date(byAdding: .day, value: 1, to: .now),
            let evening = cal.date(bySettingHour: 18, minute: 30, second: 0, of: tomorrow) {
             schedule(id: "daily", at: evening,
-                     title: "New daily quests are up!",
-                     body: "Claim your daily seeds and push past Stage \(p.stage). The rats are getting bold…")
+                     title: L10n.t("New daily quests are up!"),
+                     body: L10n.f("Claim your daily seeds and push past Stage %lld. The rats are getting bold…", p.stage))
         }
 
         // 3. Lapsed player nudge (3 days).
         if let later = cal.date(byAdding: .day, value: 3, to: .now),
            let noon = cal.date(bySettingHour: 12, minute: 15, second: 0, of: later) {
             schedule(id: "lapsed", at: noon,
-                     title: "The rat army is marching on your base 🐀",
-                     body: "Your hamsters need their commander. A free crate might be waiting!")
+                     title: L10n.t("The rat army is marching on your base 🐀"),
+                     body: L10n.t("Your hamsters need their commander. A free crate might be waiting!"))
         }
     }
 

@@ -124,7 +124,7 @@ struct SeedFarmWidget: View {
                 Text("🌻").font(.system(size: 26))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SEED FARM").font(Theme.font(11)).foregroundStyle(Theme.gold)
-                    Text(collected.map { "+\($0) collected!" } ?? "\(amount) / \(cap)")
+                    Text(collected.map { L10n.f("+%lld collected!", $0) } ?? "\(amount) / \(cap)")
                         .font(Theme.font(13)).foregroundStyle(.white).monospacedDigit()
                 }
                 Button("Collect") { collect(doubled: false) }

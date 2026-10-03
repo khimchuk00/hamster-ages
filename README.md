@@ -24,7 +24,9 @@ Tools/SimHarness/  headless AI-vs-AI прогони для балансу
 ```
 
 ## CI
-`.github/workflows/ios-build.yml` — на кожен push: тести логіки + збірка під iOS Simulator на macOS-раннері GitHub.
+`.github/workflows/ios-build.yml` — на кожен push: тести логіки, збірка під iOS Simulator, запуск у симуляторі
+з DEBUG-аргументами (`-demo`, `-screen battle|heroes|upgrades|quests|shop`, `-autoplay`) і скріншоти.
+Логи та скріни публікуються в гілку `ci-artifacts`.
 
 ## Покупки (локально)
 Edit Scheme → Run → Options → StoreKit Configuration → `HamsterAges.storekit`. Тоді магазин працює в симуляторі без App Store Connect.
@@ -43,8 +45,9 @@ swiftc -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o /tmp/hamster-s
 Крутити числа — у `Core/GameConfig.swift` (`StageDifficulty`, `makeEra`).
 
 `Tools/balance_port.py` — ранній Python-порт (застарів, авторитетна — Swift-симуляція через `test.sh --balance`).
-Поточна крива (бот-гравець, 12 боїв на точку): етапи 1–3 → 100%, етап 8 без прокачки → ~90%, 10 потребує мета ~6,
-20 з мета 10 → ~50%; бої 3–7.5 хв (овертайм із 4:30 вимикає турелі й розганяє урон).
+Поточна крива (бот-гравець): етапи 1–3 → 100%, етап 5 (перший бос) → ~55%, етап 8 без прокачки → ~10%,
+з мета 3 → ~75%; етап 10 з мета 6 → ~80%; етап 20 з мета 10 → ~60%. Бої 3–6 хв: овертайм із 4:30 вимикає турелі
+й розганяє урон, раптова смерть із 7:00 точить обидві бази.
 
 ## Що вже є з live-ops
 - Туторіал першого бою (6 кроків, блокуючі підказки зі стрілкою на кнопку).

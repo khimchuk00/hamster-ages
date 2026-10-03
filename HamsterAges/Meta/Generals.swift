@@ -5,7 +5,7 @@ import Foundation
 enum GeneralRarity: Int, Codable, CaseIterable {
     case rare, epic, legendary
 
-    var title: String { ["Rare", "Epic", "Legendary"][rawValue] }
+    var title: String { L10n.t(["Rare", "Epic", "Legendary"][rawValue]) }
     /// Drop weight in a crate.
     var weight: Double { [70, 25, 5][rawValue] }
     /// Seeds refunded for a duplicate of a maxed general.
@@ -19,14 +19,14 @@ enum GeneralID: String, Codable, CaseIterable, Identifiable {
 
     var name: String {
         switch self {
-        case .sirNibbles: return "Sir Nibbles"
-        case .archie: return "Archie Longshot"
-        case .grannyGrain: return "Granny Grain"
-        case .professor: return "Prof. Whiskers"
-        case .bolt: return "Bolt"
-        case .ironBelly: return "Iron Belly"
-        case .queenSqueak: return "Queen Squeak"
-        case .drBoom: return "Dr. Boom"
+        case .sirNibbles: return L10n.t("Sir Nibbles")
+        case .archie: return L10n.t("Archie Longshot")
+        case .grannyGrain: return L10n.t("Granny Grain")
+        case .professor: return L10n.t("Prof. Whiskers")
+        case .bolt: return L10n.t("Bolt")
+        case .ironBelly: return L10n.t("Iron Belly")
+        case .queenSqueak: return L10n.t("Queen Squeak")
+        case .drBoom: return L10n.t("Dr. Boom")
         }
     }
 
@@ -88,14 +88,14 @@ enum GeneralID: String, Codable, CaseIterable, Identifiable {
     func effectText(level: Int) -> String {
         let l = Double(level)
         switch self {
-        case .sirNibbles: return "Melee damage +\(Int(8 * l))%"
-        case .archie: return "Ranged damage +\(Int(6 * l))%, range +\(Int(4 * l))%"
-        case .grannyGrain: return "Food income +\(Int(6 * l))%"
-        case .professor: return "XP gain +\(Int(8 * l))%"
-        case .bolt: return "Attack speed +\(Int(5 * l))%, move +\(Int(3 * l))%"
-        case .ironBelly: return "Unit HP +\(Int(7 * l))%"
-        case .queenSqueak: return "Units +\(Int(5 * l))% HP & damage, special −\(Int(5 * l))% cooldown"
-        case .drBoom: return "Special damage +\(Int(15 * l))%, turrets +\(Int(8 * l))%"
+        case .sirNibbles: return L10n.f("Melee damage +%lld%%", Int(8 * l))
+        case .archie: return L10n.f("Ranged damage +%lld%%, range +%lld%%", Int(6 * l), Int(4 * l))
+        case .grannyGrain: return L10n.f("Food income +%lld%%", Int(6 * l))
+        case .professor: return L10n.f("XP gain +%lld%%", Int(8 * l))
+        case .bolt: return L10n.f("Attack speed +%lld%%, move +%lld%%", Int(5 * l), Int(3 * l))
+        case .ironBelly: return L10n.f("Unit HP +%lld%%", Int(7 * l))
+        case .queenSqueak: return L10n.f("Units +%lld%% HP & damage, special −%lld%% cooldown", Int(5 * l), Int(5 * l))
+        case .drBoom: return L10n.f("Special damage +%lld%%, turrets +%lld%%", Int(15 * l), Int(8 * l))
         }
     }
 
