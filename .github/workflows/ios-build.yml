@@ -73,6 +73,7 @@ jobs:
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan ci-artifacts
           git rm -rf . -q
+          git clean -fdxq
           cp -R /tmp/out/. .
           git add -A
           git commit -q -m "CI artifacts for ${GITHUB_SHA::7}"

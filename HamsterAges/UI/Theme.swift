@@ -38,15 +38,17 @@ struct ChunkyButtonStyle: ButtonStyle {
     var color: Color = Theme.green
     var cornerRadius: CGFloat = 14
     var depth: CGFloat = 4
+    /// Smaller padding/font for dense widgets.
+    var compact = false
 
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
         configuration.label
-            .font(Theme.font(17))
+            .font(Theme.font(compact ? 13 : 17))
             .foregroundStyle(.white)
             .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 1.5)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, compact ? 10 : 16)
+            .padding(.vertical, compact ? 6 : 10)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(color)

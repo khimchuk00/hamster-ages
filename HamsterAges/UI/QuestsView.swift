@@ -128,7 +128,7 @@ struct SeedFarmWidget: View {
                         .font(Theme.font(13)).foregroundStyle(.white).monospacedDigit()
                 }
                 Button("Collect") { collect(doubled: false) }
-                    .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.green : Theme.disabled, cornerRadius: 10, depth: 3))
+                    .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.green : Theme.disabled, cornerRadius: 10, depth: 3, compact: true))
                     .disabled(amount <= 0)
                 Button {
                     ads.showRewarded(placement: "farm_x2") { ok in
@@ -138,11 +138,12 @@ struct SeedFarmWidget: View {
                         }
                     }
                 } label: { Label("×2", systemImage: "play.rectangle.fill") }
-                .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.purple : Theme.disabled, cornerRadius: 10, depth: 3))
+                .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.purple : Theme.disabled, cornerRadius: 10, depth: 3, compact: true))
                 .disabled(amount <= 0)
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
             .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel))
+            .fixedSize()
         }
     }
 

@@ -42,9 +42,11 @@ struct GeneralsView: View {
                         }
                     }
                     if let g = selected ?? p.equipped {
+                        ScrollView(showsIndicators: false) {
                         GeneralDetail(general: g, level: p.generalLevel(g), equipped: p.equipped == g) {
                             store.equip(g)
                             Haptics.success()
+                        }
                         }
                     }
                     Spacer(minLength: 0)
@@ -105,7 +107,7 @@ private struct GeneralTile: View {
         let rc = rarityColor(general.rarity)
         VStack(spacing: 2) {
             Image(uiImage: ArtFactory.shared.general(general))
-                .resizable().scaledToFit().frame(height: 62)
+                .resizable().scaledToFit().frame(height: 48)
                 .colorMultiply(level > 0 ? .white : .black)
                 .opacity(level > 0 ? 1 : 0.5)
             Text(level > 0 ? general.name : "???").font(Theme.font(11)).foregroundStyle(.white).lineLimit(1)
@@ -136,7 +138,7 @@ private struct GeneralDetail: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().frame(height: 80)
+            Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().frame(height: 64)
                 .colorMultiply(level > 0 ? .white : .black)
             Text(general.name).font(Theme.font(17)).foregroundStyle(.white)
             Text(general.rarity.title.uppercased()).font(Theme.font(10)).foregroundStyle(.white)
@@ -145,13 +147,16 @@ private struct GeneralDetail: View {
             Text(general.effectText(level: max(1, level)))
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85)).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             Label("\(general.ability.title): \(general.ability.detail)", systemImage: "bolt.circle.fill")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.purple.mix(with: .white, by: 0.4)).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             if level > 0 && level < Generals.maxLevel {
                 Text("Next: \(general.effectText(level: level + 1))")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(Theme.gold.opacity(0.9)).multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if level > 0 {
                 Button(equipped ? "Equipped" : "Equip", action: onEquip)

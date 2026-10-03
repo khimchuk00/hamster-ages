@@ -60,7 +60,7 @@ struct HomeView: View {
                                     Image(systemName: "gift.fill").font(.system(size: 20)).foregroundStyle(Theme.gold)
                                     VStack(alignment: .leading, spacing: 0) {
                                         Text("STARTER PACK").font(Theme.font(13)).foregroundStyle(Theme.gold)
-                                        Text("3,000 🌻 + No Ads · \(shop.product(.starterPack)?.displayPrice ?? "")")
+                                        Text("3,000 🌻 + No Ads" + (shop.product(.starterPack).map { " · \($0.displayPrice)" } ?? ""))
                                             .font(Theme.font(11)).foregroundStyle(.white)
                                     }
                                 }
@@ -89,12 +89,12 @@ struct HomeView: View {
 
                     // Right: stage panel
                     VStack(spacing: 8) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 4) {
                             Button { showDaily = true } label: {
                                 Image(systemName: "gift.fill")
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundStyle(.white)
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 32, height: 32)
                                     .background(Circle().fill(Theme.panel))
                                     .overlay(alignment: .topTrailing) {
                                         if store.dailyStatus().available {
@@ -106,7 +106,7 @@ struct HomeView: View {
                             Button { showQuests = true } label: {
                                 Image(systemName: "list.bullet.clipboard.fill")
                                     .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                                    .frame(width: 36, height: 36).background(Circle().fill(Theme.panel))
+                                    .frame(width: 32, height: 32).background(Circle().fill(Theme.panel))
                                     .overlay(alignment: .topTrailing) {
                                         if p.questBoard?.hasClaimable == true {
                                             Circle().fill(Theme.red).frame(width: 12, height: 12).offset(x: 2, y: -2)
@@ -117,17 +117,17 @@ struct HomeView: View {
                             Button { showShop = true } label: {
                                 Image(systemName: "cart.fill")
                                     .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                                    .frame(width: 36, height: 36).background(Circle().fill(Theme.panel))
+                                    .frame(width: 32, height: 32).background(Circle().fill(Theme.panel))
                             }
                             .buttonStyle(PressScale())
                             Button { showSettings = true } label: {
                                 Image(systemName: "gearshape.fill")
                                     .font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
-                                    .frame(width: 36, height: 36).background(Circle().fill(Theme.panel))
+                                    .frame(width: 32, height: 32).background(Circle().fill(Theme.panel))
                             }
                             .buttonStyle(PressScale())
                             Spacer()
-                            CurrencyPill(icon: "🌻", value: p.seeds)
+                            CurrencyPill(icon: "🌻", value: p.seeds).fixedSize()
                         }
 
                         VStack(spacing: 4) {
@@ -256,7 +256,8 @@ struct HomeView: View {
             Music.shared.play(.menu)
             GameCenter.setAccessPoint(visible: true)
             withAnimation(.easeInOut(duration: 0.45).repeatForever()) { bob = true }
-            if store.dailyStatus().available { showDaily = true }
+            // Don't greet brand-new players with a popup before their first battle.
+            if store.progress.tutorialDone == true && store.dailyStatus().available { showDaily = true }
         }
         .sheet(isPresented: $showUpgrades) { UpgradesView(store: store) }
         .sheet(isPresented: $showDaily) { DailyRewardView(store: store) }
