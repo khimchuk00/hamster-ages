@@ -1,0 +1,706 @@
+import SpriteKit
+import SwiftUI
+
+struct BattleView: View {
+    let controller: BattleController
+    let store: ProgressStore
+    let ads: AdService
+    let onExit: () -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                SpriteView(scene: controller.scene, preferredFramesPerSecond: 60, options: [.ignoresSiblingOrder])
+                    .ignoresSafeArea()
+
+                BattleHUD(c: controller)
+
+                if controller.tutorialVisible, let step = controller.tutorialStep, controller.cardOffer == nil, controller.result == nil {
+                    TutorialBubble(step: step)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                if let banner = controller.banner {
+                    OutlinedText(text: banner, size: 34, color: Theme.gold)
+                        .transition(.scale.combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
+
+                if let offer = controller.cardOffer {
+                    CardPickView(controller: controller, cards: offer, ads: ads)
+                        .transition(.opacity)
+                }
+
+                if controller.reviveOffer {
+                    ReviveView(controller: controller, ads: ads)
+                        .transition(.opacity)
+                }
+
+                if controller.isPaused {
+                    PauseView(controller: controller, onQuit: onExit)
+                }
+
+                if let result = controller.result {
+                    ResultView(result: result, store: store, ads: ads, onContinue: onExit)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+            }
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: controller.banner)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: controller.tutorialVisible)
+            .animation(.easeOut(duration: 0.2), value: controller.cardOffer == nil)
+            .animation(.easeOut(duration: 0.25), value: controller.result == nil)
+            .onAppear { applyInsets(geo) }
+            .onChange(of: geo.size) { applyInsets(geo) }
+        }
+        .onAppear {
+            Music.shared.play(.era(controller.era))
+            controller.enableRevive(ads.isRewardedReady)
+            GameCenter.setAccessPoint(visible: false)
+            // Capture only what's needed: capturing `self` (which holds `controller`) in a closure stored on the
+            // controller is a retain cycle that leaks the controller, simulation and scene after every battle.
+            let isTutorial = controller.isTutorial
+            controller.onFinish = { [store] r in
+                if r.mode == .survival {
+                    store.recordSurvival(seconds: r.duration, seeds: r.seeds, stats: r.stats)
+                    GameCenter.submitSurvival(seconds: Int(r.duration))
+                } else if r.mode == .challenge {
+                    store.recordChallenge(won: r.won, seeds: r.seeds, stats: r.stats)
+                } else {
+                    store.recordBattle(stage: r.stage, won: r.won, seeds: r.seeds, stars: r.stars, stats: r.stats)
+                }
+                if isTutorial { store.completeTutorial() }
+                GameCenter.sync(progress: store.progress, lastBattle: r.stats)
+                ReviewPrompt.maybeAsk(progress: store.progress, lastStars: r.stars)
+            }
+        }
+    }
+
+    private func applyInsets(_ geo: GeometryProxy) {
+        let i = geo.safeAreaInsets
+        controller.scene.safeInsets = UIEdgeInsets(top: i.top, left: i.leading, bottom: i.bottom, right: i.trailing)
+    }
+}
+
+// MARK: - HUD
+
+private struct BattleHUD: View {
+    let c: BattleController
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 8) {
+                RoundIconButton(icon: "pause.fill") { c.isPaused = true }
+                if let g = c.general {
+                    Image(uiImage: ArtFactory.shared.general(g))
+                        .resizable().scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .background(Circle().fill(Theme.panel))
+                        .overlay(alignment: .bottomTrailing) {
+                            Text("\(c.generalLevel)").font(Theme.font(9)).foregroundStyle(Theme.ink)
+                                .frame(width: 14, height: 14).background(Circle().fill(Theme.gold))
+                        }
+                        .accessibilityLabel("\(g.name), \(g.effectText(level: c.generalLevel))")
+                }
+                BaseBar(title: GameConfig.eraNames[c.era], fraction: c.playerHP, color: Theme.teal, text: c.playerHPText, mirrored: false)
+                Spacer(minLength: 4)
+                VStack(spacing: 4) {
+                    HStack(spacing: 6) {
+                        CurrencyPill(icon: "🌽", value: c.food)
+                        Text(c.clock)
+                            .font(Theme.font(12)).monospacedDigit()
+                            .foregroundStyle(c.isOvertime ? Theme.red : .white.opacity(0.85))
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(Capsule().fill(Theme.panel))
+                    }
+                    EvolveBar(c: c)
+                        .tutorialAnchor(.evolve)
+                }
+                Spacer(minLength: 4)
+                BaseBar(title: c.mode == .survival ? "Rat Fortress · Wave \(c.wave)" : "Rats · \(GameConfig.eraNames[c.enemyEra])",
+                        fraction: c.enemyHP, color: Theme.red, text: c.mode == .survival ? "∞" : nil, mirrored: true)
+                RoundIconButton(icon: c.speed > 1 ? "forward.fill" : "play.fill", label: c.speed > 1 ? "×2" : "×1") { c.toggleSpeed() }
+            }
+            Spacer()
+            HStack(alignment: .bottom, spacing: 8) {
+                ForEach(UnitRole.allCases, id: \.self) { role in
+                    UnitButton(role: role, era: c.era, cost: c.unitCosts[role.rawValue], affordable: c.food >= c.unitCosts[role.rawValue] && c.queue.count < GameConfig.maxQueue) {
+                        c.train(role)
+                    }
+                    .tutorialAnchor(role == .melee ? .unit : nil)
+                }
+                QueueView(queue: c.queue, fraction: c.trainFraction)
+                Spacer(minLength: 4)
+                ForEach(0..<2, id: \.self) { slot in
+                    TurretButton(slot: slot, info: c.turretSlots.indices.contains(slot) ? c.turretSlots[slot] : TurretSlotInfo(unlocked: false),
+                                 era: c.era, food: c.food, cost: c.turretCost, unlockCost: c.slotUnlockCost,
+                                 onTap: { c.tapTurretSlot(slot) }, onSell: { c.sellTurret(slot) })
+                    .tutorialAnchor(slot == 0 ? .turret : nil)
+                }
+                if let g = c.general {
+                    HeroButton(general: g, ready: c.heroReady) { c.useHero() }
+                }
+                SpecialButton(era: c.era, fraction: c.specialFraction) { c.useSpecial() }
+                    .tutorialAnchor(.special)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .overlayPreferenceValue(TutorialAnchorKey.self) { anchors in
+            GeometryReader { proxy in
+                if c.tutorialVisible, let target = c.tutorialStep?.target, let anchor = anchors[target] {
+                    TutorialPointer(rect: proxy[anchor])
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
+// MARK: - Tutorial UI
+
+struct TutorialAnchorKey: PreferenceKey {
+    static var defaultValue: [TutorialTarget: Anchor<CGRect>] { [:] }
+    static func reduce(value: inout [TutorialTarget: Anchor<CGRect>], nextValue: () -> [TutorialTarget: Anchor<CGRect>]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+extension View {
+    func tutorialAnchor(_ target: TutorialTarget?) -> some View {
+        anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { a in
+            target.map { [$0: a] } ?? [:]
+        }
+    }
+}
+
+private struct TutorialPointer: View {
+    let rect: CGRect
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Theme.gold, lineWidth: 4)
+                .frame(width: rect.width + 14, height: rect.height + 14)
+                .scaleEffect(pulse ? 1.12 : 1)
+                .opacity(pulse ? 0.4 : 1)
+            Image(systemName: "hand.point.down.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
+                .offset(y: -(rect.height / 2 + 26) + (pulse ? -6 : 0))
+        }
+        .position(x: rect.midX, y: rect.midY)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) { pulse = true }
+        }
+    }
+}
+
+private struct TutorialBubble: View {
+    let step: TutorialStep
+
+    var body: some View {
+        VStack {
+            HStack(spacing: 10) {
+                Image(uiImage: ArtFactory.shared.unit(.hamster, era: 1, role: .melee))
+                    .resizable().scaledToFit().frame(width: 44, height: 44)
+                Text(step.text)
+                    .font(Theme.font(15))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .frame(maxWidth: 440)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Theme.cream))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.orange, lineWidth: 3))
+            .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            .padding(.top, 58)
+            Spacer()
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct RoundIconButton: View {
+    let icon: String
+    var label: String? = nil
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 0) {
+                Image(systemName: icon).font(.system(size: 14, weight: .black))
+                if let label { Text(label).font(Theme.font(10)) }
+            }
+            .foregroundStyle(.white)
+            .frame(width: 40, height: 40)
+            .background(Circle().fill(Theme.panel))
+            .overlay(Circle().stroke(.white.opacity(0.25), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct BaseBar: View {
+    let title: String
+    let fraction: Double
+    let color: Color
+    let text: String?
+    let mirrored: Bool
+
+    var body: some View {
+        VStack(alignment: mirrored ? .trailing : .leading, spacing: 2) {
+            Text(title.uppercased())
+                .font(Theme.font(10))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.6), radius: 1, y: 1)
+            ZStack(alignment: mirrored ? .trailing : .leading) {
+                Capsule().fill(Color.black.opacity(0.45))
+                Capsule().fill(color.gradient)
+                    .frame(width: max(0, 150 * fraction))
+                if let text {
+                    Text(text).font(Theme.font(10)).foregroundStyle(.white).padding(.horizontal, 6)
+                }
+            }
+            .frame(width: 150, height: 14)
+            .overlay(Capsule().stroke(.white.opacity(0.5), lineWidth: 1.2))
+            .animation(.easeOut(duration: 0.2), value: fraction)
+        }
+    }
+}
+
+private struct EvolveBar: View {
+    let c: BattleController
+    @State private var pulse = false
+
+    var body: some View {
+        Group {
+            if c.canEvolve {
+                Button { c.evolve() } label: {
+                    Label("EVOLVE", systemImage: "arrow.up.forward.circle.fill").font(Theme.font(14))
+                }
+                .buttonStyle(ChunkyButtonStyle(color: Theme.purple, cornerRadius: 12, depth: 3))
+                .scaleEffect(pulse ? 1.07 : 0.97)
+                .onAppear { withAnimation(.easeInOut(duration: 0.5).repeatForever()) { pulse = true } }
+                .onDisappear { pulse = false }
+            } else if c.era < GameConfig.eras.count - 1 {
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.black.opacity(0.45))
+                    Capsule().fill(Theme.purple.gradient).frame(width: 130 * c.xpProgress)
+                    Text("XP → \(GameConfig.eraNames[c.era + 1])")
+                        .font(Theme.font(9)).foregroundStyle(.white).frame(maxWidth: .infinity)
+                }
+                .frame(width: 130, height: 12)
+                .overlay(Capsule().stroke(.white.opacity(0.4), lineWidth: 1))
+                .animation(.easeOut(duration: 0.2), value: c.xpProgress)
+            } else {
+                Text("FINAL AGE").font(Theme.font(11)).foregroundStyle(Theme.gold)
+            }
+        }
+    }
+}
+
+private struct UnitButton: View {
+    let role: UnitRole
+    let era: Int
+    let cost: Int
+    let affordable: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 0) {
+                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role))
+                    .resizable().scaledToFit()
+                    .frame(height: 40)
+                Text("\(cost)")
+                    .font(Theme.font(12))
+                    .foregroundStyle(affordable ? .white : Theme.red.mix(with: .white, by: 0.4))
+            }
+            .frame(width: 58, height: 60)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(affordable ? Theme.gold : .white.opacity(0.2), lineWidth: affordable ? 2 : 1))
+            .saturation(affordable ? 1 : 0.3)
+        }
+        .buttonStyle(PressScale())
+    }
+}
+
+private struct QueueView: View {
+    let queue: [UnitRole]
+    let fraction: Double
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<GameConfig.maxQueue, id: \.self) { i in
+                ZStack {
+                    Circle().fill(i < queue.count ? Theme.orange : Color.black.opacity(0.35)).frame(width: 9, height: 9)
+                    if i == 0 && !queue.isEmpty {
+                        ProgressRing(fraction: fraction, color: .white, lineWidth: 2).frame(width: 14, height: 14)
+                    }
+                }
+                .frame(width: 14, height: 14)
+            }
+        }
+        .padding(.bottom, 4)
+    }
+}
+
+private struct TurretButton: View {
+    let slot: Int
+    let info: TurretSlotInfo
+    let era: Int
+    let food: Int
+    let cost: Int
+    let unlockCost: Int
+    let onTap: () -> Void
+    let onSell: () -> Void
+
+    private var label: (String, Int?) {
+        if !info.unlocked { return ("Unlock", unlockCost) }
+        guard let e = info.era else { return ("Turret", cost) }
+        return e < era ? ("Upgrade", cost) : ("Ready", nil)
+    }
+
+    var body: some View {
+        let (title, price) = label
+        let affordable = price.map { food >= $0 } ?? true
+        Button(action: onTap) {
+            VStack(spacing: 1) {
+                if !info.unlocked {
+                    Image(systemName: "lock.fill").font(.system(size: 18)).foregroundStyle(.white.opacity(0.8)).frame(height: 28)
+                } else {
+                    Image(uiImage: ArtFactory.shared.turret(era: info.era ?? era, species: .hamster))
+                        .resizable().scaledToFit().frame(height: 28)
+                        .opacity(info.era == nil ? 0.45 : 1)
+                }
+                Text(title).font(Theme.font(9)).foregroundStyle(.white.opacity(0.85))
+                if let price {
+                    Text("\(price)").font(Theme.font(11)).foregroundStyle(affordable ? .white : Theme.red.mix(with: .white, by: 0.4))
+                }
+            }
+            .frame(width: 54, height: 60)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(price != nil && affordable ? Theme.gold : .white.opacity(0.2), lineWidth: price != nil && affordable ? 2 : 1))
+        }
+        .buttonStyle(PressScale())
+        .contextMenu {
+            if info.era != nil {
+                Button(role: .destructive, action: onSell) { Label("Sell turret (50%)", systemImage: "dollarsign.circle") }
+            }
+        }
+    }
+}
+
+private struct SpecialButton: View {
+    let era: Int
+    let fraction: Double
+    let action: () -> Void
+    var ready: Bool { fraction >= 1 }
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle().fill(ready ? Theme.red.gradient : Theme.panel.gradient)
+                Image(uiImage: ArtFactory.shared.meteor(era: era)).resizable().scaledToFit().padding(12)
+                    .saturation(ready ? 1 : 0.2)
+                ProgressRing(fraction: fraction, color: ready ? Theme.gold : .white.opacity(0.7), lineWidth: 4)
+                    .padding(2)
+            }
+            .frame(width: 62, height: 62)
+            .overlay(alignment: .bottom) {
+                Text(GameConfig.eras[era].special.name.uppercased())
+                    .font(Theme.font(7)).foregroundStyle(.white)
+                    .padding(.horizontal, 4).padding(.vertical, 1)
+                    .background(Capsule().fill(Color.black.opacity(0.6)))
+                    .offset(y: 6)
+            }
+        }
+        .buttonStyle(PressScale())
+        .disabled(!ready)
+    }
+}
+
+private struct HeroButton: View {
+    let general: GeneralID
+    let ready: Bool
+    let action: () -> Void
+    @State private var glow = false
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle().fill(ready ? Theme.purple.gradient : Theme.panel.gradient)
+                Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().padding(4)
+                    .saturation(ready ? 1 : 0)
+                Circle().stroke(ready ? Theme.gold : .white.opacity(0.2), lineWidth: ready ? 3 : 1)
+                    .scaleEffect(ready && glow ? 1.08 : 1)
+            }
+            .frame(width: 56, height: 56)
+            .overlay(alignment: .bottom) {
+                Text(general.ability.title.uppercased())
+                    .font(Theme.font(7)).foregroundStyle(.white)
+                    .padding(.horizontal, 4).padding(.vertical, 1)
+                    .background(Capsule().fill(Color.black.opacity(0.6)))
+                    .offset(y: 6)
+            }
+        }
+        .buttonStyle(PressScale())
+        .disabled(!ready)
+        .onAppear { withAnimation(.easeInOut(duration: 0.7).repeatForever()) { glow = true } }
+        .accessibilityLabel("\(general.ability.title): \(general.ability.detail)")
+    }
+}
+
+struct PressScale: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(.spring(response: 0.15, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Card pick
+
+private struct CardPickView: View {
+    let controller: BattleController
+    let cards: [Card]
+    let ads: AdService
+    @State private var adRerollUsed = false
+    @State private var appeared = false
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.55).ignoresSafeArea()
+            VStack(spacing: 12) {
+                OutlinedText(text: controller.cardOfferTitle, size: 24, color: Theme.gold)
+                Text(controller.isTutorial && controller.ownedCards.isEmpty ? "Cards power up your army for this battle — pick any!" : "Choose one upgrade for this battle")
+                    .font(Theme.font(13)).foregroundStyle(.white.opacity(0.85))
+                HStack(spacing: 14) {
+                    ForEach(Array(cards.enumerated()), id: \.element.id) { i, card in
+                        CardView(card: card, stacks: controller.ownedCards.filter { $0 == card.id }.count)
+                            .onTapGesture { controller.pick(card) }
+                            .offset(y: appeared ? 0 : 40)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.7).delay(Double(i) * 0.07), value: appeared)
+                    }
+                }
+                HStack(spacing: 12) {
+                    if controller.rerollsLeft > 0 {
+                        Button { controller.reroll() } label: {
+                            Label("Reroll (\(controller.rerollsLeft))", systemImage: "dice.fill")
+                        }
+                        .buttonStyle(ChunkyButtonStyle(color: Theme.teal))
+                    } else if !adRerollUsed {
+                        Button {
+                            adRerollUsed = true
+                            ads.showRewarded(placement: "card_reroll") { ok in if ok { controller.grantReroll() } }
+                        } label: {
+                            Label("Free Reroll", systemImage: "play.rectangle.fill")
+                        }
+                        .buttonStyle(ChunkyButtonStyle(color: Theme.teal))
+                    }
+                }
+            }
+            .padding()
+        }
+        .onAppear { appeared = true }
+        .id(cards.map(\.id.rawValue).joined())
+    }
+}
+
+private struct CardView: View {
+    let card: Card
+    let stacks: Int
+
+    var body: some View {
+        let rc = Theme.rarityColor(card.rarity)
+        VStack(spacing: 8) {
+            Text(String(describing: card.rarity).uppercased())
+                .font(Theme.font(10))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 8).padding(.vertical, 2)
+                .background(Capsule().fill(rc))
+            ZStack {
+                Circle().fill(rc.opacity(0.25)).frame(width: 64, height: 64)
+                Image(systemName: card.icon).font(.system(size: 30, weight: .bold)).foregroundStyle(rc.mix(with: .white, by: 0.2))
+            }
+            Text(card.title).font(Theme.font(16)).foregroundStyle(.white).multilineTextAlignment(.center)
+            Text(card.detail).font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85)).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            if stacks > 0 {
+                Text("Owned ×\(stacks)").font(Theme.font(10)).foregroundStyle(Theme.gold)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(width: 168, height: 200)
+        .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: 0x2B2140)))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(rc, lineWidth: 3))
+        .shadow(color: rc.opacity(card.rarity == .epic ? 0.7 : 0.3), radius: card.rarity == .epic ? 14 : 6)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Revive
+
+private struct ReviveView: View {
+    let controller: BattleController
+    let ads: AdService
+    @State private var loading = false
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+            VStack(spacing: 14) {
+                OutlinedText(text: "YOUR BASE IS FALLING!", size: 30, color: Theme.red)
+                Text("Watch a short video to restore 40% of your base and blast the rats at your gates.")
+                    .font(Theme.font(14)).foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center).frame(maxWidth: 380)
+                HStack(spacing: 14) {
+                    Button("Give up") { controller.declineRevive() }
+                        .buttonStyle(ChunkyButtonStyle(color: Theme.disabled))
+                        .disabled(loading)
+                    Button {
+                        loading = true
+                        ads.showRewarded(placement: "revive") { ok in
+                            loading = false
+                            if ok { controller.acceptRevive() } else { controller.declineRevive() }
+                        }
+                    } label: {
+                        Label(loading ? "Loading…" : "Revive", systemImage: "play.rectangle.fill")
+                    }
+                    .buttonStyle(ChunkyButtonStyle(color: Theme.green))
+                    .disabled(loading)
+                }
+            }
+            .padding(26)
+            .background(RoundedRectangle(cornerRadius: 26).fill(Theme.panel))
+        }
+    }
+}
+
+// MARK: - Pause
+
+private struct PauseView: View {
+    let controller: BattleController
+    let onQuit: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.55).ignoresSafeArea()
+            VStack(spacing: 14) {
+                OutlinedText(text: "Paused", size: 30)
+                if controller.sim.activeModifier != .none {
+                    Label("\(controller.sim.activeModifier.title) — \(controller.sim.activeModifier.detail)", systemImage: controller.sim.activeModifier.icon)
+                        .font(Theme.font(13)).foregroundStyle(Theme.gold)
+                }
+                if !controller.ownedCards.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(Array(controller.ownedCards.enumerated()), id: \.offset) { _, id in
+                            let card = Card.card(id)
+                            Image(systemName: card.icon)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Theme.rarityColor(card.rarity))
+                                .frame(width: 30, height: 30)
+                                .background(Circle().fill(Color.black.opacity(0.4)))
+                        }
+                    }
+                }
+                HStack(spacing: 14) {
+                    Button("Surrender", action: onQuit).buttonStyle(ChunkyButtonStyle(color: Theme.red))
+                    Button("Resume") { controller.isPaused = false }.buttonStyle(ChunkyButtonStyle(color: Theme.green))
+                }
+            }
+            .padding(24)
+            .background(RoundedRectangle(cornerRadius: 24).fill(Theme.panel))
+        }
+    }
+}
+
+// MARK: - Result
+
+private struct ResultView: View {
+    let result: BattleResult
+    let store: ProgressStore
+    let ads: AdService
+    let onContinue: () -> Void
+    @State private var doubled = false
+    @State private var loadingAd = false
+    @State private var shownStars = 0
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+            VStack(spacing: 12) {
+                if result.mode == .survival {
+                    OutlinedText(text: "SURVIVED " + String(format: "%d:%02d", Int(result.duration) / 60, Int(result.duration) % 60), size: 36, color: Theme.gold)
+                    let best = store.progress.bestSurvival ?? 0
+                    Text(abs(best - result.duration) < 0.01 ? "🏆 New personal best! Wave \(result.wave)" : "Wave \(result.wave) · Best \(String(format: "%d:%02d", Int(best) / 60, Int(best) % 60))")
+                        .font(Theme.font(15)).foregroundStyle(.white)
+                } else {
+                OutlinedText(text: result.won ? "VICTORY!" : "DEFEAT", size: 40, color: result.won ? Theme.gold : Theme.red)
+                }
+                if result.mode == .survival {
+                    EmptyView()
+                } else if result.won {
+                    HStack(spacing: 8) {
+                        ForEach(0..<3, id: \.self) { i in
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 34))
+                                .foregroundStyle(i < shownStars ? Theme.gold : Color.white.opacity(0.2))
+                                .scaleEffect(i < shownStars ? 1 : 0.7)
+                        }
+                    }
+                } else {
+                    Text("Upgrade your hamsters and try again!")
+                        .font(Theme.font(14)).foregroundStyle(.white.opacity(0.85))
+                }
+                HStack(spacing: 16) {
+                    Label(result.mode == .survival ? "Survival" : result.mode == .challenge ? "Daily Challenge" : "Stage \(result.stage)", systemImage: "flag.fill")
+                    Label("\(result.kills) kills", systemImage: "scope")
+                    Label(String(format: "%d:%02d", Int(result.duration) / 60, Int(result.duration) % 60), systemImage: "clock.fill")
+                }
+                .font(Theme.font(12)).foregroundStyle(.white.opacity(0.8))
+                if let event = LiveEvents.activeTitle() {
+                    Text(event).font(Theme.font(11)).foregroundStyle(Theme.gold)
+                }
+                CurrencyPill(icon: "🌻", value: doubled ? result.seeds * 2 : result.seeds)
+                    .scaleEffect(1.3)
+                    .padding(.vertical, 4)
+                HStack(spacing: 14) {
+                    if !doubled {
+                        Button {
+                            loadingAd = true
+                            ads.showRewarded(placement: "double_reward") { ok in
+                                loadingAd = false
+                                if ok {
+                                    store.addSeeds(result.seeds)
+                                    Analytics.log(.adRewarded(placement: "double_reward"))
+                                    withAnimation { doubled = true }
+                                }
+                            }
+                        } label: {
+                            Label(loadingAd ? "Loading…" : "×2 Seeds", systemImage: "play.rectangle.fill")
+                        }
+                        .buttonStyle(ChunkyButtonStyle(color: Theme.purple))
+                        .disabled(loadingAd)
+                    }
+                    Button(result.won ? "Next" : "Continue", action: onContinue)
+                        .buttonStyle(ChunkyButtonStyle(color: Theme.green))
+                }
+            }
+            .padding(28)
+            .background(RoundedRectangle(cornerRadius: 28).fill(Theme.panel))
+        }
+        .onAppear {
+            for i in 0..<result.stars {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 + Double(i) * 0.25) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { shownStars = i + 1 }
+                    Haptics.tap()
+                }
+            }
+        }
+    }
+}

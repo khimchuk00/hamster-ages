@@ -1,0 +1,72 @@
+{
+  "identifier": "8C1F2A7E",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "Removes interstitial ads forever.",
+          "displayName": "No Ads",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.removeads",
+      "referenceName": "No Ads",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": false,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "3,000 seeds and no interstitial ads.",
+          "displayName": "Starter Pack",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.starterpack",
+      "referenceName": "Starter Pack",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "1,200 sunflower seeds.",
+          "displayName": "Seed Bag",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.seeds.small",
+      "referenceName": "Seed Bag",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "6740000004",
+      "localizations": [
+        {
+          "description": "8,000 sunflower seeds.",
+          "displayName": "Seed Barrel",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.seeds.large",
+      "referenceName": "Seed Barrel",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {},
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}
