@@ -494,6 +494,9 @@
     "%lld/%lld" : {
       "shouldTranslate" : false
     },
+    "%lld★" : {
+      "shouldTranslate" : false
+    },
     "+%lld collected!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4775,6 +4778,77 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kısım %lld"
+          }
+        }
+      }
+    },
+    "Chapter chest: %lld stars" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скриня розділу: %lld зірок"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapiteltruhe: %lld Sterne"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cofre del capítulo: %lld estrellas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffre du chapitre : %lld étoiles"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forziere del capitolo: %lld stelle"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baú do capítulo: %lld estrelas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章の宝箱：星%lld個"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "챕터 상자: 별 %lld개"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章节宝箱：%lld星"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "章節寶箱：%lld星"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm sandığı: %lld yıldız"
           }
         }
       }

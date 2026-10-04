@@ -98,6 +98,8 @@ struct PlayerProgress: Codable {
     var piggySeeds: Int?
     /// Best stars per stage on Hard replays.
     var hardStars: [Int: Int]?
+    /// Chapter chests already opened, as "chapter-tier" keys (tier 0 = 15 stars, 1 = 30 stars).
+    var chapterChests: [String]?
 
     var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
     func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
@@ -236,6 +238,34 @@ final class ProgressStore {
         advanceQuest(.useSpecial, by: stats.specialsUsed)
         advanceQuest(.evolve, by: stats.evolutions)
         save()
+    }
+
+    // MARK: Chapter chests
+
+    /// Stars needed in a chapter (Normal) for each chest tier.
+    static let chestStars = [15, 30]
+
+    func chapterStars(_ chapter: Int) -> Int {
+        (1...10).reduce(0) { $0 + (progress.stars[chapter * 10 + $1] ?? 0) }
+    }
+
+    func chestClaimed(chapter: Int, tier: Int) -> Bool { (progress.chapterChests ?? []).contains("\(chapter)-\(tier)") }
+
+    func chestReady(chapter: Int, tier: Int) -> Bool {
+        !chestClaimed(chapter: chapter, tier: tier) && chapterStars(chapter) >= ProgressStore.chestStars[tier]
+    }
+
+    static func chestSeeds(chapter: Int, tier: Int) -> Int { (tier == 0 ? 600 : 1500) * (chapter + 1) }
+
+    /// Opens a chapter chest: seeds, and the 30-star chest also opens a hero crate.
+    func claimChest(chapter: Int, tier: Int) -> (seeds: Int, crate: CrateResult?)? {
+        guard chestReady(chapter: chapter, tier: tier) else { return nil }
+        progress.chapterChests = (progress.chapterChests ?? []) + ["\(chapter)-\(tier)"]
+        let seeds = ProgressStore.chestSeeds(chapter: chapter, tier: tier)
+        progress.seeds += seeds
+        let crate = tier == 1 ? openCrate(free: false, questBonus: true) : nil
+        save()
+        return (seeds, crate)
     }
 
     /// Hard mode opens for a chapter once all its stages are cleared.

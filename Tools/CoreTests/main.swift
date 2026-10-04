@@ -278,6 +278,12 @@ MainActor.assumeIsolated {
     check(!store.piggyBreakable, "piggy needs 1,500 before it can be broken")
     for _ in 0..<40 { store.recordBattle(stage: 3, won: true, seeds: 1000, stars: 3) }
     check(store.piggy == ProgressStore.piggyCap, "piggy is capped")
+    for st in 1...5 { store.recordBattle(stage: st, won: true, seeds: 0, stars: 3) }
+    check(store.chapterStars(0) >= 15 && store.chestReady(chapter: 0, tier: 0) && !store.chestReady(chapter: 0, tier: 1),
+          "15 stars open the first chapter chest")
+    let chestSeeds = store.claimChest(chapter: 0, tier: 0)?.seeds
+    check(chestSeeds == ProgressStore.chestSeeds(chapter: 0, tier: 0) && store.claimChest(chapter: 0, tier: 0) == nil,
+          "a chapter chest opens once")
     let seedsBeforePiggy = store.progress.seeds
     check(store.breakPiggy() == ProgressStore.piggyCap && store.progress.seeds == seedsBeforePiggy + ProgressStore.piggyCap && store.piggy == 0,
           "breaking the piggy pours it into the wallet")

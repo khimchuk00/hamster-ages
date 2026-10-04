@@ -8,6 +8,7 @@ struct CampaignMapView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var chapter: Int
     @State private var hard = false
+    @State private var toast: String?
     @State private var selected: Int?
     @State private var pulse = false
 
@@ -76,6 +77,15 @@ struct CampaignMapView: View {
                     }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
+
+                if let toast {
+                    Text(toast).font(Theme.font(20)).foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 20).padding(.vertical, 10)
+                        .background(Capsule().fill(Theme.gold))
+                        .shadow(radius: 6)
+                        .transition(.scale.combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
             }
         }
         .onAppear { withAnimation(.easeInOut(duration: 0.7).repeatForever()) { pulse = true } }
@@ -93,6 +103,11 @@ struct CampaignMapView: View {
                 .font(Theme.font(13)).foregroundStyle(Theme.gold)
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(Capsule().fill(Theme.panel))
+            if !hard {
+                HStack(spacing: 6) {
+                    ForEach(0..<ProgressStore.chestStars.count, id: \.self) { tier in chestButton(tier) }
+                }
+            }
             if hardOpen {
                 HStack(spacing: 0) {
                     ForEach([false, true], id: \.self) { h in
@@ -112,6 +127,7 @@ struct CampaignMapView: View {
                 .background(Capsule().fill(Theme.panel))
             }
             Spacer()
+            ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
                 ForEach(0...(lastChapter + 1), id: \.self) { c in
                     let locked = c > lastChapter
@@ -134,11 +150,41 @@ struct CampaignMapView: View {
                     .buttonStyle(.plain)
                 }
             }
+            }
+            .frame(width: CGFloat(min(lastChapter + 2, 6)) * 38)
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
                     .frame(width: 36, height: 36).background(Circle().fill(Theme.panel))
             }
         }
+    }
+
+    private func chestButton(_ tier: Int) -> some View {
+        let claimed = store.chestClaimed(chapter: chapter, tier: tier)
+        let ready = store.chestReady(chapter: chapter, tier: tier)
+        return Button {
+            guard let r = store.claimChest(chapter: chapter, tier: tier) else { Haptics.fail(); return }
+            Haptics.success()
+            Sound.shared.play(.win)
+            var text = "+\(r.seeds) 🌻"
+            if let c = r.crate { text += " · " + (c.isNew ? L10n.f("%@ joined!", c.general.name) : L10n.f("%@ Lv %lld", c.general.name, c.newLevel)) }
+            withAnimation(.spring) { toast = text }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { withAnimation { toast = nil } }
+        } label: {
+            HStack(spacing: 3) {
+                Image(systemName: claimed ? "checkmark.circle.fill" : (tier == 0 ? "gift.fill" : "shippingbox.fill"))
+                    .font(.system(size: 13, weight: .black))
+                Text("\(ProgressStore.chestStars[tier])★").font(Theme.font(11))
+            }
+            .foregroundStyle(ready ? Theme.ink : .white.opacity(claimed ? 0.5 : 0.85))
+            .padding(.horizontal, 8).padding(.vertical, 5)
+            .background(Capsule().fill(ready ? Theme.gold : Theme.panel))
+            .overlay(Capsule().stroke(ready ? Color.white : .clear, lineWidth: 1.5))
+            .scaleEffect(ready && pulse ? 1.08 : 1)
+        }
+        .buttonStyle(.plain)
+        .disabled(claimed)
+        .accessibilityLabel(Text(L10n.f("Chapter chest: %lld stars", ProgressStore.chestStars[tier])))
     }
 
     /// A gentle zig-zag across the screen.

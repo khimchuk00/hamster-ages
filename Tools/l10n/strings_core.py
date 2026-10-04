@@ -329,3 +329,4 @@ T("Fills up as you battle", "Наповнюється з кожним боєм",
 T("Break at %lld 🌻", "Можна розбити з %lld 🌻", "Knackbar ab %lld 🌻", "Se rompe con %lld 🌻", "Cassable à %lld 🌻", "Si rompe a %lld 🌻", "Quebra com %lld 🌻", "%lld 🌻で割れる", "%lld 🌻부터 깰 수 있어요", "满%lld 🌻可砸开", "滿%lld 🌻可砸開", "%lld 🌻 olunca kırılır")
 T("Hard", "Важко", "Schwer", "Difícil", "Difficile", "Difficile", "Difícil", "ハード", "어려움", "困难", "困難", "Zor")
 T("Normal", "Звичайно", "Normal", "Normal", "Normal", "Normale", "Normal", "ノーマル", "보통", "普通", "普通", "Normal")
+T("Chapter chest: %lld stars", "Скриня розділу: %lld зірок", "Kapiteltruhe: %lld Sterne", "Cofre del capítulo: %lld estrellas", "Coffre du chapitre : %lld étoiles", "Forziere del capitolo: %lld stelle", "Baú do capítulo: %lld estrelas", "章の宝箱：星%lld個", "챕터 상자: 별 %lld개", "章节宝箱：%lld星", "章節寶箱：%lld星", "Bölüm sandığı: %lld yıldız")
