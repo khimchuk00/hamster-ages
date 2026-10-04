@@ -118,7 +118,7 @@ public enum Stance: Int, CaseIterable, Codable {
 
 /// Named enemy commanders. Each one plays differently, so stages feel like fights against someone.
 public enum RatGeneral: String, CaseIterable, Codable {
-    case gnawsworth, skritch, whiskerbane, squeak, cheddar, ratKing
+    case gnawsworth, skritch, whiskerbane, squeak, cheddar, grimtail, sneakpaw, ratKing
 
     public var name: String {
         switch self {
@@ -127,6 +127,8 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .whiskerbane: return L10n.t("Baroness Whiskerbane")
         case .squeak: return L10n.t("Professor Fizzle")
         case .cheddar: return L10n.t("Big Cheddar")
+        case .grimtail: return L10n.t("General Grimtail")
+        case .sneakpaw: return L10n.t("Lady Sneakpaw")
         case .ratKing: return L10n.t("The Rat King")
         }
     }
@@ -139,6 +141,8 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .whiskerbane: return L10n.t("Turtles behind turrets")
         case .squeak: return L10n.t("Evolves fast")
         case .cheddar: return L10n.t("Endless cheap swarms")
+        case .grimtail: return L10n.t("Loves big guns")
+        case .sneakpaw: return L10n.t("Strikes from afar, fast")
         case .ratKing: return L10n.t("Leads giant royal rats")
         }
     }
@@ -150,6 +154,8 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .whiskerbane: return L10n.t("Come closer, darlings. My towers are hungry.")
         case .squeak: return L10n.t("Science! My rats evolve faster than yours.")
         case .cheddar: return L10n.t("More rats! MORE! Cheap and cheerful!")
+        case .grimtail: return L10n.t("Load the big ones. Fire at will!")
+        case .sneakpaw: return L10n.t("You won't even see us coming, fluffies.")
         case .ratKing: return L10n.t("Kneel before your king, little hamsters!")
         }
     }
@@ -162,6 +168,8 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .whiskerbane: return 0x8E24AA
         case .squeak: return 0x00897B
         case .cheddar: return 0xF9A825
+        case .grimtail: return 0x6D4C41
+        case .sneakpaw: return 0x37474F
         case .ratKing: return 0xB0306A
         }
     }
@@ -169,7 +177,7 @@ public enum RatGeneral: String, CaseIterable, Codable {
     public static func forStage(_ stage: Int) -> RatGeneral {
         if stage % 5 == 0 { return .ratKing }
         if stage <= 2 { return .gnawsworth }
-        let rotation: [RatGeneral] = [.skritch, .whiskerbane, .squeak, .cheddar, .gnawsworth]
+        let rotation: [RatGeneral] = [.skritch, .whiskerbane, .squeak, .cheddar, .grimtail, .sneakpaw, .gnawsworth]
         // Count only non-boss stages from 3 so every general gets a turn before repeating.
         let index = (stage - 3) - (stage / 5)
         return rotation[index % rotation.count]
@@ -204,6 +212,13 @@ public enum RatGeneral: String, CaseIterable, Codable {
             p.weights = [0.36, 0.46, 0.18]
             p.evolveDelay = 0.4
             p.massBeforeCharge = 4
+        case .grimtail:
+            p.weights = [0.32, 0.30, 0.38]
+            p.turretEager = true
+        case .sneakpaw:
+            p.weights = [0.38, 0.54, 0.08]
+            p.specialCrowd = 3
+            p.evolveDelay = 0.8
         case .cheddar:
             p.weights = [0.72, 0.23, 0.05]
             p.specialCrowd = 6
@@ -218,6 +233,11 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .squeak:
             m.xpGain *= 1.12
             m.income *= 0.96
+        case .grimtail:
+            m.roleHP[UnitRole.heavy.rawValue] *= 1.1
+        case .sneakpaw:
+            m.rangedRange *= 1.1
+            m.moveSpeed *= 1.06
         case .cheddar:
             m.unitCost *= 0.9
             m.unitHP *= 0.94

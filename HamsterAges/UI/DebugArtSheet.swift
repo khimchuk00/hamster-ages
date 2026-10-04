@@ -42,14 +42,14 @@ struct DebugArtSheet: View {
                 ShareCard(result: sample).scaleEffect(1.2)
             case .ratGenerals:
                 VStack(spacing: 14) {
-                    HStack(spacing: 14) {
+                    HStack(spacing: 6) {
                         ForEach(RatGeneral.allCases, id: \.self) { g in
                             VStack(spacing: 4) {
-                                RatGeneralBadge(general: g, size: 96)
+                                RatGeneralBadge(general: g, size: 78)
                                 Text(g.name).font(Theme.font(12)).foregroundStyle(Theme.ink)
                                 Text(g.style).font(Theme.font(10)).foregroundStyle(Theme.ink.opacity(0.7))
                             }
-                            .frame(width: 120)
+                            .frame(width: 92)
                         }
                     }
                     HStack(spacing: 10) {

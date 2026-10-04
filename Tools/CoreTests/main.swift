@@ -404,8 +404,8 @@ do {
     check(RatTrait.chance(stage: 40) <= 0.3, "elite share is capped")
     check(RatGeneral.forStage(1) == .gnawsworth && RatGeneral.forStage(5) == .ratKing && RatGeneral.forStage(10) == .ratKing,
           "first stages get the gentle general, boss stages the Rat King")
-    let rotation = (3...12).filter { $0 % 5 != 0 }.map(RatGeneral.forStage)
-    check(Set(rotation).count == 5, "every rat general shows up before repeating")
+    let rotation = (3...14).filter { $0 % 5 != 0 }.map(RatGeneral.forStage)
+    check(Set(rotation).count == RatGeneral.allCases.count - 1, "every rat general shows up before repeating")
 
     // Elites appear, shields absorb hits, plague rats split.
     // Several seeds (all deterministic) so the check doesn't hinge on one battle's dice.

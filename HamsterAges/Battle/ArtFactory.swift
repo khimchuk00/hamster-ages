@@ -170,6 +170,8 @@ final class ArtFactory {
                 case .whiskerbane: self.drawCritter(ctx, .rat, era: 1, at: o, scale: 1, hat: false, weapon: .ranged)
                 case .squeak: self.drawCritter(ctx, .rat, era: 4, at: o, scale: 1, hat: false, weapon: .ranged)
                 case .cheddar: self.drawCritter(ctx, .rat, era: 0, at: o, scale: 1, hat: false, weapon: .melee)
+                case .grimtail: self.drawCritter(ctx, .rat, era: 2, at: o, scale: 1, hat: false, weapon: .ranged)
+                case .sneakpaw: self.drawCritter(ctx, .rat, era: 1, at: o, scale: 1, hat: false, weapon: .melee)
                 case .ratKing: self.drawCritter(ctx, .rat, era: 3, at: o, scale: 1, hat: false, weapon: .melee)
                 }
                 let eye = CGPoint(x: o.x + 44, y: o.y + 33.5)
@@ -223,6 +225,30 @@ final class ArtFactory {
                     for (x, y, r) in [(24.0, 17.0, 2.2), (32.0, 20.0, 1.6), (28.0, 12.0, 1.3)] as [(CGFloat, CGFloat, CGFloat)] {
                         self.fill(self.circle(o.x + x, o.y + y, r), UIColor(hex: 0xE0A800))
                     }
+                case .grimtail:
+                    // Bicorne hat with a cockade, and a battle scar
+                    let hat = UIBezierPath()
+                    hat.move(to: CGPoint(x: o.x + 12, y: o.y + 24))
+                    hat.addQuadCurve(to: CGPoint(x: o.x + 46, y: o.y + 22), controlPoint: CGPoint(x: o.x + 29, y: o.y + 4))
+                    hat.addQuadCurve(to: CGPoint(x: o.x + 12, y: o.y + 24), controlPoint: CGPoint(x: o.x + 29, y: o.y + 18))
+                    self.gradient(hat, UIColor(hex: 0x4E342E), UIColor(hex: 0x212121))
+                    self.stroke(hat, ol, 1.4)
+                    self.fill(self.circle(o.x + 29, o.y + 15, 2.6), UIColor(hex: 0xE04848), stroke: ol, width: 0.8)
+                    self.line(CGPoint(x: eye.x - 4, y: eye.y - 7), CGPoint(x: eye.x + 3, y: eye.y + 6), UIColor(hex: 0xB0306A), width: 1.4)
+                case .sneakpaw:
+                    // Dark hood and a bandit mask
+                    let hood = UIBezierPath()
+                    hood.move(to: CGPoint(x: o.x + 10, y: o.y + 40))
+                    hood.addQuadCurve(to: CGPoint(x: o.x + 30, y: o.y + 12), controlPoint: CGPoint(x: o.x + 8, y: o.y + 16))
+                    hood.addQuadCurve(to: CGPoint(x: o.x + 52, y: o.y + 30), controlPoint: CGPoint(x: o.x + 48, y: o.y + 12))
+                    hood.addQuadCurve(to: CGPoint(x: o.x + 34, y: o.y + 26), controlPoint: CGPoint(x: o.x + 42, y: o.y + 24))
+                    hood.addQuadCurve(to: CGPoint(x: o.x + 22, y: o.y + 42), controlPoint: CGPoint(x: o.x + 22, y: o.y + 28))
+                    hood.close()
+                    self.gradient(hood, UIColor(hex: 0x546E7A), UIColor(hex: 0x263238))
+                    self.stroke(hood, ol, 1.3)
+                    let mask = UIBezierPath(roundedRect: CGRect(x: eye.x - 8, y: eye.y - 4, width: 15, height: 7), cornerRadius: 3.5)
+                    UIColor(hex: 0x1D1A22, alpha: 0.85).setFill(); mask.fill()
+                    self.fill(self.circle(eye.x + 1, eye.y, 1.6), UIColor(hex: 0xFFEB3B))
                 case .ratKing:
                     let crown = UIBezierPath()
                     crown.move(to: CGPoint(x: o.x + 17, y: o.y + 25)); crown.addLine(to: CGPoint(x: o.x + 15, y: o.y + 9))
