@@ -214,6 +214,8 @@ public final class BattleSimulation {
     public let mode: BattleMode
     /// The rat commander for this battle (AI personality + taunts).
     public let ratGeneral: RatGeneral
+    /// How this battle is won (Daily Challenge twists); set before the first step.
+    public var goal: BattleGoal = .destroyBase
     /// Siege Fog modifier.
     public private(set) var turretsDisabled = false
     public var activeModifier: StageModifier { mode.hasStageRules ? difficulty.modifier : .none }
@@ -370,7 +372,8 @@ public final class BattleSimulation {
     @discardableResult
     public func buyTurret(slot: Int, for side: Side) -> Bool {
         let s = state(side)
-        guard winner == nil, !isOvertime, !turretsDisabled, slot < s.turrets.count, s.turrets[slot].unlocked else { return false }
+        guard winner == nil, !isOvertime, !turretsDisabled, slot < s.turrets.count, s.turrets[slot].unlocked,
+              !(side == .player && goal == .noTurrets) else { return false }
         if let e = s.turrets[slot].era, e >= s.era { return false }
         let refund = s.turrets[slot].era.map { GameConfig.eras[$0].turret.cost * 0.5 } ?? 0
         let cost = turretCost(for: side)
@@ -397,7 +400,7 @@ public final class BattleSimulation {
     public func unlockSlot(for side: Side) -> Bool {
         let cost = slotUnlockCost(for: side)
         let s = state(side)
-        guard winner == nil, !s.turrets[1].unlocked, s.food >= cost else { return false }
+        guard winner == nil, !s.turrets[1].unlocked, s.food >= cost, !(side == .player && goal == .noTurrets) else { return false }
         mutate(side) {
             $0.food -= cost
             $0.turrets[1].unlocked = true
@@ -478,6 +481,13 @@ public final class BattleSimulation {
         guard winner == nil, !awaitingRevive else { return }
         let wasOvertime = isOvertime
         time += dt
+        if let limit = goal.seconds, time >= limit {
+            // Hold Out: surviving is winning. Beat the Clock: out of time is losing.
+            let w: Side = goal == .holdOut ? .player : .enemy
+            winner = w
+            events.append(.gameOver(winner: w))
+            return
+        }
         if !wasOvertime && isOvertime { events.append(.overtimeStarted) }
         if mode.hasStageRules && time >= GameConfig.suddenDeathStart {
             if time - dt < GameConfig.suddenDeathStart { events.append(.suddenDeathStarted) }

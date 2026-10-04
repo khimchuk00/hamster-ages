@@ -226,3 +226,37 @@ public enum RatGeneral: String, CaseIterable, Codable {
         }
     }
 }
+
+// MARK: - Battle goals
+
+/// Alternative win conditions (Daily Challenge) that reuse the same battlefield.
+public enum BattleGoal: String, CaseIterable, Codable {
+    case destroyBase, holdOut, beatTheClock, noTurrets
+
+    public var title: String {
+        switch self {
+        case .destroyBase: return L10n.t("Destroy the rat base")
+        case .holdOut: return L10n.t("Hold Out")
+        case .beatTheClock: return L10n.t("Beat the Clock")
+        case .noTurrets: return L10n.t("No Turrets")
+        }
+    }
+
+    public var detail: String {
+        switch self {
+        case .destroyBase: return L10n.t("Destroy the rat base")
+        case .holdOut: return L10n.t("Survive for 3:00 — the rats give up")
+        case .beatTheClock: return L10n.t("Destroy the rat base before 4:00")
+        case .noTurrets: return L10n.t("Your army fights without turrets")
+        }
+    }
+
+    /// Time limit that decides the battle, if any.
+    public var seconds: Double? {
+        switch self {
+        case .holdOut: return 180
+        case .beatTheClock: return 240
+        case .destroyBase, .noTurrets: return nil
+        }
+    }
+}

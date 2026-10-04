@@ -156,4 +156,10 @@ enum DailyChallenge {
     }
 
     static func reward(stage: Int) -> Int { 2 * (50 + 20 * stage) }
+
+    /// Every day also has a win condition twist (rotates independently of the modifier).
+    static func goal(for date: Date) -> BattleGoal {
+        let pool = BattleGoal.allCases
+        return pool[(QuestBoard.dayKey(date) / 2) % pool.count]
+    }
 }

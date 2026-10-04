@@ -283,7 +283,8 @@ struct HomeView: View {
                                 Button { onPlay(.challenge) } label: {
                                     VStack(spacing: 0) {
                                         Text("DAILY").font(Theme.font(13)).lineLimit(1).minimumScaleFactor(0.5)
-                                        Text(isOpen ? DailyChallenge.modifier(for: .now).title : L10n.t("Cleared ✓")).font(Theme.font(9)).lineLimit(1).minimumScaleFactor(0.6)
+                                        Text(isOpen ? (DailyChallenge.goal(for: .now) == .destroyBase ? DailyChallenge.modifier(for: .now).title
+                                                                                          : DailyChallenge.goal(for: .now).title) : L10n.t("Cleared ✓")).font(Theme.font(9)).lineLimit(1).minimumScaleFactor(0.6)
                                     }
                                     .frame(width: 86)
                                 }

@@ -454,5 +454,25 @@ do {
     }
 }
 
+// MARK: Battle goals
+do {
+    let h = BattleSimulation(difficulty: StageDifficulty(stage: 8), playerMods: SideModifiers(), seed: 4, mode: .challenge)
+    h.goal = .holdOut
+    playerBot(h)
+    h.reviveEnabled = false
+    run(h, seconds: 400)
+    check(h.winner == .player ? h.time <= 180.1 : h.time < 180, "Hold Out: surviving 3:00 wins")
+    let c = BattleSimulation(difficulty: StageDifficulty(stage: 30), playerMods: SideModifiers(), seed: 4, mode: .challenge)
+    c.goal = .beatTheClock
+    run(c, seconds: 400)
+    check(c.winner == .enemy && c.time <= 240.1, "Beat the Clock: time out loses")
+    let n = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 4, mode: .challenge)
+    n.goal = .noTurrets
+    run(n, seconds: 30)
+    check(!n.buyTurret(slot: 0, for: .player) && !n.unlockSlot(for: .player), "No Turrets: the player can't build turrets")
+    check(Set((0..<8).map { DailyChallenge.goal(for: Date(timeIntervalSince1970: Double($0) * 86_400)) }).count == BattleGoal.allCases.count,
+          "daily goals rotate through every twist")
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

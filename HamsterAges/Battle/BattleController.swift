@@ -119,6 +119,7 @@ final class BattleController {
                                mode: mode)
         if mode == .challenge {
             for id in DailyChallenge.startingCards(for: today) { sim.applyCard(id, to: .player) }
+            sim.goal = DailyChallenge.goal(for: today)
         }
         sim.setHeroAbility(general?.ability, for: .player)
         rerollsLeft = progress.level(.charm)
@@ -232,8 +233,9 @@ final class BattleController {
         set(\.slotUnlockCost, Int(sim.slotUnlockCost(for: .player)))
         set(\.turretSlots, p.turrets.map { TurretSlotInfo(unlocked: $0.unlocked, era: $0.era) })
         set(\.ownedCards, p.cards)
-        let t = Int(sim.time)
-        set(\.clock, String(format: "%d:%02d", t / 60, t % 60))
+        // Timed goals count down instead of up.
+        let t = sim.goal.seconds.map { Int(max(0, $0 - sim.time).rounded(.up)) } ?? Int(sim.time)
+        set(\.clock, (sim.goal.seconds != nil ? "⏱ " : "") + String(format: "%d:%02d", t / 60, t % 60))
         set(\.isOvertime, sim.isOvertime)
         set(\.wave, sim.survivalWave)
         set(\.heroReady, p.heroReady)
@@ -420,6 +422,12 @@ final class BattleController {
         sim.applyCard(card.id, to: .player)
         if firstPick, sim.activeModifier != .none {
             flashBanner(sim.activeModifier.title.localizedUppercase + "!")
+        }
+        if firstPick && sim.goal != .destroyBase {
+            let text = sim.goal.detail.localizedUppercase
+            DispatchQueue.main.asyncAfter(deadline: .now() + (sim.activeModifier != .none ? 1.8 : 0.1)) { [weak self] in
+                self?.flashBanner(text)
+            }
         }
         if firstPick && !isTutorial {
             let line = ratGeneral.taunt
