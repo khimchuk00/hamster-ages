@@ -37,6 +37,7 @@ public final class UnitEntity {
     /// Rat King: > 0 while winding up a ground slam.
     public internal(set) var windup: Double = 0
     var slamCooldown = GameConfig.bossSlamFirst
+    var healCooldown = 1.0
     public var isAlive: Bool { hp > 0 }
     /// Visual size relative to a normal unit of the same role.
     public var sizeScale: Double { isBoss ? 1.4 : isMinion ? 0.7 : 1 }
@@ -53,6 +54,7 @@ public final class UnitEntity {
         switch self.trait {
         case .swift?: hpK *= 0.7; speedK *= 1.6
         case .armored?: hpK *= 1.1; speedK *= 0.92
+        case .medic?: dmgK *= 0.5
         case .shielded?, .plague?: break
         case nil: break
         }
@@ -117,6 +119,10 @@ public enum BattleEvent {
     /// The Rat King raises its paws — a slam lands in `GameConfig.bossSlamWindup` seconds.
     case bossWindup(unitID: Int, x: Double, radius: Double)
     case bossSlam(unitID: Int, x: Double, radius: Double)
+    /// Counter feedback: the hit was weak (`effective` = false) or strong against this rat's trait.
+    case counterHit(unitID: Int, effective: Bool)
+    /// A Rat Medic patched up an ally.
+    case healed(unitID: Int, by: Int, amount: Double)
     case waveUp(level: Int)
     case reviveOffered
     case suddenDeathStarted
@@ -528,11 +534,25 @@ public final class BattleSimulation {
     }
 
     /// Rolls an elite trait for a freshly trained rat.
-    private func rollTrait(_ side: Side) -> RatTrait? {
+    private func rollTrait(_ side: Side, role: UnitRole) -> RatTrait? {
         guard side == .enemy else { return nil }
-        let odds = eliteOdds
-        guard !odds.pool.isEmpty, Double.random(in: 0..<1, using: &rng) < odds.chance else { return nil }
-        return odds.pool.randomElement(using: &rng)
+        let pool = eliteOdds.pool.filter { $0.fits(role) }
+        guard !pool.isEmpty, Double.random(in: 0..<1, using: &rng) < eliteOdds.chance else { return nil }
+        return pool.randomElement(using: &rng)
+    }
+
+    /// Rat Medic: periodically heals the most hurt ally in reach.
+    private func updateMedic(_ u: UnitEntity, _ dt: Double) {
+        u.healCooldown -= dt
+        guard u.healCooldown <= 0 else { return }
+        let patient = units.filter {
+            $0.side == u.side && $0.isAlive && $0 !== u && $0.hp < $0.maxHP && abs($0.x - u.x) <= RatTrait.medicRange
+        }.min { $0.hp / $0.maxHP < $1.hp / $1.maxHP }
+        guard let p = patient else { u.healCooldown = 0.3; return }
+        let amount = min(p.maxHP - p.hp, p.maxHP * RatTrait.medicHeal)
+        p.hp += amount
+        u.healCooldown = RatTrait.medicInterval
+        events.append(.healed(unitID: p.id, by: u.id, amount: amount))
     }
 
     /// A Plague Rat bursts into two small rats where it fell.
@@ -590,7 +610,7 @@ public final class BattleSimulation {
                 $0.queue.removeFirst()
                 $0.trainProgress = 0
             }
-            spawn(q.role, era: q.era, side: side, trait: rollTrait(side))
+            spawn(q.role, era: q.era, side: side, trait: rollTrait(side, role: q.role))
         }
     }
 
@@ -653,6 +673,7 @@ public final class BattleSimulation {
                 u.cooldown -= dt
                 defer { ahead = u }
                 if u.isBoss && updateBossSlam(u, dt) { continue }
+                if u.trait == .medic { updateMedic(u, dt) }
 
                 if stance == .fallBack, let line, (u.x - line) * dir > 0.5 {
                     // Disengage and walk home; slightly slower than the advance so it's a real choice.
@@ -827,7 +848,15 @@ public final class BattleSimulation {
             }
         }
         var dealt = amount * target.armor
-        if target.trait == .armored && kind == .pierce { dealt *= GameConfig.armoredPierceFactor }
+        if target.trait == .armored {
+            if kind == .pierce {
+                dealt *= GameConfig.armoredPierceFactor
+                events.append(.counterHit(unitID: target.id, effective: false))
+            } else if kind == .heavy {
+                dealt *= GameConfig.armoredHeavyFactor
+                events.append(.counterHit(unitID: target.id, effective: true))
+            }
+        }
         target.hp -= dealt
         events.append(.unitHit(unitID: target.id, damage: dealt))
         guard !target.isAlive else { return }

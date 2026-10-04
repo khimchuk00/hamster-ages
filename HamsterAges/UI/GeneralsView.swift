@@ -135,12 +135,17 @@ private struct GeneralDetail: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().frame(height: 64)
-                .colorMultiply(level > 0 ? .white : .black)
-            Text(general.name).font(Theme.font(17)).foregroundStyle(.white)
-            Text(general.rarity.title.localizedUppercase).font(Theme.font(10)).foregroundStyle(.white)
-                .padding(.horizontal, 8).padding(.vertical, 2)
-                .background(Capsule().fill(rarityColor(general.rarity)))
+            // Portrait beside the name keeps the whole card (incl. "Next:") visible without scrolling.
+            HStack(spacing: 8) {
+                Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().frame(height: 52)
+                    .colorMultiply(level > 0 ? .white : .black)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(general.name).font(Theme.font(16)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(general.rarity.title.localizedUppercase).font(Theme.font(10)).foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
+                        .background(Capsule().fill(rarityColor(general.rarity)))
+                }
+            }
             Text(general.effectText(level: max(1, level)))
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85)).multilineTextAlignment(.center)
@@ -157,7 +162,7 @@ private struct GeneralDetail: View {
             }
             if level > 0 {
                 Button(equipped ? "Equipped" : "Equip", action: onEquip)
-                    .buttonStyle(ChunkyButtonStyle(color: equipped ? Theme.disabled : Theme.teal, cornerRadius: 12, depth: 3))
+                    .buttonStyle(ChunkyButtonStyle(color: equipped ? Theme.disabled : Theme.teal, cornerRadius: 12, depth: 3, compact: true))
                     .disabled(equipped)
             } else {
                 Text("Find in a crate").font(Theme.font(12)).foregroundStyle(.white.opacity(0.6))

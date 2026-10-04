@@ -103,6 +103,8 @@ public enum GameConfig {
     public static let bossSlamDamage: Double = 1.8
     /// Armored rats take this share of arrow/bullet damage.
     public static let armoredPierceFactor: Double = 0.45
+    /// ...and this much from cannons, shells and heavy blows.
+    public static let armoredHeavyFactor: Double = 1.3
     /// Survival mode: endless, enemy grows stronger every interval; unlocked after beating stage 10.
     public static let survivalBaseStage = 8
     public static let survivalUnlockStage = 11

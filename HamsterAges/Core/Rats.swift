@@ -5,7 +5,7 @@ import Foundation
 /// Elite rats appear from stage 4. Each trait has a clear counter so the player has a reason to adapt
 /// their army mix instead of spamming one unit.
 public enum RatTrait: String, CaseIterable, Codable {
-    case swift, armored, shielded, plague
+    case swift, armored, shielded, plague, medic
 
     public var title: String {
         switch self {
@@ -13,6 +13,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .armored: return L10n.t("Armored Rat")
         case .shielded: return L10n.t("Shield Rat")
         case .plague: return L10n.t("Plague Rat")
+        case .medic: return L10n.t("Rat Medic")
         }
     }
 
@@ -23,6 +24,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .armored: return L10n.t("Arrows and bullets barely scratch it")
         case .shielded: return L10n.t("Its bubble blocks the first 3 hits")
         case .plague: return L10n.t("Bursts into 2 small rats when it falls")
+        case .medic: return L10n.t("Heals hurt rats around it")
         }
     }
 
@@ -33,6 +35,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .armored: return L10n.t("Counter: melee and heavy units")
         case .shielded: return L10n.t("Counter: many quick hits (ranged, turrets)")
         case .plague: return L10n.t("Counter: splash damage and specials")
+        case .medic: return L10n.t("Counter: take it out first — specials, long range")
         }
     }
 
@@ -42,6 +45,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .armored: return "shield.fill"
         case .shielded: return "circle.circle.fill"
         case .plague: return "allergens.fill"
+        case .medic: return "heart.fill"
         }
     }
 
@@ -52,10 +56,18 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .armored: return 7
         case .shielded: return 9
         case .plague: return 12
+        case .medic: return 6
         }
     }
 
     public static let shieldHits = 3
+    /// Medic: heal share of max HP, how often, and how far.
+    public static let medicHeal = 0.12
+    public static let medicInterval = 2.2
+    public static let medicRange = 150.0
+
+    /// Medics only come as ranged rats (they hang back).
+    public func fits(_ role: UnitRole) -> Bool { self != .medic || role == .ranged }
 
     public static func pool(stage: Int) -> [RatTrait] { allCases.filter { stage >= $0.firstStage } }
 
@@ -113,7 +125,7 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .gnawsworth: return L10n.t("Captain Gnawsworth")
         case .skritch: return L10n.t("Warlord Skritch")
         case .whiskerbane: return L10n.t("Baroness Whiskerbane")
-        case .squeak: return L10n.t("Professor Squeak")
+        case .squeak: return L10n.t("Professor Fizzle")
         case .cheddar: return L10n.t("Big Cheddar")
         case .ratKing: return L10n.t("The Rat King")
         }

@@ -60,6 +60,7 @@ final class BattleScene: SKScene {
     private var activeTokens = 0
     private var smokeTimer: TimeInterval = 0
     private var lastBaseHaptic: TimeInterval = 0
+    private var lastCounterText: TimeInterval = 0
 
     private let minimap = SKNode()
     private var minimapBG: SKShapeNode?
@@ -357,6 +358,7 @@ final class BattleScene: SKScene {
         case .armored?: return (UIColor(hex: 0x7E97B0), 0.4)
         case .plague?: return (UIColor(hex: 0x8BC34A), 0.3)
         case .swift?: return (UIColor(hex: 0xFFD54A), 0.18)
+        case .medic?: return (UIColor(hex: 0xF8BBD0), 0.25)
         case .shielded?, nil: return nil
         }
     }
@@ -441,6 +443,17 @@ final class BattleScene: SKScene {
         unitNodes[u.id] = container
         bodies[u.id] = body
         hpBars[u.id] = bar
+
+        // Light units blink now and then, so the army feels alive.
+        if u.role != .heavy {
+            let skin = controller?.skin ?? .classic
+            let open = texture
+            let shut = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: skin, face: .blink))
+            let first = Double((u.id * 53) % 30) / 10
+            body.run(.sequence([.wait(forDuration: first),
+                                .repeatForever(.sequence([.setTexture(shut), .wait(forDuration: 0.12), .setTexture(open),
+                                                          .wait(forDuration: 2.5, withRange: 3)]))]), withKey: "blink")
+        }
 
         // Spawn pop
         body.alpha = 0
@@ -548,10 +561,15 @@ final class BattleScene: SKScene {
                     run(.wait(forDuration: 0.5)) { [weak self] in self?.damageLabels -= 1 }
                 }
 
-            case .died(let id, let x, let side, _, let role):
+            case .died(let id, let x, let side, let era, let role):
                 Sound.shared.play(.pop, minInterval: 0.06)
                 let pos = CGPoint(x: laneToScreen(x), y: unitNodes[id]?.position.y ?? groundY)
                 if let node = unitNodes[id] {
+                    if role != .heavy, let body = bodies[id] {
+                        body.removeAction(forKey: "blink")
+                        body.texture = tex(ArtFactory.shared.unit(species(side), era: era, role: role,
+                                                                  skin: controller?.skin ?? .classic, face: .dead))
+                    }
                     node.run(.sequence([.group([.fadeOut(withDuration: 0.25), .scale(to: 0.6, duration: 0.25),
                                                 .rotate(byAngle: side == .player ? 0.8 : -0.8, duration: 0.25)]),
                                         .removeFromParent()]), withKey: "die")
@@ -674,6 +692,32 @@ final class BattleScene: SKScene {
 
             case .bossSlam(let id, let x, let radius):
                 bossSlam(id: id, x: x, radius: radius)
+
+            case .healed(let id, let healer, let amount):
+                guard let node = unitNodes[id], let body = bodies[id] else { break }
+                let top = CGPoint(x: node.position.x, y: node.position.y + body.size.height * 0.6)
+                if let from = unitNodes[healer], let hb = bodies[healer] {
+                    let path = CGMutablePath()
+                    path.move(to: CGPoint(x: from.position.x, y: from.position.y + hb.size.height * 0.7))
+                    path.addLine(to: top)
+                    let beam = SKShapeNode(path: path)
+                    beam.strokeColor = UIColor(hex: 0xF48FB1, alpha: 0.9)
+                    beam.lineWidth = 2.5
+                    beam.glowWidth = 2
+                    beam.zPosition = 12
+                    fxLayer.addChild(beam)
+                    beam.run(.sequence([.fadeOut(withDuration: 0.35), .removeFromParent()]))
+                }
+                puff(at: top, color: UIColor(hex: 0xF8BBD0), count: 5, spread: 14)
+                floatText("+\(Int(amount.rounded()))", at: CGPoint(x: top.x, y: top.y + 10 * hScale),
+                          color: UIColor(hex: 0xF48FB1), size: 11 * hScale, rise: 20)
+
+            case .counterHit(let id, let effective):
+                guard now - lastCounterText > 0.35, let node = unitNodes[id], let body = bodies[id] else { break }
+                lastCounterText = now
+                floatText(effective ? L10n.t("CRUSH!") : L10n.t("RESIST"),
+                          at: CGPoint(x: node.position.x, y: node.position.y + body.size.height + 12 * hScale),
+                          color: effective ? UIColor(hex: 0xFFB74D) : UIColor(hex: 0xB0BEC5), size: (effective ? 14 : 11) * hScale, rise: 26)
 
             case .eliteSpawned(let id, _):
                 if let node = unitNodes[id] {

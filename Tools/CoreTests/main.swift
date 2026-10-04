@@ -367,7 +367,7 @@ do {
 // MARK: Elite rats, stances, rat generals, boss slam
 do {
     check(RatTrait.chance(stage: 3) == 0 && RatTrait.pool(stage: 3).isEmpty, "no elite rats before stage 4")
-    check(RatTrait.pool(stage: 4) == [.swift] && RatTrait.pool(stage: 12).count == 4, "elite traits unlock with stages")
+    check(RatTrait.pool(stage: 4) == [.swift] && RatTrait.pool(stage: 12).count == RatTrait.allCases.count, "elite traits unlock with stages")
     check(RatTrait.chance(stage: 40) <= 0.3, "elite share is capped")
     check(RatGeneral.forStage(1) == .gnawsworth && RatGeneral.forStage(5) == .ratKing && RatGeneral.forStage(10) == .ratKing,
           "first stages get the gentle general, boss stages the Rat King")
@@ -377,13 +377,14 @@ do {
     // Elites appear, shields absorb hits, plague rats split.
     let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 77)
     playerBot(s)
-    var traits = Set<RatTrait>(), shieldHits = 0, sawMinion = false, eliteIDs = Set<Int>()
+    var traits = Set<RatTrait>(), shieldHits = 0, heals = 0, sawMinion = false, eliteIDs = Set<Int>()
     var t = 0.0
     while t < 400 && s.winner == nil && !s.awaitingRevive {
         s.step(1.0 / 30)
         for e in s.events {
             if case .eliteSpawned(let id, let trait) = e { traits.insert(trait); eliteIDs.insert(id) }
             if case .shieldHit = e { shieldHits += 1 }
+            if case .healed = e { heals += 1 }
         }
         if s.units.contains(where: { $0.isMinion }) { sawMinion = true }
         s.events.removeAll()
@@ -391,7 +392,9 @@ do {
     }
     check(traits.count >= 3, "several elite traits appear at stage 14 (\(traits))")
     check(shieldHits > 0, "shield bubbles absorb hits")
+    check(heals > 0, "rat medics heal their friends")
     check(sawMinion, "plague rats burst into minions")
+    check(s.units.allSatisfy { $0.trait != .medic || $0.role == .ranged }, "medics are always ranged rats")
     check(s.units.allSatisfy { $0.side == .enemy || $0.trait == nil }, "only rats get elite traits")
 
     // Hold keeps the army under the turrets; Fall back walks it home.

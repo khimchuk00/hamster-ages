@@ -24,7 +24,7 @@ struct BattleView: View {
 
                 if let trait = controller.eliteIntro, controller.cardOffer == nil, controller.result == nil {
                     EliteIntroCard(trait: trait)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .transition(.move(edge: .leading).combined(with: .opacity))
                 }
 
                 if let taunt = controller.taunt, controller.result == nil {
@@ -218,7 +218,7 @@ private struct StanceControl: View {
                         Text(s.title).font(Theme.font(8)).lineLimit(1).minimumScaleFactor(0.6)
                     }
                     .foregroundStyle(on ? Theme.ink : .white)
-                    .frame(width: 52, height: 34)
+                    .frame(width: 46, height: 30)
                     .background(RoundedRectangle(cornerRadius: 10).fill(on ? stanceColor(s) : Color.clear))
                 }
                 .buttonStyle(.plain)
@@ -255,7 +255,7 @@ private struct TauntBubble: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: 300, alignment: .trailing)
+                .frame(maxWidth: 260, alignment: .trailing)
                 .background(RoundedRectangle(cornerRadius: 14).fill(Theme.cream))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: general.color), lineWidth: 2.5))
                 RatGeneralBadge(general: general, size: 46)
@@ -284,12 +284,14 @@ private struct EliteIntroCard: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .frame(maxWidth: 420)
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(maxWidth: 330, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 16).fill(Theme.cream))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.red, lineWidth: 2.5))
             .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
-            .padding(.top, 96)
+            .padding(.top, 60)
+            .padding(.leading, 56)
+            .frame(maxWidth: .infinity, alignment: .leading)
             Spacer()
         }
         .allowsHitTesting(false)

@@ -2,6 +2,9 @@ import UIKit
 
 enum Species { case hamster, rat }
 
+/// Facial expression variants of a unit sprite (swapped in by the scene: blinks, knocked-out X eyes).
+enum Face: String { case normal, blink, dead }
+
 extension UIColor {
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
         self.init(red: CGFloat((hex >> 16) & 0xFF) / 255,
@@ -49,9 +52,9 @@ final class ArtFactory {
     private var activeSkin: FurSkin = .classic
     private func pal(_ s: Species) -> Palette { ArtFactory.palette(s, skin: s == .hamster ? activeSkin : .classic) }
 
-    func unit(_ species: Species, era: Int, role: UnitRole, skin: FurSkin = .classic) -> UIImage {
+    func unit(_ species: Species, era: Int, role: UnitRole, skin: FurSkin = .classic, face: Face = .normal) -> UIImage {
         let skin = species == .hamster ? skin : .classic
-        return cached("u-\(species)-\(era)-\(role)-\(skin.rawValue)") {
+        return cached("u-\(species)-\(era)-\(role)-\(skin.rawValue)-\(face.rawValue)") {
             activeSkin = skin
             defer { activeSkin = .classic }
             let size = role == .heavy ? CGSize(width: 96, height: 80) : ArtFactory.lightUnitSize   // extra width for raised blades
@@ -59,7 +62,7 @@ final class ArtFactory {
                 if role == .heavy {
                     self.drawHeavy(ctx, species, era)
                 } else {
-                    self.drawCritter(ctx, species, era: era, at: .zero, scale: 1, hat: true, weapon: role)
+                    self.drawCritter(ctx, species, era: era, at: .zero, scale: 1, hat: true, weapon: role, face: face)
                 }
             }
         }
@@ -239,7 +242,8 @@ final class ArtFactory {
         cached("tb-\(t.rawValue)") {
             render(CGSize(width: 18, height: 18)) { _ in
                 let ol = ArtFactory.outline
-                let colors: [RatTrait: UInt32] = [.swift: 0xFFC83D, .armored: 0x90A4AE, .shielded: 0x4FC3F7, .plague: 0x8BC34A]
+                let colors: [RatTrait: UInt32] = [.swift: 0xFFC83D, .armored: 0x90A4AE, .shielded: 0x4FC3F7,
+                                                .plague: 0x8BC34A, .medic: 0xF48FB1]
                 let c = UIColor(hex: colors[t]!)
                 let disc = self.circle(9, 9, 8)
                 self.gradient(disc, c.blend(.white, 0.35), c.blend(.black, 0.15))
@@ -269,6 +273,12 @@ final class ArtFactory {
                         self.fill(self.circle(9 + cos(a) * 3.4, 9 + sin(a) * 3.4, 2.4), glyph)
                     }
                     self.fill(self.circle(9, 9, 1.6), c)
+                case .medic:
+                    let heart = UIBezierPath()
+                    heart.move(to: CGPoint(x: 9, y: 14))
+                    heart.addCurve(to: CGPoint(x: 9, y: 6.5), controlPoint1: CGPoint(x: 2, y: 9.5), controlPoint2: CGPoint(x: 5, y: 2.5))
+                    heart.addCurve(to: CGPoint(x: 9, y: 14), controlPoint1: CGPoint(x: 13, y: 2.5), controlPoint2: CGPoint(x: 16, y: 9.5))
+                    self.fill(heart, .white, stroke: glyph, width: 1)
                 }
             }
         }
@@ -363,7 +373,7 @@ final class ArtFactory {
     // MARK: Critters (local 64x64 frame, facing right)
 
     private func drawCritter(_ ctx: UIGraphicsImageRendererContext, _ s: Species, era: Int, at origin: CGPoint,
-                             scale: CGFloat, hat: Bool, weapon: UnitRole?) {
+                             scale: CGFloat, hat: Bool, weapon: UnitRole?, face: Face = .normal) {
         let c = ctx.cgContext
         let p = pal(s)
         let ol = ArtFactory.outline
@@ -431,10 +441,14 @@ final class ArtFactory {
 
         if s == .rat {
             // Squinting, angry eye with a red iris
-            fill(oval(39, 29.5, 10, 8), .white, stroke: ol, width: 1.2)
-            fill(circle(45, 33.5, 2.8), UIColor(hex: 0xC62828))
-            fill(circle(45.4, 33.6, 1.4), UIColor(hex: 0x1D1A22))
-            fill(circle(46.2, 32.6, 0.7), .white)
+            if face == .normal {
+                fill(oval(39, 29.5, 10, 8), .white, stroke: ol, width: 1.2)
+                fill(circle(45, 33.5, 2.8), UIColor(hex: 0xC62828))
+                fill(circle(45.4, 33.6, 1.4), UIColor(hex: 0x1D1A22))
+                fill(circle(46.2, 32.6, 0.7), .white)
+            } else {
+                drawClosedEye(center: CGPoint(x: 44, y: 33.5), face: face)
+            }
             line(CGPoint(x: 37.5, y: 27.5), CGPoint(x: 49, y: 31), ol, width: 2.6)          // heavy brow
             fill(circle(60.5, 39, 2.6), UIColor(hex: 0xC2185B), stroke: ol, width: 0.8)       // nose
             fill(UIBezierPath(roundedRect: CGRect(x: 52.5, y: 42.5, width: 2.6, height: 3.6), cornerRadius: 0.6), .white, stroke: ol, width: 0.7)
@@ -449,10 +463,14 @@ final class ArtFactory {
             stroke(cheek, ol, 1.2)
             fill(oval(42, 43, 8, 4.5), UIColor(hex: 0xFF8A80, alpha: 0.55))
             // Big shiny eye
-            fill(oval(38.5, 29, 10, 11), .white, stroke: ol, width: 1.3)
-            fill(circle(44.2, 35, 3.4), UIColor(hex: 0x2A1E1A))
-            fill(circle(45.4, 33.4, 1.3), .white)
-            fill(circle(43, 36.8, 0.6), UIColor(white: 1, alpha: 0.8))
+            if face == .normal {
+                fill(oval(38.5, 29, 10, 11), .white, stroke: ol, width: 1.3)
+                fill(circle(44.2, 35, 3.4), UIColor(hex: 0x2A1E1A))
+                fill(circle(45.4, 33.4, 1.3), .white)
+                fill(circle(43, 36.8, 0.6), UIColor(white: 1, alpha: 0.8))
+            } else {
+                drawClosedEye(center: CGPoint(x: 43.5, y: 34.5), face: face)
+            }
             // Nose, mouth, whiskers
             fill(circle(53.5, 38.5, 2.1), UIColor(hex: 0xE5737A), stroke: ol, width: 0.8)
             let mouth = UIBezierPath()
@@ -473,6 +491,21 @@ final class ArtFactory {
         gradient(arm, light, p.fur)
         stroke(arm, ol, 1.4)
         c.restoreGState()
+    }
+
+    /// Blink = a happy closed arc; knocked out = cartoon X.
+    private func drawClosedEye(center c: CGPoint, face: Face) {
+        let ol = ArtFactory.outline
+        if face == .dead {
+            line(CGPoint(x: c.x - 3.6, y: c.y - 3.6), CGPoint(x: c.x + 3.6, y: c.y + 3.6), ol, width: 2.2)
+            line(CGPoint(x: c.x - 3.6, y: c.y + 3.6), CGPoint(x: c.x + 3.6, y: c.y - 3.6), ol, width: 2.2)
+        } else {
+            let lid = UIBezierPath()
+            lid.move(to: CGPoint(x: c.x - 4.5, y: c.y))
+            lid.addQuadCurve(to: CGPoint(x: c.x + 4.5, y: c.y), controlPoint: CGPoint(x: c.x, y: c.y + 3.2))
+            lid.lineWidth = 1.8; lid.lineCapStyle = .round
+            ol.setStroke(); lid.stroke()
+        }
     }
 
     /// Era clothing, drawn clipped to the body so it follows the silhouette. Team colour sits on the belt

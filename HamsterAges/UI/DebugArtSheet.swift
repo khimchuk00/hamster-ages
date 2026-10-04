@@ -45,7 +45,7 @@ struct DebugArtSheet: View {
                             .frame(width: 120)
                         }
                     }
-                    HStack(spacing: 24) {
+                    HStack(spacing: 10) {
                         ForEach(RatTrait.allCases, id: \.self) { t in
                             HStack(spacing: 6) {
                                 Image(uiImage: ArtFactory.shared.traitBadge(t)).resizable().frame(width: 40, height: 40)
@@ -53,7 +53,7 @@ struct DebugArtSheet: View {
                                     Text(t.title).font(Theme.font(13)).foregroundStyle(Theme.ink)
                                     Text(t.counter).font(Theme.font(9)).foregroundStyle(Theme.ink.opacity(0.7))
                                 }
-                                .frame(width: 130, alignment: .leading)
+                                .frame(width: 100, alignment: .leading)
                             }
                         }
                     }

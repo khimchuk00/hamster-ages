@@ -375,7 +375,7 @@ struct UpgradesView: View {
     let store: ProgressStore
     @Environment(\.dismiss) private var dismiss
 
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
+    private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
         ZStack {
@@ -391,7 +391,7 @@ struct UpgradesView: View {
                     }
                 }
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
+                    LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(MetaUpgrade.allCases) { u in
                             UpgradeCard(upgrade: u, store: store)
                         }
@@ -404,6 +404,7 @@ struct UpgradesView: View {
     }
 }
 
+/// Compact row card: all 8 upgrades fit on one landscape iPhone screen without scrolling.
 private struct UpgradeCard: View {
     let upgrade: MetaUpgrade
     let store: ProgressStore
@@ -411,35 +412,46 @@ private struct UpgradeCard: View {
     var body: some View {
         let level = store.progress.level(upgrade)
         let maxed = level >= upgrade.maxLevel
-        VStack(spacing: 6) {
+        HStack(spacing: 10) {
             Image(systemName: upgrade.icon)
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(Theme.gold)
-                .frame(width: 48, height: 48)
+                .frame(width: 42, height: 42)
                 .background(Circle().fill(Color.white.opacity(0.08)))
-            Text(upgrade.title).font(Theme.font(15)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
-            Text("Lv \(level)/\(upgrade.maxLevel)").font(Theme.font(11)).foregroundStyle(.white.opacity(0.6))
-            // At level 0 show what the first purchase gives instead of "+0".
-            Text(upgrade.effectText(level: max(1, level))).font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(level == 0 ? 0.55 : 0.85))
-                .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.center)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(upgrade.title).font(Theme.font(15)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                    Text("Lv \(level)/\(upgrade.maxLevel)").font(Theme.font(11)).foregroundStyle(.white.opacity(0.6))
+                        .fixedSize()
+                }
+                // At level 0 show what the first purchase gives instead of "+0".
+                Text(upgrade.effectText(level: max(1, level))).font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(level == 0 ? 0.55 : 0.85))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                if !maxed && level > 0 {
+                    Text(L10n.f("Next: %@", upgrade.effectText(level: level + 1)))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(Theme.gold.opacity(0.9))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }
+            }
+            Spacer(minLength: 4)
             if maxed {
-                Text("MAX").font(Theme.font(14)).foregroundStyle(Theme.gold).padding(.vertical, 8)
+                Text("MAX").font(Theme.font(14)).foregroundStyle(Theme.gold).frame(minWidth: 76)
             } else {
                 Button {
                     store.buy(upgrade)
                     Haptics.success()
                 } label: {
-                    Text("🌻 \(upgrade.cost(level: level))").font(Theme.font(14))
+                    Text("🌻 \(upgrade.cost(level: level))").font(Theme.font(14)).lineLimit(1).frame(minWidth: 64)
                 }
                 .buttonStyle(ChunkyButtonStyle(color: store.canBuy(upgrade) ? Theme.green : Theme.disabled, cornerRadius: 12, depth: 3))
                 .disabled(!store.canBuy(upgrade))
             }
         }
+        .padding(.horizontal, 10).padding(.vertical, 7)
         .frame(maxWidth: .infinity)
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 18).fill(Color.white.opacity(0.07)))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.12), lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.12), lineWidth: 1))
     }
 }
 
