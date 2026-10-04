@@ -251,7 +251,7 @@ private struct BaseBar: View {
 
     var body: some View {
         VStack(alignment: mirrored ? .trailing : .leading, spacing: 2) {
-            Text(title.uppercased())
+            Text(title.localizedUppercase)
                 .font(Theme.font(10))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.6), radius: 1, y: 1)
@@ -409,7 +409,7 @@ private struct SpecialButton: View {
             }
             .frame(width: 62, height: 62)
             .overlay(alignment: .bottom) {
-                Text(GameConfig.eras[era].special.name.uppercased())
+                Text(GameConfig.eras[era].special.name.localizedUppercase)
                     .font(Theme.font(7)).foregroundStyle(.white)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
@@ -438,7 +438,7 @@ private struct HeroButton: View {
             }
             .frame(width: 56, height: 56)
             .overlay(alignment: .bottom) {
-                Text(general.ability.title.uppercased())
+                Text(general.ability.title.localizedUppercase)
                     .font(Theme.font(7)).foregroundStyle(.white)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
@@ -516,7 +516,7 @@ private struct CardView: View {
     var body: some View {
         let rc = Theme.rarityColor(card.rarity)
         VStack(spacing: 8) {
-            Text(String(describing: card.rarity).uppercased())
+            Text(card.rarity.title.localizedUppercase)
                 .font(Theme.font(10))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 8).padding(.vertical, 2)

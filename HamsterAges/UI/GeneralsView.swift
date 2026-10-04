@@ -138,7 +138,7 @@ private struct GeneralDetail: View {
             Image(uiImage: ArtFactory.shared.general(general)).resizable().scaledToFit().frame(height: 64)
                 .colorMultiply(level > 0 ? .white : .black)
             Text(general.name).font(Theme.font(17)).foregroundStyle(.white)
-            Text(general.rarity.title.uppercased()).font(Theme.font(10)).foregroundStyle(.white)
+            Text(general.rarity.title.localizedUppercase).font(Theme.font(10)).foregroundStyle(.white)
                 .padding(.horizontal, 8).padding(.vertical, 2)
                 .background(Capsule().fill(rarityColor(general.rarity)))
             Text(general.effectText(level: max(1, level)))
@@ -180,7 +180,7 @@ private struct CrateReveal: View {
                     .resizable().scaledToFit().frame(height: 130)
                     .shadow(color: rarityColor(result.general.rarity).opacity(0.9), radius: 20)
                 Text(result.general.name).font(Theme.font(20)).foregroundStyle(.white)
-                Text(result.general.rarity.title.uppercased()).font(Theme.font(11)).foregroundStyle(.white)
+                Text(result.general.rarity.title.localizedUppercase).font(Theme.font(11)).foregroundStyle(.white)
                     .padding(.horizontal, 10).padding(.vertical, 3)
                     .background(Capsule().fill(rarityColor(result.general.rarity)))
                 if result.refund > 0 {

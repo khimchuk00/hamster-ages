@@ -5,6 +5,10 @@ def T(key, *v):
     assert len(v) == 11, key
     S[key] = v
 
+def UK(key, one, few, many):
+    """Ukrainian plural forms for a key already defined with T()."""
+    v = list(S[key]); v[0] = {"one": one, "few": few, "many": many, "other": many}; S[key] = tuple(v)
+
 # Battle banners
 T("Opening Card", "Стартова карта", "Startkarte", "Carta inicial", "Carte de départ", "Carta iniziale", "Carta inicial", "開幕カード", "시작 카드", "开局卡牌", "開局卡牌", "Başlangıç Kartı")
 T("Evolved to %@", "Еволюція: %@", "Entwickelt: %@", "Evolucionado: %@", "Évolution : %@", "Evoluto: %@", "Evoluiu: %@", "%@へ進化", "%@(으)로 진화", "进化至%@", "進化至%@", "Evrim: %@")
@@ -158,6 +162,7 @@ T("Attack speed +%lld%%, move +%lld%%", "Швидкість атаки +%1$lld%%
 T("Unit HP +%lld%%", "Здоров'я бійців +%lld%%", "Einheiten-LP +%lld%%", "Vida de unidades +%lld%%", "PV des unités +%lld%%", "PS delle unità +%lld%%", "Vida das unidades +%lld%%", "ユニットHP+%lld%%", "유닛 체력 +%lld%%", "单位生命+%lld%%", "單位生命+%lld%%", "Birim canı +%%%lld")
 T("Units +%lld%% HP & damage, special −%lld%% cooldown", "Бійці +%1$lld%% здоров'я і шкоди, суперудар −%2$lld%% перезарядки", "Einheiten +%1$lld%% LP & Schaden, Spezial −%2$lld%% Abklingzeit", "Unidades +%1$lld%% vida y daño, especial −%2$lld%% recarga", "Unités +%1$lld%% PV et dégâts, spéciale −%2$lld%% recharge", "Unità +%1$lld%% PS e danni, speciale −%2$lld%% ricarica", "Unidades +%1$lld%% vida e dano, especial −%2$lld%% recarga", "ユニットHP・ダメージ+%1$lld%%、必殺技CT−%2$lld%%", "유닛 체력·피해 +%1$lld%%, 필살기 쿨타임 −%2$lld%%", "单位生命和伤害+%1$lld%%，必杀技冷却−%2$lld%%", "單位生命和傷害+%1$lld%%，必殺技冷卻−%2$lld%%", "Birimler +%%%1$lld can ve hasar, özel −%%%2$lld bekleme")
 T("Special damage +%lld%%, turrets +%lld%%", "Шкода суперудару +%1$lld%%, турелей +%2$lld%%", "Spezialschaden +%1$lld%%, Türme +%2$lld%%", "Daño especial +%1$lld%%, torretas +%2$lld%%", "Dégâts spéciaux +%1$lld%%, tourelles +%2$lld%%", "Danni speciali +%1$lld%%, torrette +%2$lld%%", "Dano especial +%1$lld%%, torres +%2$lld%%", "必殺技ダメージ+%1$lld%%、タレット+%2$lld%%", "필살기 피해 +%1$lld%%, 포탑 +%2$lld%%", "必杀技伤害+%1$lld%%，炮塔+%2$lld%%", "必殺技傷害+%1$lld%%，砲塔+%2$lld%%", "Özel hasar +%%%1$lld, taretler +%%%2$lld")
+T("Common", "Звичайний", "Gewöhnlich", "Común", "Commune", "Comune", "Comum", "コモン", "일반", "普通", "普通", "Sıradan")
 T("Rare", "Рідкісний", "Selten", "Raro", "Rare", "Raro", "Raro", "レア", "레어", "稀有", "稀有", "Nadir")
 T("Epic", "Епічний", "Episch", "Épico", "Épique", "Epico", "Épico", "エピック", "에픽", "史诗", "史詩", "Epik")
 T("Legendary", "Легендарний", "Legendär", "Legendario", "Légendaire", "Leggendario", "Lendário", "レジェンド", "전설", "传说", "傳說", "Efsanevi")
@@ -196,3 +201,33 @@ T("Claim your daily seeds and push past Stage %lld. The rats are getting bold…
 T("The rat army is marching on your base 🐀", "Щуряча армія йде на твою базу 🐀", "Die Rattenarmee marschiert auf deine Basis 🐀", "El ejército rata marcha hacia tu base 🐀", "L'armée des rats marche sur ta base 🐀", "L'esercito dei ratti marcia sulla tua base 🐀", "O exército de ratos marcha para sua base 🐀", "ネズミ軍団が拠点に迫っている🐀", "쥐 군단이 기지로 진격 중 🐀", "鼠军正向你的基地进发🐀", "鼠軍正向你的基地進發🐀", "Fare ordusu üssüne yürüyor 🐀")
 T("Your hamsters need their commander. A free crate might be waiting!", "Хом'ячкам потрібен командир. Можливо, на тебе чекає безкоштовна скриня!", "Deine Hamster brauchen ihren Kommandanten. Vielleicht wartet eine Gratis-Kiste!", "Tus hámsters necesitan a su comandante. ¡Quizá te espere un cofre gratis!", "Tes hamsters ont besoin de leur commandant. Une caisse gratuite t'attend peut-être !", "I tuoi criceti hanno bisogno del comandante. Forse ti aspetta una cassa gratis!", "Seus hamsters precisam do comandante. Talvez um baú grátis esteja esperando!", "ハムスターたちが司令官を待ってる。無料の箱があるかも！", "햄스터들에게 사령관이 필요해요. 무료 상자가 기다릴지도!", "仓鼠们需要指挥官！说不定有免费宝箱在等你！", "倉鼠們需要指揮官！說不定有免費寶箱在等你！", "Hamsterlerin komutanlarına ihtiyacı var. Bedava bir sandık bekliyor olabilir!")
 T("Store unavailable", "Магазин недоступний", "Store nicht verfügbar", "Tienda no disponible", "Boutique indisponible", "Negozio non disponibile", "Loja indisponível", "ストアを利用できません", "스토어를 사용할 수 없음", "商店不可用", "商店無法使用", "Mağaza kullanılamıyor")
+
+# UI strings built in code
+T("Rat Fortress · Wave %lld", "Щуряча фортеця · Хвиля %lld", "Rattenfestung · Welle %lld", "Fortaleza rata · Oleada %lld", "Forteresse des rats · Vague %lld", "Fortezza dei ratti · Ondata %lld", "Fortaleza dos ratos · Onda %lld", "ネズミ要塞・ウェーブ%lld", "쥐 요새 · 웨이브 %lld", "鼠族堡垒·第%lld波", "鼠族堡壘·第%lld波", "Fare Kalesi · Dalga %lld")
+T("Rats · %@", "Щури · %@", "Ratten · %@", "Ratas · %@", "Rats · %@", "Ratti · %@", "Ratos · %@", "ネズミ・%@", "쥐 · %@", "鼠族·%@", "鼠族·%@", "Fareler · %@")
+T("Unlock", "Відкрити", "Freischalten", "Desbloquear", "Débloquer", "Sblocca", "Liberar", "解放", "잠금 해제", "解锁", "解鎖", "Aç")
+T("Turret", "Турель", "Turm", "Torreta", "Tourelle", "Torretta", "Torre", "タレット", "포탑", "炮塔", "砲塔", "Taret")
+T("Upgrade", "Покращити", "Verbessern", "Mejorar", "Améliorer", "Potenzia", "Melhorar", "強化", "강화", "升级", "升級", "Yükselt")
+T("Ready", "Готово", "Bereit", "Listo", "Prêt", "Pronto", "Pronto", "準備完了", "준비됨", "就绪", "就緒", "Hazır")
+T("Survival", "Виживання", "Überleben", "Supervivencia", "Survie", "Sopravvivenza", "Sobrevivência", "サバイバル", "서바이벌", "生存", "生存", "Hayatta Kalma")
+T("Daily Challenge", "Щоденний виклик", "Tägliche Herausforderung", "Desafío diario", "Défi quotidien", "Sfida giornaliera", "Desafio diário", "デイリーチャレンジ", "일일 도전", "每日挑战", "每日挑戰", "Günlük Meydan Okuma")
+T("Stage %lld", "Етап %lld", "Stufe %lld", "Fase %lld", "Niveau %lld", "Livello %lld", "Fase %lld", "ステージ%lld", "%lld단계", "第%lld关", "第%lld關", "Bölüm %lld")
+T("SURVIVED %@", "ПРОТРИМАВСЯ %@", "ÜBERLEBT: %@", "SOBREVIVISTE %@", "SURVÉCU %@", "SOPRAVVISSUTO %@", "SOBREVIVEU %@", "生存時間 %@", "생존 %@", "存活 %@", "存活 %@", "HAYATTA KALDIN %@")
+T("🏆 New personal best! Wave %lld", "🏆 Новий особистий рекорд! Хвиля %lld", "🏆 Neue Bestleistung! Welle %lld", "🏆 ¡Nuevo récord personal! Oleada %lld", "🏆 Nouveau record personnel ! Vague %lld", "🏆 Nuovo record personale! Ondata %lld", "🏆 Novo recorde pessoal! Onda %lld", "🏆 自己ベスト更新！ウェーブ%lld", "🏆 개인 최고 기록! 웨이브 %lld", "🏆 个人新纪录！第%lld波", "🏆 個人新紀錄！第%lld波", "🏆 Yeni kişisel rekor! Dalga %lld")
+T("Wave %lld · Best %@", "Хвиля %1$lld · Рекорд %2$@", "Welle %1$lld · Bestzeit %2$@", "Oleada %1$lld · Récord %2$@", "Vague %1$lld · Record %2$@", "Ondata %1$lld · Record %2$@", "Onda %1$lld · Recorde %2$@", "ウェーブ%1$lld・ベスト%2$@", "웨이브 %1$lld · 최고 %2$@", "第%1$lld波 · 最佳%2$@", "第%1$lld波 · 最佳%2$@", "Dalga %1$lld · En iyi %2$@")
+T("%@ joined!", "%@ приєднується!", "%@ ist dabei!", "¡%@ se une!", "%@ rejoint l'armée !", "%@ si unisce!", "%@ entrou!", "%@が仲間に！", "%@ 합류!", "%@加入了！", "%@加入了！", "%@ katıldı!")
+T("%@ Lv %lld", "%1$@ · рів. %2$lld", "%1$@ Lv %2$lld", "%1$@ Nv %2$lld", "%1$@ Niv %2$lld", "%1$@ Liv %2$lld", "%1$@ Nv %2$lld", "%1$@ Lv%2$lld", "%1$@ Lv %2$lld", "%1$@ %2$lld级", "%1$@ %2$lld級", "%1$@ Sv %2$lld")
+T("3,000 🌻 + No Ads", "3 000 🌻 + без реклами", "3.000 🌻 + keine Werbung", "3000 🌻 + sin anuncios", "3 000 🌻 + sans pub", "3000 🌻 + niente pubblicità", "3.000 🌻 + sem anúncios", "3,000 🌻 + 広告なし", "3,000 🌻 + 광고 제거", "3000 🌻 + 去广告", "3000 🌻 + 去廣告", "3.000 🌻 + Reklamsız")
+T("Best %@", "Рекорд %@", "Bestzeit %@", "Récord %@", "Record %@", "Record %@", "Recorde %@", "ベスト %@", "최고 %@", "最佳 %@", "最佳 %@", "En iyi %@")
+T("Endless", "Нескінченно", "Endlos", "Sin fin", "Sans fin", "Infinito", "Sem fim", "エンドレス", "무한", "无尽", "無盡", "Sonsuz")
+T("Cleared ✓", "Пройдено ✓", "Geschafft ✓", "Superado ✓", "Réussi ✓", "Superata ✓", "Concluído ✓", "クリア ✓", "클리어 ✓", "已通关 ✓", "已通關 ✓", "Tamamlandı ✓")
+T("+%lld collected!", "+%lld зібрано!", "+%lld gesammelt!", "¡+%lld recogidas!", "+%lld récoltées !", "+%lld raccolti!", "+%lld coletadas!", "+%lld 回収！", "+%lld 수확!", "已收取+%lld！", "已收取+%lld！", "+%lld toplandı!")
+
+# Ukrainian plurals
+UK("Win %lld battles", "Виграй %lld бій", "Виграй %lld бої", "Виграй %lld боїв")
+UK("Train %lld hamsters", "Натренуй %lld хом'ячка", "Натренуй %lld хом'ячків", "Натренуй %lld хом'ячків")
+UK("Defeat %lld rats", "Переможи %lld щура", "Переможи %lld щурів", "Переможи %lld щурів")
+UK("Use special attacks %lld times", "Використай суперудар %lld раз", "Використай суперудар %lld рази", "Використай суперудар %lld разів")
+UK("Evolve %lld times", "Еволюціонуй %lld раз", "Еволюціонуй %lld рази", "Еволюціонуй %lld разів")
+UK("Buy %lld upgrades", "Купи %lld покращення", "Купи %lld покращення", "Купи %lld покращень")
+UK("%lld seeds are waiting. Collect them before the hamsters eat them all.", "На тебе чекає %lld насінина. Збери, поки хом'ячки все не з'їли.", "На тебе чекають %lld насінини. Збери, поки хом'ячки все не з'їли.", "На тебе чекає %lld насінин. Збери, поки хом'ячки все не з'їли.")

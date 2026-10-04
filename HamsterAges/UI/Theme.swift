@@ -79,6 +79,7 @@ struct OutlinedText: View {
         self.size = size; self.color = color; self.outline = outline
     }
 
+    @_disfavoredOverload
     init<S: StringProtocol>(text: S, size: CGFloat = 20, color: Color = .white, outline: Color = Theme.ink) {
         key = nil; plain = String(text)
         self.size = size; self.color = color; self.outline = outline

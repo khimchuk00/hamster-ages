@@ -57,6 +57,8 @@ public struct SideModifiers {
 public enum CardRarity: Int, Codable, CaseIterable {
     case common, rare, epic
 
+    public var title: String { L10n.t(["Common", "Rare", "Epic"][rawValue]) }
+
     var weight: Double {
         switch self {
         case .common: return 60

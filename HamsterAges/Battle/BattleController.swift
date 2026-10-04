@@ -128,7 +128,7 @@ final class BattleController {
                 switch e {
                 case .evolved(side: .player, era: let newEra):
                     Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
-                    flashBanner(GameConfig.eraNames[newEra].uppercased() + "!")
+                    flashBanner(GameConfig.eraNames[newEra].localizedUppercase + "!")
                     offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
                 case .lastStand(side: .player):
                     flashBanner(L10n.t("LAST STAND!"))
@@ -261,7 +261,7 @@ final class BattleController {
         for e in events {
             if case .evolved(side: .player, era: let newEra) = e {
                 Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
-                flashBanner(GameConfig.eraNames[newEra].uppercased() + "!")
+                flashBanner(GameConfig.eraNames[newEra].localizedUppercase + "!")
                 offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
             }
         }
@@ -309,7 +309,7 @@ final class BattleController {
         }
         scene.handle(sim.events)
         sim.events.removeAll()
-        flashBanner(ability.title.uppercased())
+        flashBanner(ability.title.localizedUppercase)
         Haptics.boom()
         refreshHUD()
     }
@@ -357,7 +357,7 @@ final class BattleController {
         let firstPick = sim.state(.player).cards.isEmpty
         sim.applyCard(card.id, to: .player)
         if firstPick, sim.activeModifier != .none {
-            flashBanner(sim.activeModifier.title.uppercased() + "!")
+            flashBanner(sim.activeModifier.title.localizedUppercase + "!")
         }
         Analytics.log(.cardPicked(id: card.id.rawValue, rarity: String(describing: card.rarity), era: sim.state(.player).era))
         cardOffer = nil
