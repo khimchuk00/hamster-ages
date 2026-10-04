@@ -712,6 +712,14 @@ final class BattleScene: SKScene {
                 floatText("+\(Int(amount.rounded()))", at: CGPoint(x: top.x, y: top.y + 10 * hScale),
                           color: UIColor(hex: 0xF48FB1), size: 11 * hScale, rise: 20)
 
+            case .bossSummon(let id):
+                if let node = unitNodes[id] {
+                    puff(at: CGPoint(x: node.position.x - 30 * hScale, y: node.position.y + 20 * hScale),
+                         color: UIColor(hex: 0xB0306A), count: 18, spread: 50)
+                }
+                shake(intensity: 5)
+                Sound.shared.play(.squeak)
+
             case .counterHit(let id, let effective):
                 guard now - lastCounterText > 0.35, let node = unitNodes[id], let body = bodies[id] else { break }
                 lastCounterText = now

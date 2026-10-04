@@ -74,7 +74,7 @@ public enum RatTrait: String, CaseIterable, Codable {
     /// Share of trained rats that come out elite.
     public static func chance(stage: Int) -> Double {
         guard stage >= 4 else { return 0 }
-        return min(0.3, 0.1 + 0.015 * Double(stage - 4))
+        return min(0.3, 0.06 + 0.015 * Double(stage - 4))
     }
 }
 

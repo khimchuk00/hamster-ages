@@ -38,6 +38,8 @@ public final class UnitEntity {
     public internal(set) var windup: Double = 0
     var slamCooldown = GameConfig.bossSlamFirst
     var healCooldown = 1.0
+    /// Rat King: already called the royal guard (once, at half health).
+    var summoned = false
     public var isAlive: Bool { hp > 0 }
     /// Visual size relative to a normal unit of the same role.
     public var sizeScale: Double { isBoss ? 1.4 : isMinion ? 0.7 : 1 }
@@ -123,6 +125,8 @@ public enum BattleEvent {
     case counterHit(unitID: Int, effective: Bool)
     /// A Rat Medic patched up an ally.
     case healed(unitID: Int, by: Int, amount: Double)
+    /// The Rat King, hurt, calls in his guard.
+    case bossSummon(unitID: Int)
     case waveUp(level: Int)
     case reviveOffered
     case suddenDeathStarted
@@ -555,6 +559,21 @@ public final class BattleSimulation {
         events.append(.healed(unitID: p.id, by: u.id, amount: amount))
     }
 
+    /// Three royal guards drop in just behind the hurt king.
+    private func summonGuard(for king: UnitEntity) {
+        let stats = GameConfig.eras[king.era].unit(.melee)
+        for k in 0..<GameConfig.bossGuards {
+            let x = king.x - king.side.direction * (king.width / 2 + 18 + Double(k) * (stats.width + GameConfig.unitSpacing))
+            let u = UnitEntity(id: nextID, side: king.side, role: .melee, era: king.era, x: x,
+                               stats: stats, mods: state(king.side).mods)
+            u.cooldown = 0.8
+            nextID += 1
+            units.append(u)
+            events.append(.spawned(unitID: u.id))
+        }
+        events.append(.bossSummon(unitID: king.id))
+    }
+
     /// A Plague Rat bursts into two small rats where it fell.
     private func spawnMinions(from dead: UnitEntity) {
         let stats = GameConfig.eras[dead.era].unit(.melee)
@@ -859,6 +878,10 @@ public final class BattleSimulation {
         }
         target.hp -= dealt
         events.append(.unitHit(unitID: target.id, damage: dealt))
+        if target.isBoss && target.isAlive && !target.summoned && target.hp < target.maxHP * 0.5 {
+            target.summoned = true
+            summonGuard(for: target)
+        }
         guard !target.isAlive else { return }
 
         events.append(.died(unitID: target.id, x: target.x, side: target.side, era: target.era, role: target.role))

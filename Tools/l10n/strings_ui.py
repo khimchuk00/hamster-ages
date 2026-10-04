@@ -144,3 +144,4 @@ T("Seed Cart", "Віз насіння", "Samenkarren", "Carro de semillas", "Cha
 T("Seed Silo", "Силос насіння", "Samensilo", "Silo de semillas", "Silo de graines", "Silo di semi", "Silo de sementes", "種のサイロ", "씨앗 저장고", "种子粮仓", "種子糧倉", "Tohum Silosu")
 T("POPULAR", "ПОПУЛЯРНЕ", "BELIEBT", "POPULAR", "POPULAIRE", "POPOLARE", "POPULAR", "人気", "인기", "热门", "熱門", "POPÜLER")
 T("Free Seeds", "Безплатне насіння", "Gratis-Samen", "Semillas gratis", "Graines gratuites", "Semi gratis", "Sementes grátis", "無料の種", "무료 씨앗", "免费种子", "免費種子", "Bedava Tohum")
+T("Map", "Мапа", "Karte", "Mapa", "Carte", "Mappa", "Mapa", "マップ", "지도", "地图", "地圖", "Harita")

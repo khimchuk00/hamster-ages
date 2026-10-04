@@ -375,7 +375,7 @@ do {
     check(Set(rotation).count == 5, "every rat general shows up before repeating")
 
     // Elites appear, shields absorb hits, plague rats split.
-    let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 77)
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 78)
     playerBot(s)
     var traits = Set<RatTrait>(), shieldHits = 0, heals = 0, sawMinion = false, eliteIDs = Set<Int>()
     var t = 0.0
@@ -440,6 +440,15 @@ do {
         t += 1.0 / 60
     }
     check(windupAt != nil && slamAt != nil, "the Rat King winds up and slams")
+    var summons = 0
+    t = 0
+    while t < 400 && b.winner == nil && !b.awaitingRevive && summons == 0 {
+        b.step(1.0 / 30)
+        for e in b.events { if case .bossSummon = e { summons += 1 } }
+        b.events.removeAll()
+        t += 1.0 / 30
+    }
+    check(summons >= 1, "a hurt Rat King calls his guard")
     if let w0 = windupAt, let s0 = slamAt {
         check(abs((s0 - w0) - GameConfig.bossSlamWindup) < 0.05, "the slam lands exactly after the wind-up")
     }

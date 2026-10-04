@@ -5,6 +5,9 @@ struct HomeView: View {
     let shop: Store
     let ads: AdService
     let onPlay: (BattleMode) -> Void
+    /// Campaign map: play (or replay) a specific stage.
+    var onPlayStage: (Int) -> Void = { _ in }
+    @State private var showMap = false
     @State private var showGenerals = false
     @State private var showQuests = false
     @State private var showUpgrades = false
@@ -23,7 +26,7 @@ struct HomeView: View {
         let difficulty = StageDifficulty(stage: p.stage)
         GeometryReader { geo in
             ZStack {
-                Image(uiImage: ArtFactory.shared.background(era: min(4, (p.stage - 1) / 6), size: geo.size, groundHeight: 70))
+                Image(uiImage: ArtFactory.shared.background(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), size: geo.size, groundHeight: 70))
                     .resizable()
                     .ignoresSafeArea()
 
@@ -171,7 +174,19 @@ struct HomeView: View {
                                     .padding(.horizontal, 10).padding(.vertical, 2)
                                     .background(Capsule().fill(Theme.red))
                             }
-                            OutlinedText(text: "Stage \(p.stage)", size: 30)
+                            if p.highestStage >= 2 {
+                                Button { showMap = true } label: {
+                                    HStack(spacing: 6) {
+                                        OutlinedText(text: "Stage \(p.stage)", size: 30)
+                                        Image(systemName: "map.fill").font(.system(size: 15, weight: .black)).foregroundStyle(Theme.ink)
+                                            .frame(width: 30, height: 30).background(Circle().fill(Theme.gold))
+                                    }
+                                }
+                                .buttonStyle(PressScale())
+                                .accessibilityHint(Text("Map"))
+                            } else {
+                                OutlinedText(text: "Stage \(p.stage)", size: 30)
+                            }
                             if p.battlesPlayed >= 1 {
                                 let foe = RatGeneral.forStage(p.stage)
                                 HStack(spacing: 6) {
@@ -313,6 +328,7 @@ struct HomeView: View {
                 switch args[i + 1] {
                 case "heroes": showGenerals = true
                 case "upgrades": showUpgrades = true
+                case "map": showMap = true
                 case "shop": showShop = true
                 case "quests": showQuests = true
                 case "pass": showPass = true
@@ -325,6 +341,9 @@ struct HomeView: View {
             withAnimation(.easeInOut(duration: 0.45).repeatForever()) { bob = true }
             // Don't greet brand-new players with a popup before their first battle.
             if store.progress.tutorialDone == true && store.dailyStatus().available { showDaily = true }
+        }
+        .fullScreenCover(isPresented: $showMap) {
+            ScaledUI { CampaignMapView(store: store) { stage in onPlayStage(stage) } }
         }
         .sheet(isPresented: $showUpgrades) { UpgradesView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showDaily) { DailyRewardView(store: store).presentationSizing(.page) }

@@ -78,6 +78,10 @@ struct RootView: View {
                             : store.progress.stage
                         battle = BattleController(stage: stage, progress: store.progress, mode: mode)
                     }
+                } onPlayStage: { stage in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        battle = BattleController(stage: min(stage, store.progress.stage), progress: store.progress)
+                    }
                 }
                 }
                 .transition(.opacity)

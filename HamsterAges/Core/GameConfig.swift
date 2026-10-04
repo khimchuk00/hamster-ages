@@ -101,6 +101,8 @@ public enum GameConfig {
     /// Reach in front of the king's body (lane units) and damage as a multiple of its attack.
     public static let bossSlamRadius: Double = 110
     public static let bossSlamDamage: Double = 1.8
+    /// Guards the Rat King calls in once at half health.
+    public static let bossGuards = 3
     /// Armored rats take this share of arrow/bullet damage.
     public static let armoredPierceFactor: Double = 0.45
     /// ...and this much from cannons, shells and heavy blows.

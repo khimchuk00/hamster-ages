@@ -186,6 +186,9 @@ final class BattleController {
                 case .eliteSpawned(_, let trait) where !seenTraits.contains(trait):
                     seenTraits.insert(trait)
                     showEliteIntro(trait)
+                case .bossSummon:
+                    flashBanner(L10n.t("THE RAT KING CALLS HIS GUARD!"))
+                    Haptics.boom()
                 case .bossWindup:
                     // Teach the counter the first couple of times: pull back out of the slam zone.
                     if stancesEnabled && slamWarnings < 2 && stance != .fallBack {
