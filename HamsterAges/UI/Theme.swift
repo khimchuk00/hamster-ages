@@ -145,3 +145,26 @@ struct ScaledUI<Content: View>: View {
         }
     }
 }
+
+/// Background for menu sheets: the current age's landscape, blurred and dimmed, so menus feel part of
+/// the world instead of a flat settings screen.
+struct SheetBackdrop: View {
+    /// Age shown behind menus (follows the campaign chapter; set by Home).
+    @MainActor static var era = 0
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Image(uiImage: ArtFactory.shared.background(era: SheetBackdrop.era, size: CGSize(width: 844, height: 390), groundHeight: 70))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .blur(radius: 7)
+                    .clipped()
+                LinearGradient(colors: [Color(hex: 0x2B2140, opacity: 0.78), Color(hex: 0x1C1428, opacity: 0.9)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+        }
+        .ignoresSafeArea()
+    }
+}

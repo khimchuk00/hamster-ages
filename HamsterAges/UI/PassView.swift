@@ -12,7 +12,7 @@ struct PassView: View {
         let tier = store.passTier
         let premium = store.hasPremiumPass()
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 0) {

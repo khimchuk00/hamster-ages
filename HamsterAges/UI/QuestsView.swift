@@ -7,7 +7,7 @@ struct QuestsView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 12) {
                 HStack {
                     OutlinedText(text: "Daily Quests", size: 26, color: Theme.gold)

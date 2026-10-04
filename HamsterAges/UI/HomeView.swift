@@ -350,6 +350,7 @@ struct HomeView: View {
                 }
             }
             #endif
+            SheetBackdrop.era = CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: store.progress.stage))
             Music.shared.play(.menu)
             GameCenter.setAccessPoint(visible: true)
             withAnimation(.easeInOut(duration: 0.45).repeatForever()) { bob = true }
@@ -412,7 +413,7 @@ struct UpgradesView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 12) {
                 HStack {
                     OutlinedText(text: "Upgrades", size: 26, color: Theme.gold)
@@ -496,7 +497,7 @@ struct DailyRewardView: View {
     var body: some View {
         let status = store.dailyStatus()
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 16) {
                 OutlinedText(text: "Daily Seeds", size: 28, color: Theme.gold)
                 Text("Come back every day — the streak resets if you miss one.")

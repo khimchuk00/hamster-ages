@@ -12,7 +12,7 @@ struct GeneralsView: View {
     var body: some View {
         let p = store.progress
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     OutlinedText(text: "Generals", size: 26, color: Theme.gold)

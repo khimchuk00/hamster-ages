@@ -19,7 +19,7 @@ struct ShopView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: 0x241B36).ignoresSafeArea()
+            SheetBackdrop()
             VStack(spacing: 12) {
                 HStack {
                     OutlinedText(text: "Shop", size: 26, color: Theme.gold)
