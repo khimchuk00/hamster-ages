@@ -1,0 +1,72 @@
+name: App Store screenshots (all languages)
+
+# Manual: Actions → "App Store screenshots" → Run workflow.
+# Raw 6.9" simulator captures per language land on the `appstore-shots` branch;
+# Tools/aso/make_screenshots.py turns them into captioned App Store images.
+on:
+  workflow_dispatch:
+    inputs:
+      languages:
+        description: "Space-separated languages"
+        default: "en uk de es fr it pt-BR ja ko zh-Hans zh-Hant tr"
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)" && xcodebuild -version
+
+      - name: Build (Debug, simulator)
+        run: |
+          xcodebuild -project HamsterAges.xcodeproj -scheme HamsterAges \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || (tail -50 build.log; exit 1)
+
+      - name: Capture
+        env:
+          LANGS: ${{ github.event.inputs.languages }}
+        run: |
+          set -x
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro Max \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --cellularBars 4 || true
+          APP=$(find build/Build/Products -name "HamsterAges.app" -maxdepth 3 | head -1)
+          xcrun simctl install "$UDID" "$APP"
+          ID=com.valkhim.hamsterages
+          for L in $LANGS; do
+            mkdir -p "raw/$L"
+            loc=$(echo "$L" | tr '-' '_')
+            shot() { # name, wait, args...
+              local name=$1 wait=$2; shift 2
+              xcrun simctl terminate "$UDID" $ID || true
+              xcrun simctl launch "$UDID" $ID -AppleLanguages "($L)" -AppleLocale "$loc" "$@"
+              sleep "$wait"
+              xcrun simctl io "$UDID" screenshot "raw/$L/$name.png"
+            }
+            shot 1-battle 38 -demo -screen battle -autoplay -era 1
+            shot 2-cards 7 -demo -screen battle -era 2
+            shot 3-future 34 -demo -screen battle -autoplay -era 4
+            shot 4-heroes 7 -demo -screen heroes
+            shot 5-home 8 -demo
+            shot 6-upgrades 7 -demo -screen upgrades
+          done
+
+      - name: Publish to the appstore-shots branch
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp -R raw /tmp/out/ 2>/dev/null || true
+          git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
+          git checkout --orphan appstore-shots
+          git rm -rf . -q
+          git clean -fdxq
+          cp -R /tmp/out/. .
+          git add -A
+          git commit -q -m "App Store raw screenshots for ${GITHUB_SHA::7}"
+          git push -f origin appstore-shots

@@ -100,6 +100,12 @@ final class BattleController {
         rerollsLeft = progress.level(.charm)
         isTutorial = progress.tutorialDone != true && stage == 1 && mode == .campaign
         tutorialStep = isTutorial ? .train : nil
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-era"), i + 1 < args.count, let era = Int(args[i + 1]) {
+            for side in Side.allCases { sim.debugJump(side, toEra: era) }
+        }
+        #endif
         scene = BattleScene(controller: self)
         Analytics.log(.battleStart(stage: stage, attempt: progress.battlesPlayed + 1))
         refreshHUD()

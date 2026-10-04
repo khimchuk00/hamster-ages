@@ -399,7 +399,7 @@ final class ProgressStore {
         p.battlesPlayed = 18
         p.tutorialDone = true
         p.upgrades = ["baseArmor": 4, "training": 5, "weapons": 5, "foraging": 3, "scholar": 2]
-        p.generals = ["sirNibbles": 3, "archie": 2, "ironBelly": 1, "queenSqueak": 1]
+        p.generals = ["sirNibbles": 3, "archie": 2, "grannyGrain": 2, "bolt": 1, "ironBelly": 1, "queenSqueak": 1]
         p.equippedGeneral = "queenSqueak"
         p.stars = [1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3]
         p.lastFarmCollect = Date.now.addingTimeInterval(-3 * 3600)

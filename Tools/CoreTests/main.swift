@@ -276,5 +276,18 @@ MainActor.assumeIsolated {
     UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
 }
 
+// Showcase jump + localization fallbacks
+do {
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 9)
+    s.debugJump(.player, toEra: 3)
+    s.debugJump(.enemy, toEra: 9)
+    check(s.state(.player).era == 3 && s.state(.enemy).era == GameConfig.eras.count - 1, "debugJump reaches the requested era (clamped)")
+    check(s.state(.player).baseMaxHP == GameConfig.eras[3].baseHP * s.state(.player).mods.baseHP, "debugJump base HP follows the era")
+    check(s.events.isEmpty, "debugJump leaves no pending events")
+    check(L10n.f("Win %lld battles", 3) == "Win 3 battles", "L10n.f formats integers")
+    check(L10n.f("Melee damage +25%%") == "Melee damage +25%", "L10n.f unescapes literal percent")
+    check(L10n.f("Rats · %@", "Future") == "Rats · Future", "L10n.f formats strings")
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

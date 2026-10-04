@@ -1,6 +1,6 @@
 # Hamster Ages — сторінка в App Store (чернетка)
 
-Ринок: США (англ.). Назву «Hamster Ages» пошуком у App Store не знайдено (жовтень 2026) — перед реєстрацією
+Ринок: США (англ.). Локалізовані назва/підзаголовок/ключові слова для 12 мов — `AppStoreLocalized.md`. Назву «Hamster Ages» пошуком у App Store не знайдено (жовтень 2026) — перед реєстрацією
 перевір ще раз в App Store Connect, там назву бронюють за собою.
 
 ## Метадані
@@ -36,9 +36,12 @@ COLLECT GENERALS
 Unlock heroes like Sir Nibbles, Queen Squeak and Dr. Boom. Equip one before battle and level them up with duplicates.
 
 ENDLESS CAMPAIGN
-Boss every 5 stages. Upgrade your base, weapons and training between battles, and claim daily seed rewards.
+The Rat King attacks every 5 stages, and stage twists like Rat Swarm, Giants and Blitz keep you on your toes. Upgrade your base, weapons and training between battles.
 
-Plays offline. No account needed.
+MORE WAYS TO PLAY
+Survive endless waves in Survival mode, beat the Daily Challenge, finish daily quests for free crates, and harvest your idle Seed Farm.
+
+Plays offline. No account needed. Available in 12 languages.
 ```
 
 ## Скріншоти (6.9" landscape, 2868×1320)

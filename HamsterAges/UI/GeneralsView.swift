@@ -107,7 +107,7 @@ private struct GeneralTile: View {
                 .resizable().scaledToFit().frame(height: 48)
                 .colorMultiply(level > 0 ? .white : .black)
                 .opacity(level > 0 ? 1 : 0.5)
-            Text(level > 0 ? general.name : "???").font(Theme.font(11)).foregroundStyle(.white).lineLimit(1)
+            Text(level > 0 ? general.name : "???").font(Theme.font(11)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
             HStack(spacing: 1) {
                 ForEach(0..<Generals.maxLevel, id: \.self) { i in
                     Image(systemName: "star.fill").font(.system(size: 7))

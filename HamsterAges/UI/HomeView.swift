@@ -158,7 +158,7 @@ struct HomeView: View {
 
                         HStack(spacing: 8) {
                             Button { showUpgrades = true } label: {
-                                Text("Upgrades").lineLimit(1).minimumScaleFactor(0.7).frame(width: 82)
+                                Text("Upgrades").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
                             }
                             .buttonStyle(ChunkyButtonStyle(color: Theme.orange))
                             .overlay(alignment: .topTrailing) {
@@ -173,7 +173,7 @@ struct HomeView: View {
                                 }
                             }
                             Button { showGenerals = true } label: {
-                                Text("Heroes").lineLimit(1).minimumScaleFactor(0.7).frame(width: 82)
+                                Text("Heroes").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
                             }
                             .buttonStyle(ChunkyButtonStyle(color: Theme.purple))
                             .overlay(alignment: .top) {
@@ -193,11 +193,11 @@ struct HomeView: View {
                             if store.survivalUnlocked {
                                 Button { onPlay(.survival) } label: {
                                     VStack(spacing: 0) {
-                                        Text("SURVIVAL").font(Theme.font(13))
+                                        Text("SURVIVAL").font(Theme.font(13)).lineLimit(1).minimumScaleFactor(0.5)
                                         Text(p.bestSurvival.map { L10n.f("Best %@", String(format: "%d:%02d", Int($0) / 60, Int($0) % 60)) } ?? L10n.t("Endless"))
-                                            .font(Theme.font(9))
+                                            .font(Theme.font(9)).lineLimit(1).minimumScaleFactor(0.6)
                                     }
-                                    .frame(width: 82)
+                                    .frame(width: 86)
                                 }
                                 .buttonStyle(ChunkyButtonStyle(color: Theme.red, cornerRadius: 12, depth: 3))
                             }
@@ -205,10 +205,10 @@ struct HomeView: View {
                                 let isOpen = store.challengeAvailable()
                                 Button { onPlay(.challenge) } label: {
                                     VStack(spacing: 0) {
-                                        Text("DAILY").font(Theme.font(13))
-                                        Text(isOpen ? DailyChallenge.modifier(for: .now).title : L10n.t("Cleared ✓")).font(Theme.font(9))
+                                        Text("DAILY").font(Theme.font(13)).lineLimit(1).minimumScaleFactor(0.5)
+                                        Text(isOpen ? DailyChallenge.modifier(for: .now).title : L10n.t("Cleared ✓")).font(Theme.font(9)).lineLimit(1).minimumScaleFactor(0.6)
                                     }
-                                    .frame(width: 82)
+                                    .frame(width: 86)
                                 }
                                 .buttonStyle(ChunkyButtonStyle(color: isOpen ? Theme.teal : Theme.disabled, cornerRadius: 12, depth: 3))
                                 .disabled(!isOpen)
@@ -222,6 +222,7 @@ struct HomeView: View {
                             }
                         }
                         #if DEBUG
+                        if !ProcessInfo.processInfo.arguments.contains("-demo") {
                         HStack {
                             Button("Balance sim") { showBalance = true }
                             Button("+5k seeds") { store.addSeeds(5000) }
@@ -229,6 +230,7 @@ struct HomeView: View {
                             Button("Reset") { store.debugReset() }
                         }
                         .font(Theme.font(10)).foregroundStyle(.white.opacity(0.6))
+                        }
                         #endif
                     }
                     .padding(14)
@@ -349,10 +351,12 @@ private struct UpgradeCard: View {
                 .foregroundStyle(Theme.gold)
                 .frame(width: 48, height: 48)
                 .background(Circle().fill(Color.white.opacity(0.08)))
-            Text(upgrade.title).font(Theme.font(15)).foregroundStyle(.white)
+            Text(upgrade.title).font(Theme.font(15)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
             Text("Lv \(level)/\(upgrade.maxLevel)").font(Theme.font(11)).foregroundStyle(.white.opacity(0.6))
-            Text(upgrade.effectText(level: level)).font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.85))
+            // At level 0 show what the first purchase gives instead of "+0".
+            Text(upgrade.effectText(level: max(1, level))).font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(level == 0 ? 0.55 : 0.85))
+                .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.center)
             if maxed {
                 Text("MAX").font(Theme.font(14)).foregroundStyle(Theme.gold).padding(.vertical, 8)
             } else {

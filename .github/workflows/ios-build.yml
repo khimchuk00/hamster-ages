@@ -74,6 +74,18 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           shot 10-first-launch 8
           xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "HamsterAges"' --style compact > sim.log 2>&1 || true
+          # iPad layout check
+          IPAD=$(xcrun simctl list devices available | grep -E "iPad Pro 13" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          if [ -n "$IPAD" ]; then
+            xcrun simctl shutdown "$UDID" || true
+            UDID=$IPAD
+            xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl install "$UDID" "$APP"
+            shot 20-ipad-home 8 -demo
+            shot 21-ipad-battle 30 -demo -screen battle -autoplay -era 2
+            shot 22-ipad-heroes 6 -demo -screen heroes
+            shot 23-ipad-cards 6 -demo -screen battle
+          fi
 
       - name: Publish logs & screenshots to the ci-artifacts branch
         if: always()

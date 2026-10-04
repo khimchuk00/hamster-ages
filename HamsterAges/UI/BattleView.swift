@@ -252,7 +252,7 @@ private struct BaseBar: View {
     var body: some View {
         VStack(alignment: mirrored ? .trailing : .leading, spacing: 2) {
             Text(title.localizedUppercase)
-                .font(Theme.font(10))
+                .font(Theme.font(10)).lineLimit(1).minimumScaleFactor(0.6)
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.6), radius: 1, y: 1)
             ZStack(alignment: mirrored ? .trailing : .leading) {
@@ -374,7 +374,7 @@ private struct TurretButton: View {
                         .resizable().scaledToFit().frame(height: 28)
                         .opacity(info.era == nil ? 0.45 : 1)
                 }
-                Text(title).font(Theme.font(9)).foregroundStyle(.white.opacity(0.85))
+                Text(title).font(Theme.font(9)).foregroundStyle(.white.opacity(0.85)).lineLimit(1).minimumScaleFactor(0.6)
                 if let price {
                     Text("\(price)").font(Theme.font(11)).foregroundStyle(affordable ? .white : Theme.red.mix(with: .white, by: 0.4))
                 }
@@ -410,7 +410,7 @@ private struct SpecialButton: View {
             .frame(width: 62, height: 62)
             .overlay(alignment: .bottom) {
                 Text(GameConfig.eras[era].special.name.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white)
+                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(2).multilineTextAlignment(.center)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)
@@ -439,7 +439,7 @@ private struct HeroButton: View {
             .frame(width: 56, height: 56)
             .overlay(alignment: .bottom) {
                 Text(general.ability.title.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white)
+                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(2).multilineTextAlignment(.center)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)

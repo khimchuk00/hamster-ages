@@ -291,6 +291,17 @@ public final class BattleSimulation {
         return true
     }
 
+    /// Showcase / CI screenshots only: jumps `side` straight to `target` era with some food to spend.
+    public func debugJump(_ side: Side, toEra target: Int) {
+        let t = min(target, GameConfig.eras.count - 1)
+        while state(side).era < t {
+            mutate(side) { $0.xp = 1e9 }
+            guard evolve(side) else { break }
+        }
+        mutate(side) { $0.xp = 0; $0.food += 300 * GameConfig.costScale[$0.era] }
+        events.removeAll()
+    }
+
     /// Buys (or upgrades to the current era) the turret in `slot`. Old turret is refunded 50%.
     @discardableResult
     public func buyTurret(slot: Int, for side: Side) -> Bool {
