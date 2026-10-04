@@ -78,7 +78,7 @@ struct RootView: View {
                 battle = BattleController(stage: store.progress.stage, progress: store.progress)
             }
             if let i = args.firstIndex(of: "-screen"), i + 1 < args.count, args[i + 1].hasPrefix("art") {
-                artSheet = args[i + 1] == "artrat" ? .units(.rat) : args[i + 1] == "artbase" ? .bases : .units(.hamster)
+                artSheet = args[i + 1] == "artrat" ? .units(.rat) : args[i + 1] == "artbase" ? .bases : args[i + 1] == "artbg" ? .backgrounds : .units(.hamster)
             }
             #endif
         }

@@ -3,7 +3,7 @@ import SwiftUI
 
 /// CI-only contact sheets for reviewing the procedural art: `-screen art`, `artrat`, `artbase`.
 struct DebugArtSheet: View {
-    enum Kind { case units(Species), bases }
+    enum Kind { case units(Species), bases, backgrounds }
     let kind: Kind
 
     var body: some View {
@@ -25,6 +25,14 @@ struct DebugArtSheet: View {
                     }
                 }
                 .padding(.horizontal, 40)
+            case .backgrounds:
+                VStack(spacing: 2) {
+                    ForEach(0..<GameConfig.eras.count, id: \.self) { era in
+                        Image(uiImage: ArtFactory.shared.background(era: era, size: CGSize(width: 1350, height: 390), groundHeight: 86))
+                            .resizable().scaledToFit()
+                    }
+                }
+                .padding(.horizontal, 60)
             case .bases:
                 VStack(spacing: 4) {
                     HStack(alignment: .bottom, spacing: 10) {
