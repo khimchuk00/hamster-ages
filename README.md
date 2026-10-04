@@ -61,6 +61,16 @@ swiftc -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o /tmp/hamster-s
 - Режим «Виживання», Game Center (лідерборди + досягнення; capability у `HamsterAges.entitlements`),
   локальні нагадування, процедурна музика, екран налаштувань.
 
+## Глибина бою (після ресерчу, жовтень 2026)
+- **Щурячі генерали** (`Core/Rats.swift`): Gnawsworth, Skritch (раш), Whiskerbane (черепаха — Hold до 6 щурів), Fizzle (швидка еволюція), Big Cheddar (рій), Rat King (боси). Портрет, репліка на старті, видно на картці етапу й мапі.
+- **Елітні щури**: Swift (4+), Medic (6+, лише стрільці), Armored (7+; стріли ×0.45, важкі ×1.3), Shield (9+, 3 удари), Plague (12+, 2 міні-щури). Шанс 6% → 30%. Перша поява — картка з контрою.
+- **Накази армії**: Відступ / Тримати / Атака (`Stance`), ховаються в першому бою.
+- **Rat King**: телеграфований гуп (червона зона 1,4 с) + виклик 3 охоронців на 50% HP.
+- **Сети карт**: 5 родин (Claw/Volley/Fort/Harvest/Might), 3 карти = бонус.
+- **Мапа кампанії** (`UI/CampaignMapView.swift`): розділи по 10 етапів, переграш пройдених.
+- **Daily Challenge**: плюс умова перемоги — Hold Out 3:00, Beat the Clock 4:00, No Turrets.
+- Share-картка перемоги (`ShareCard`), моргання / X-очі, варіації висоти SFX.
+
 ### App Store Connect — що завести
 - IAP: 4 продукти (вище).
 - Game Center: лідерборди `com.valkhim.hamsterages.highest_stage`, `…survival_seconds`;
