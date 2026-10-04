@@ -68,7 +68,15 @@ swiftc -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o /tmp/hamster-s
 - `AppLinks.privacyPolicy` у `UI/SettingsView.swift` — вставити URL політики конфіденційності.
 - `PrivacyInfo.xcprivacy`, чернетка сторінки App Store — `AppStore.md`.
 
+## Реклама (AdMob)
+`Services/AdMob.swift` — Google Mobile Ads 13 (SPM). Після туторіалу: згода UMP (лише в регіонах GDPR/US-штатів) → ATT → старт SDK → передзавантаження rewarded/interstitial з повтором через 30 с.
+Зараз стоять **тестові** ID Google — гроші не йдуть. Перед релізом:
+1. admob.google.com → Apps → Add app (iOS, Hamster Ages) → скопіюй App ID у `HamsterAges-Info.plist` (`GADApplicationIdentifier`).
+2. Створи 2 ad units: Rewarded і Interstitial → встав у `AdConfig` в `Services/AdMob.swift`.
+3. AdMob → Privacy & messaging → створи GDPR-повідомлення (і US states) — без нього форма згоди не покажеться.
+4. App Store Connect → App Privacy: Identifiers (Device ID), Usage Data, Diagnostics — «used for third-party advertising, tracking».
+`-demo` / `-stubads` у launch arguments вмикають заглушку без SDK (CI і скріни).
+
 ## Що далі (перед soft launch)
-- Реальний рекламний SDK замість `StubAdService` (AdMob / AppLovin MAX) + ATT-промпт.
 - Підключити аналітичний бекенд, privacy manifest.
 - Музика, локалізація (String Catalog), App Store скріни й прев'ю-відео.
