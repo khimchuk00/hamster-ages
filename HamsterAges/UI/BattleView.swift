@@ -688,9 +688,11 @@ private struct CardPickView: View {
                 OutlinedText(text: controller.cardOfferTitle, size: 24, color: Theme.gold)
                 Text(controller.isTutorial && controller.ownedCards.isEmpty ? "Cards power up your army for this battle — pick any!" : "Choose one upgrade for this battle")
                     .font(Theme.font(13)).foregroundStyle(.white.opacity(0.85))
+                SetProgressRow(owned: controller.ownedCards)
                 HStack(spacing: 14) {
                     ForEach(Array(cards.enumerated()), id: \.element.id) { i, card in
-                        CardView(card: card, stacks: controller.ownedCards.filter { $0 == card.id }.count)
+                        CardView(card: card, stacks: controller.ownedCards.filter { $0 == card.id }.count,
+                                 familyCount: controller.ownedCards.filter { Card.tag(of: $0) == card.tag }.count)
                             .onTapGesture { controller.pick(card) }
                             .offset(y: appeared ? 0 : 40)
                             .opacity(appeared ? 1 : 0)
@@ -721,9 +723,32 @@ private struct CardPickView: View {
     }
 }
 
+/// Card families collected so far: "Claw 2/3", or the bonus name once complete.
+private struct SetProgressRow: View {
+    let owned: [CardID]
+
+    var body: some View {
+        let tags = CardTag.allCases.filter { t in owned.contains { Card.tag(of: $0) == t } }
+        if !tags.isEmpty {
+            HStack(spacing: 8) {
+                ForEach(tags, id: \.self) { t in
+                    let n = owned.filter { Card.tag(of: $0) == t }.count
+                    let done = n >= CardTag.setSize
+                    Label(done ? t.bonusTitle : "\(t.title) \(n)/\(CardTag.setSize)", systemImage: done ? "checkmark.seal.fill" : t.icon)
+                        .font(Theme.font(11)).foregroundStyle(done ? Theme.ink : .white)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Capsule().fill(done ? Theme.gold : Color(hex: t.color).opacity(0.45)))
+                }
+            }
+        }
+    }
+}
+
 private struct CardView: View {
     let card: Card
     let stacks: Int
+    /// Cards of this card's family already owned.
+    var familyCount = 0
 
     var body: some View {
         let rc = Theme.rarityColor(card.rarity)
@@ -745,9 +770,21 @@ private struct CardView: View {
                 Text("Owned ×\(stacks)").font(Theme.font(10)).foregroundStyle(Theme.gold)
             }
             Spacer(minLength: 0)
+            if familyCount == CardTag.setSize - 1 {
+                Label(L10n.f("Completes %@!", card.tag.bonusTitle), systemImage: "sparkles")
+                    .font(Theme.font(10)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Capsule().fill(Theme.gold))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            } else {
+                Label(card.tag.title, systemImage: card.tag.icon)
+                    .font(Theme.font(10)).foregroundStyle(.white)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Capsule().fill(Color(hex: card.tag.color).opacity(0.5)))
+            }
         }
         .padding(12)
-        .frame(width: 168, height: 200)
+        .frame(width: 168, height: 214)
         .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: 0x2B2140)))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(rc, lineWidth: 3))
         .shadow(color: rc.opacity(card.rarity == .epic ? 0.7 : 0.3), radius: card.rarity == .epic ? 14 : 6)

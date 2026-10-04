@@ -192,6 +192,10 @@ final class BattleController {
                 case .eliteSpawned(_, let trait) where !seenTraits.contains(trait):
                     seenTraits.insert(trait)
                     showEliteIntro(trait)
+                case .setBonus(side: .player, let tag):
+                    flashBanner(L10n.f("SET BONUS: %@!", tag.bonusTitle.localizedUppercase))
+                    Sound.shared.play(.evolve)
+                    Haptics.success()
                 case .bossSummon:
                     flashBanner(L10n.t("THE RAT KING CALLS HIS GUARD!"))
                     Haptics.boom()

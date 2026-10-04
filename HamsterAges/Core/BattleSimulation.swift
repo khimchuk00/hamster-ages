@@ -127,6 +127,8 @@ public enum BattleEvent {
     case healed(unitID: Int, by: Int, amount: Double)
     /// The Rat King, hurt, calls in his guard.
     case bossSummon(unitID: Int)
+    /// Third card of a family picked: its set bonus is now active.
+    case setBonus(side: Side, tag: CardTag)
     case waveUp(level: Int)
     case reviveOffered
     case suddenDeathStarted
@@ -170,6 +172,9 @@ public struct SideState {
     public var overclockTimer: Double = 0
     public var heroReady: Bool { heroAbility != nil && !heroUsed }
     public var bossesKilled = 0
+    public var setBonuses: Set<CardTag> = []
+    /// Cards owned per family.
+    public func tagCount(_ tag: CardTag) -> Int { cards.filter { Card.tag(of: $0) == tag }.count }
     /// Army-wide order (player HUD / AI general).
     public var stance: Stance = .charge
 
@@ -472,6 +477,27 @@ public final class BattleSimulation {
             case .secondWind: s.mods.baseRegen += 0.005
             }
             s.cards.append(id)
+        }
+        let tag = Card.tag(of: id)
+        if !state(side).setBonuses.contains(tag) && state(side).tagCount(tag) >= CardTag.setSize {
+            mutate(side) { s in
+                s.setBonuses.insert(tag)
+                switch tag {
+                case .claw: s.mods.roleHP[UnitRole.melee.rawValue] *= 1.25
+                case .volley: s.mods.roleDamage[UnitRole.ranged.rawValue] *= 1.2
+                case .fort:
+                    s.mods.turretDamage *= 1.25
+                    let old = s.baseMaxHP
+                    s.mods.baseHP *= 1.15
+                    s.baseMaxHP *= 1.15
+                    s.baseHP += s.baseMaxHP - old
+                case .harvest: s.mods.income *= 1.2
+                case .might:
+                    s.mods.roleHP[UnitRole.heavy.rawValue] *= 1.25
+                    s.mods.roleDamage[UnitRole.heavy.rawValue] *= 1.25
+                }
+            }
+            events.append(.setBonus(side: side, tag: tag))
         }
     }
 

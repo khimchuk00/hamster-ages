@@ -474,5 +474,26 @@ do {
           "daily goals rotate through every twist")
 }
 
+// MARK: Card sets
+do {
+    check(Set(CardID.allCases.map(Card.tag(of:))).count == CardTag.allCases.count, "every card family has cards")
+    for tag in CardTag.allCases {
+        check(CardID.allCases.filter { Card.tag(of: $0) == tag && Card.card($0).stackable }.count >= 1,
+              "family \(tag) can always reach a set with stackable cards")
+    }
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 1)
+    let income = s.state(.player).mods.income
+    s.applyCard(.chubbyCheeks, to: .player)
+    s.applyCard(.scavenger, to: .player)
+    check(s.state(.player).setBonuses.isEmpty, "no set bonus with 2 cards")
+    s.events.removeAll()
+    s.applyCard(.fastLearner, to: .player)
+    check(s.state(.player).setBonuses == [.harvest], "3 Harvest cards unlock Bumper Crop")
+    check(abs(s.state(.player).mods.income - income * 1.3 * 1.2) < 1e-9, "Bumper Crop adds +20% income on top")
+    check(s.events.contains { if case .setBonus(.player, .harvest) = $0 { return true } else { return false } }, "set bonus event fires")
+    s.applyCard(.bargainBin, to: .player)
+    check(abs(s.state(.player).mods.income - income * 1.3 * 1.2) < 1e-9, "set bonus applies once")
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

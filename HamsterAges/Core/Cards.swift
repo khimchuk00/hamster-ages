@@ -75,6 +75,64 @@ public enum CardID: String, Codable, CaseIterable {
          shieldWall, sniperNest, scavenger, rapidFire, siegeBreaker, secondWind
 }
 
+/// Card families. Collecting 3 cards of one family in a battle unlocks its set bonus.
+public enum CardTag: String, CaseIterable, Codable {
+    case claw, volley, fort, harvest, might
+
+    public static let setSize = 3
+
+    public var title: String {
+        switch self {
+        case .claw: return L10n.t("Claw")
+        case .volley: return L10n.t("Volley")
+        case .fort: return L10n.t("Fort")
+        case .harvest: return L10n.t("Harvest")
+        case .might: return L10n.t("Might")
+        }
+    }
+
+    public var icon: String {
+        switch self {
+        case .claw: return "pawprint.fill"
+        case .volley: return "scope"
+        case .fort: return "building.columns.fill"
+        case .harvest: return "leaf.fill"
+        case .might: return "dumbbell.fill"
+        }
+    }
+
+    /// Colour for chips (hex).
+    public var color: UInt32 {
+        switch self {
+        case .claw: return 0xF4A259
+        case .volley: return 0x23A8C9
+        case .fort: return 0x9AA4AE
+        case .harvest: return 0x5BC25B
+        case .might: return 0xE04848
+        }
+    }
+
+    public var bonusTitle: String {
+        switch self {
+        case .claw: return L10n.t("Pack Fury")
+        case .volley: return L10n.t("Hailstorm")
+        case .fort: return L10n.t("Iron Walls")
+        case .harvest: return L10n.t("Bumper Crop")
+        case .might: return L10n.t("Titans")
+        }
+    }
+
+    public var bonusDetail: String {
+        switch self {
+        case .claw: return L10n.f("Melee units +25%% HP")
+        case .volley: return L10n.f("Ranged units +20%% damage")
+        case .fort: return L10n.f("Turrets +25%% damage, base +15%% HP")
+        case .harvest: return L10n.f("Food income +20%%")
+        case .might: return L10n.f("Heavy units +25%% HP and damage")
+        }
+    }
+}
+
 public struct Card: Identifiable, Equatable {
     public let id: CardID
     public let title: String
@@ -111,6 +169,18 @@ public struct Card: Identifiable, Equatable {
     ]
 
     public static func card(_ id: CardID) -> Card { all.first { $0.id == id }! }
+
+    public var tag: CardTag { Card.tag(of: id) }
+
+    public static func tag(of id: CardID) -> CardTag {
+        switch id {
+        case .sharpTeeth, .shieldWall, .vampireBite, .berserk, .recruiter: return .claw
+        case .eagleEye, .splashShot, .rapidFire, .skyFury: return .volley
+        case .fortify, .turretGrease, .sniperNest, .secondWind, .lastStand: return .fort
+        case .chubbyCheeks, .seedStash, .scavenger, .bargainBin, .fastLearner, .hamsterWheel: return .harvest
+        case .thickFur, .giantGrowth, .warDrums, .siegeBreaker: return .might
+        }
+    }
 
     /// Draws `count` distinct cards, weighted by rarity, skipping non-stackable cards already owned.
     public static func draw(count: Int, owned: [CardID], rng: inout SeededRandom, epicBoost: Double = 1) -> [Card] {
