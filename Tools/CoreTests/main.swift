@@ -503,5 +503,17 @@ do {
     check(abs(s.state(.player).mods.income - income * 1.3 * 1.2) < 1e-9, "set bonus applies once")
 }
 
+// MARK: Hard mode
+do {
+    let n = StageDifficulty(stage: 7), h = StageDifficulty(stage: 7, hard: true)
+    check(h.isHard && h.aiStats > n.aiStats && h.aiIncome > n.aiIncome, "Hard rats are tougher and richer")
+    let s = BattleSimulation(difficulty: h, playerMods: SideModifiers(), seed: 2)
+    check(s.eliteOdds.pool.count == RatTrait.allCases.count && s.eliteOdds.chance > RatTrait.chance(stage: 7), "Hard fields every elite, more often")
+    MainActor.assumeIsolated {
+        check(ProgressStore.reward(stage: 7, won: true, damageFraction: 1, hard: true) == 2 * ProgressStore.reward(stage: 7, won: true, damageFraction: 1),
+              "Hard pays double seeds")
+    }
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

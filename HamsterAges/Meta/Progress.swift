@@ -96,6 +96,8 @@ struct PlayerProgress: Codable {
     var freeSeedsCount: Int?
     /// Piggy Bank: a share of every battle's seeds piles up here; breaking it is an IAP.
     var piggySeeds: Int?
+    /// Best stars per stage on Hard replays.
+    var hardStars: [Int: Int]?
 
     var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
     func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
@@ -191,8 +193,8 @@ final class ProgressStore {
     }
 
     // Battle rewards
-    static func reward(stage: Int, won: Bool, damageFraction: Double) -> Int {
-        let full = 50 + 20 * stage
+    static func reward(stage: Int, won: Bool, damageFraction: Double, hard: Bool = false) -> Int {
+        let full = (50 + 20 * stage) * (hard ? 2 : 1)
         return won ? full : Int((Double(full) * 0.55 * damageFraction).rounded()) + 5
     }
 
@@ -236,7 +238,10 @@ final class ProgressStore {
         save()
     }
 
-    func recordBattle(stage: Int, won: Bool, seeds: Int, stars: Int, stats: BattleStats = BattleStats()) {
+    /// Hard mode opens for a chapter once all its stages are cleared.
+    func hardUnlocked(chapter: Int) -> Bool { progress.stage > (chapter + 1) * 10 }
+
+    func recordBattle(stage: Int, won: Bool, seeds: Int, stars: Int, stats: BattleStats = BattleStats(), hard: Bool = false) {
         progress.seeds += seeds
         fillPiggy(from: seeds)
         addPassXP(HamsterPass.xp(battleWon: won, stars: stars))
@@ -251,7 +256,12 @@ final class ProgressStore {
         if progress.starterOfferStart == nil && progress.starterBought != true && (!won || progress.battlesPlayed >= 3) {
             progress.starterOfferStart = .now
         }
-        if won {
+        if won && hard {
+            progress.wins += 1
+            var h = progress.hardStars ?? [:]
+            h[stage] = max(h[stage] ?? 0, stars)
+            progress.hardStars = h
+        } else if won {
             progress.wins += 1
             progress.stars[stage] = max(progress.stars[stage] ?? 0, stars)
             if stage == progress.stage {

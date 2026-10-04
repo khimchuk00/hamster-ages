@@ -13,6 +13,7 @@ struct BattleResult {
     var wave = 0
     /// For the share card.
     var era = 0
+    var hard = false
     var ratGeneral: RatGeneral = .gnawsworth
     var skin: FurSkin = .classic
     var general: GeneralID?
@@ -102,13 +103,13 @@ final class BattleController {
     }
     var reviveOffer = false
 
-    init(stage: Int, progress: PlayerProgress, mode: BattleMode = .campaign) {
+    init(stage: Int, progress: PlayerProgress, mode: BattleMode = .campaign, hard: Bool = false) {
         self.stage = stage
         self.mode = mode
         let today = Date.now
         challengeFirstClear = mode == .challenge && progress.challengeClearedDay != QuestBoard.dayKey(today)
         switch mode {
-        case .campaign: difficulty = StageDifficulty(stage: stage)
+        case .campaign: difficulty = StageDifficulty(stage: stage, hard: hard)
         case .survival: difficulty = StageDifficulty(stage: GameConfig.survivalBaseStage)
         case .challenge: difficulty = StageDifficulty(stage: stage, modifier: DailyChallenge.modifier(for: today))
         }
@@ -480,7 +481,8 @@ final class BattleController {
         switch mode {
         case .survival: baseSeeds = ProgressStore.survivalReward(wave: sim.survivalWave)
         case .challenge where won && challengeFirstClear: baseSeeds = DailyChallenge.reward(stage: stage)
-        default: baseSeeds = ProgressStore.reward(stage: stage, won: won, damageFraction: sim.enemyBaseDamageFraction)
+        default: baseSeeds = ProgressStore.reward(stage: stage, won: won, damageFraction: sim.enemyBaseDamageFraction,
+                                                  hard: difficulty.isHard)
         }
         let seeds = Int((Double(baseSeeds) * LiveEvents.seedMultiplier()).rounded())
         let stats = BattleStats(won: won, unitsTrained: p.unitsTrained, kills: p.kills, specialsUsed: p.specialsUsed,
@@ -489,6 +491,7 @@ final class BattleController {
         r.mode = mode
         r.wave = sim.survivalWave
         r.era = p.era
+        r.hard = difficulty.isHard
         r.ratGeneral = ratGeneral
         r.skin = skin
         r.general = general

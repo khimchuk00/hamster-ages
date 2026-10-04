@@ -327,3 +327,5 @@ T("SET BONUS: %@!", "БОНУС НАБОРУ: %@!", "SET-BONUS: %@!", "¡BONO DE
 T("Full! Break it now", "Повна! Розбий її", "Voll! Jetzt knacken", "¡Llena! Rómpela ya", "Pleine ! Casse-la", "Pieno! Rompilo ora", "Cheio! Quebre agora", "満タン！今すぐ割ろう", "가득 찼어요! 지금 깨세요", "已满！现在砸开", "已滿！現在砸開", "Doldu! Şimdi kır")
 T("Fills up as you battle", "Наповнюється з кожним боєм", "Füllt sich beim Kämpfen", "Se llena al combatir", "Se remplit en combattant", "Si riempie combattendo", "Enche enquanto você batalha", "バトルで貯まる", "전투할수록 차올라요", "战斗时自动存入", "戰鬥時自動存入", "Savaştıkça dolar")
 T("Break at %lld 🌻", "Можна розбити з %lld 🌻", "Knackbar ab %lld 🌻", "Se rompe con %lld 🌻", "Cassable à %lld 🌻", "Si rompe a %lld 🌻", "Quebra com %lld 🌻", "%lld 🌻で割れる", "%lld 🌻부터 깰 수 있어요", "满%lld 🌻可砸开", "滿%lld 🌻可砸開", "%lld 🌻 olunca kırılır")
+T("Hard", "Важко", "Schwer", "Difícil", "Difficile", "Difficile", "Difícil", "ハード", "어려움", "困难", "困難", "Zor")
+T("Normal", "Звичайно", "Normal", "Normal", "Normal", "Normale", "Normal", "ノーマル", "보통", "普通", "普通", "Normal")

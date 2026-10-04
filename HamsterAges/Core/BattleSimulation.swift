@@ -344,7 +344,9 @@ public final class BattleSimulation {
             let stage = GameConfig.survivalBaseStage + 2 * (survivalWave - 1)
             return (RatTrait.pool(stage: stage), RatTrait.chance(stage: stage))
         case .campaign, .challenge:
-            return (RatTrait.pool(stage: difficulty.stage), RatTrait.chance(stage: difficulty.stage))
+            // Hard mode fields every elite type the rats will ever have, and more of them.
+            let stage = difficulty.isHard ? max(difficulty.stage, 12) : difficulty.stage
+            return (RatTrait.pool(stage: stage), min(0.4, RatTrait.chance(stage: stage) + (difficulty.isHard ? 0.12 : 0)))
         }
     }
 

@@ -4,9 +4,10 @@ import SwiftUI
 /// Any cleared stage can be replayed for more stars; the next one is the glowing node.
 struct CampaignMapView: View {
     let store: ProgressStore
-    let onPlay: (Int) -> Void
+    let onPlay: (Int, Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var chapter: Int
+    @State private var hard = false
     @State private var selected: Int?
     @State private var pulse = false
 
@@ -15,7 +16,7 @@ struct CampaignMapView: View {
     /// Background age for a chapter (the last age repeats).
     static func era(ofChapter c: Int) -> Int { min(GameConfig.eras.count - 1, c) }
 
-    init(store: ProgressStore, onPlay: @escaping (Int) -> Void) {
+    init(store: ProgressStore, onPlay: @escaping (Int, Bool) -> Void) {
         self.store = store
         self.onPlay = onPlay
         _chapter = State(initialValue: CampaignMapView.chapter(of: store.progress.stage))
@@ -26,7 +27,14 @@ struct CampaignMapView: View {
     private var stages: [Int] { (1...CampaignMapView.perChapter).map { chapter * CampaignMapView.perChapter + $0 } }
     private var focus: Int {
         if let selected { return selected }
+        if hard { return stages.first { (store.progress.hardStars?[$0] ?? 0) == 0 } ?? stages[0] }
         return stages.contains(current) ? current : stages[0]
+    }
+    private var hardOpen: Bool { store.hardUnlocked(chapter: chapter) }
+    private func stars(_ stage: Int) -> Int { hard ? (store.progress.hardStars?[stage] ?? 0) : (store.progress.stars[stage] ?? 0) }
+    private func nodeState(_ stage: Int) -> StageNode.NodeState {
+        if hard { return stars(stage) > 0 ? .cleared : .next }
+        return stage < current ? .cleared : stage == current ? .next : .locked
     }
 
     var body: some View {
@@ -34,7 +42,7 @@ struct CampaignMapView: View {
             ZStack {
                 Image(uiImage: ArtFactory.shared.background(era: CampaignMapView.era(ofChapter: chapter), size: geo.size, groundHeight: 60))
                     .resizable().ignoresSafeArea()
-                Color.black.opacity(0.18).ignoresSafeArea()
+                (hard ? Color(hex: 0x4A0E2E).opacity(0.45) : Color.black.opacity(0.18)).ignoresSafeArea()
 
                 VStack(spacing: 6) {
                     header
@@ -52,9 +60,8 @@ struct CampaignMapView: View {
                             .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
 
                             ForEach(Array(stages.enumerated()), id: \.offset) { i, stage in
-                                StageNode(stage: stage, stars: store.progress.stars[stage] ?? 0,
-                                          state: stage < current ? .cleared : stage == current ? .next : .locked,
-                                          selected: stage == focus, pulse: pulse)
+                                StageNode(stage: stage, stars: stars(stage), state: nodeState(stage),
+                                          selected: stage == focus, pulse: pulse && (!hard || stage == focus), hard: hard)
                                     .position(pts[i])
                                     .onTapGesture {
                                         selected = stage
@@ -63,9 +70,9 @@ struct CampaignMapView: View {
                             }
                         }
                     }
-                    StageCard(stage: focus, stars: store.progress.stars[focus] ?? 0, playable: focus <= current) {
+                    StageCard(stage: focus, stars: stars(focus), playable: hard || focus <= current, hard: hard) {
                         dismiss()
-                        onPlay(focus)
+                        onPlay(focus, hard)
                     }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
@@ -81,18 +88,39 @@ struct CampaignMapView: View {
                 Text(GameConfig.eraNames[CampaignMapView.era(ofChapter: chapter)].localizedUppercase)
                     .font(Theme.font(11)).foregroundStyle(.white).shadow(color: .black.opacity(0.6), radius: 1, y: 1)
             }
-            let got = stages.reduce(0) { $0 + (store.progress.stars[$1] ?? 0) }
+            let got = stages.reduce(0) { $0 + stars($1) }
             Label("\(got)/\(stages.count * 3)", systemImage: "star.fill")
                 .font(Theme.font(13)).foregroundStyle(Theme.gold)
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(Capsule().fill(Theme.panel))
+            if hardOpen {
+                HStack(spacing: 0) {
+                    ForEach([false, true], id: \.self) { h in
+                        Button {
+                            withAnimation(.spring(response: 0.3)) { hard = h; selected = nil }
+                            Haptics.tap()
+                        } label: {
+                            Text(h ? L10n.t("Hard") : L10n.t("Normal")).font(Theme.font(12))
+                                .foregroundStyle(hard == h ? (h ? Color.white : Theme.ink) : Color.white.opacity(0.8))
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Capsule().fill(hard == h ? (h ? Theme.red : Theme.gold) : Color.clear))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(2)
+                .background(Capsule().fill(Theme.panel))
+            }
             Spacer()
             HStack(spacing: 6) {
                 ForEach(0...(lastChapter + 1), id: \.self) { c in
                     let locked = c > lastChapter
                     Button {
                         guard !locked else { Haptics.fail(); return }
-                        withAnimation(.spring(response: 0.3)) { chapter = c; selected = nil }
+                        withAnimation(.spring(response: 0.3)) {
+                            chapter = c; selected = nil
+                            if !store.hardUnlocked(chapter: c) { hard = false }
+                        }
                     } label: {
                         Group {
                             if locked { Image(systemName: "lock.fill").font(.system(size: 11, weight: .black)) }
@@ -132,6 +160,7 @@ private struct StageNode: View {
     let state: NodeState
     let selected: Bool
     let pulse: Bool
+    var hard = false
 
     var body: some View {
         let boss = stage % 5 == 0
@@ -174,8 +203,8 @@ private struct StageNode: View {
 
     private var fill: Color {
         switch state {
-        case .cleared: return Theme.green
-        case .next: return Theme.gold
+        case .cleared: return hard ? Theme.purple : Theme.green
+        case .next: return hard ? Theme.red : Theme.gold
         case .locked: return Theme.disabled
         }
     }
@@ -185,6 +214,7 @@ private struct StageCard: View {
     let stage: Int
     let stars: Int
     let playable: Bool
+    var hard = false
     let onPlay: () -> Void
 
     var body: some View {
@@ -196,6 +226,10 @@ private struct StageCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(L10n.f("Stage %lld", stage)).font(Theme.font(16)).foregroundStyle(.white)
+                    if hard {
+                        Text(L10n.t("Hard").localizedUppercase).font(Theme.font(10)).foregroundStyle(.white)
+                            .padding(.horizontal, 6).padding(.vertical, 1).background(Capsule().fill(Theme.purple))
+                    }
                     if d.isBoss {
                         Text("BOSS").font(Theme.font(10)).foregroundStyle(.white)
                             .padding(.horizontal, 6).padding(.vertical, 1).background(Capsule().fill(Theme.red))
@@ -220,12 +254,12 @@ private struct StageCard: View {
                 }
             }
             Spacer(minLength: 6)
-            Text("🌻 \(ProgressStore.reward(stage: stage, won: true, damageFraction: 1))")
+            Text("🌻 \(ProgressStore.reward(stage: stage, won: true, damageFraction: 1, hard: hard))")
                 .font(Theme.font(13)).foregroundStyle(.white)
             Button(action: onPlay) {
                 Label(stars > 0 ? L10n.t("Replay") : L10n.t("BATTLE"), systemImage: "flag.2.crossed.fill").font(Theme.font(16))
             }
-            .buttonStyle(ChunkyButtonStyle(color: playable ? Theme.green : Theme.disabled, cornerRadius: 14, depth: 4))
+            .buttonStyle(ChunkyButtonStyle(color: playable ? (hard ? Theme.red : Theme.green) : Theme.disabled, cornerRadius: 14, depth: 4))
             .disabled(!playable)
         }
         .padding(.horizontal, 12).padding(.vertical, 8)

@@ -253,14 +253,17 @@ public struct StageDifficulty {
     public let aiEvolveDelay: Double
     public let isBoss: Bool
     public let modifier: StageModifier
+    /// Hard replay of a cleared chapter: tougher, richer rats, more elites, double seeds.
+    public let isHard: Bool
 
-    public init(stage: Int, modifier forced: StageModifier? = nil) {
+    public init(stage: Int, modifier forced: StageModifier? = nil, hard: Bool = false) {
         let s = Double(max(1, stage) - 1)
         let boss = stage % 5 == 0
         self.stage = max(1, stage)
         isBoss = boss
-        aiIncome = min(2.6, 0.6 + 0.045 * s)
-        aiStats = min(2.2, 0.8 + 0.03 * s)
+        isHard = hard
+        aiIncome = min(2.6, 0.6 + 0.045 * s) * (hard ? 1.25 : 1)
+        aiStats = min(2.2, 0.8 + 0.03 * s) * (hard ? 1.3 : 1)
         aiThinkInterval = max(0.45, 1.3 - 0.05 * s)
         aiUsesCards = stage >= 4
         aiEvolveDelay = max(0.5, 10 - 0.6 * s)

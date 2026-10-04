@@ -82,7 +82,7 @@ struct BattleView: View {
                 } else if r.mode == .challenge {
                     store.recordChallenge(won: r.won, seeds: r.seeds, stats: r.stats)
                 } else {
-                    store.recordBattle(stage: r.stage, won: r.won, seeds: r.seeds, stars: r.stars, stats: r.stats)
+                    store.recordBattle(stage: r.stage, won: r.won, seeds: r.seeds, stars: r.stars, stats: r.stats, hard: r.hard)
                 }
                 if isTutorial { store.completeTutorial() }
                 GameCenter.sync(progress: store.progress, lastBattle: r.stats)

@@ -6,7 +6,7 @@ struct HomeView: View {
     let ads: AdService
     let onPlay: (BattleMode) -> Void
     /// Campaign map: play (or replay) a specific stage.
-    var onPlayStage: (Int) -> Void = { _ in }
+    var onPlayStage: (Int, Bool) -> Void = { _, _ in }
     @State private var showMap = false
     @State private var showGenerals = false
     @State private var showQuests = false
@@ -357,7 +357,7 @@ struct HomeView: View {
             if store.progress.tutorialDone == true && store.dailyStatus().available { showDaily = true }
         }
         .fullScreenCover(isPresented: $showMap) {
-            ScaledUI { CampaignMapView(store: store) { stage in onPlayStage(stage) } }
+            ScaledUI { CampaignMapView(store: store) { stage, hard in onPlayStage(stage, hard) } }
         }
         .sheet(isPresented: $showUpgrades) { UpgradesView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showDaily) { DailyRewardView(store: store).presentationSizing(.page) }
