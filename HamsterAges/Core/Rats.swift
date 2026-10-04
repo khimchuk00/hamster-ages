@@ -203,9 +203,11 @@ public enum RatGeneral: String, CaseIterable, Codable {
         case .squeak:
             p.weights = [0.36, 0.46, 0.18]
             p.evolveDelay = 0.4
+            p.massBeforeCharge = 4
         case .cheddar:
             p.weights = [0.72, 0.23, 0.05]
             p.specialCrowd = 6
+            p.massBeforeCharge = 5
         }
         return p
     }
