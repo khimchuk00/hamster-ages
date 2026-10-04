@@ -328,7 +328,7 @@ final class BattleScene: SKScene {
         let texture = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role))
         let body = SKSpriteNode(texture: texture)
         body.name = "body"
-        body.anchorPoint = CGPoint(x: 0.5, y: 0.06)
+        body.anchorPoint = CGPoint(x: ArtFactory.unitAnchorX(u.role), y: 0.06)
         body.setScale(unitScale)
         if u.isBoss {
             body.setScale(unitScale * 1.4)

@@ -39,9 +39,14 @@ final class ArtFactory {
 
     // MARK: Public API
 
+    /// Light units are drawn in a 64x64 critter frame plus room on the right for long weapons.
+    static let lightUnitSize = CGSize(width: 78, height: 64)
+    /// Horizontal anchor that keeps the critter's body (not the canvas) centred on the unit's lane position.
+    static func unitAnchorX(_ role: UnitRole) -> CGFloat { role == .heavy ? 0.5 : 32 / lightUnitSize.width }
+
     func unit(_ species: Species, era: Int, role: UnitRole) -> UIImage {
         cached("u-\(species)-\(era)-\(role)") {
-            let size = role == .heavy ? CGSize(width: 96, height: 80) : CGSize(width: 64, height: 64)
+            let size = role == .heavy ? CGSize(width: 96, height: 80) : ArtFactory.lightUnitSize   // extra width for raised blades
             return render(size) { ctx in
                 if role == .heavy {
                     self.drawHeavy(ctx, species, era)
