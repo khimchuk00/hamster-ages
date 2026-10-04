@@ -826,7 +826,7 @@ public final class BattleSimulation {
             events.append(.projectileFired(id: p.id))
         } else if let t = target {
             damage(t, amount: u.damage * overtimeFactor * charge, by: u.side, sourceID: u.id,
-                   kind: u.role == .heavy ? .heavy : .melee)
+                   kind: u.role == .heavy ? .heavy : .melee, role: u.role)
         } else {
             damageBase(u.side.opponent, amount: u.damage * overtimeFactor * charge * state(u.side).mods.baseDamage, by: u.side)
         }
@@ -866,11 +866,12 @@ public final class BattleSimulation {
         }
         // Cannonballs, shells and turret blasts crack armor; arrows and bullets don't.
         let kind: DamageKind = p.isHeavy || (p.fromTurret && p.splash > 0) ? .heavy : .pierce
-        if let primary { damage(primary, amount: p.damage, by: p.side, sourceID: p.sourceID, kind: kind) }
+        let role: UnitRole? = p.fromTurret ? nil : (p.isHeavy ? .heavy : .ranged)
+        if let primary { damage(primary, amount: p.damage, by: p.side, sourceID: p.sourceID, kind: kind, role: role) }
         if p.splash > 0 {
             for u in units where u.side == p.side.opponent && u.isAlive && u !== primary
                 && abs(u.x - p.x) <= p.splash {
-                damage(u, amount: p.damage * p.splashFactor, by: p.side, sourceID: p.sourceID, kind: kind)
+                damage(u, amount: p.damage * p.splashFactor, by: p.side, sourceID: p.sourceID, kind: kind, role: role)
             }
         }
     }
@@ -892,7 +893,8 @@ public final class BattleSimulation {
         pendingSpecials = keep
     }
 
-    private func damage(_ target: UnitEntity, amount: Double, by attacker: Side, sourceID: Int?, kind: DamageKind) {
+    private func damage(_ target: UnitEntity, amount: Double, by attacker: Side, sourceID: Int?, kind: DamageKind,
+                        role: UnitRole? = nil) {
         guard target.isAlive else { return }
         if target.shield > 0 {
             if kind == .special {
@@ -905,6 +907,7 @@ public final class BattleSimulation {
             }
         }
         var dealt = amount * target.armor
+        if let role { dealt *= GameConfig.roleFactor(attacker: role, target: target.role) }
         if target.trait == .armored {
             if kind == .pierce {
                 dealt *= GameConfig.armoredPierceFactor

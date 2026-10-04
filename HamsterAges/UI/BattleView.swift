@@ -27,6 +27,11 @@ struct BattleView: View {
                         .transition(.move(edge: .leading).combined(with: .opacity))
                 }
 
+                if let tip = controller.tip, controller.result == nil, controller.eliteIntro == nil {
+                    TipCard(text: tip)
+                        .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+
                 if let taunt = controller.taunt, controller.result == nil {
                     TauntBubble(general: controller.ratGeneral, text: taunt)
                         .transition(.scale(scale: 0.6, anchor: .topTrailing).combined(with: .opacity))
@@ -63,6 +68,7 @@ struct BattleView: View {
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: controller.tutorialVisible)
             .animation(.spring(response: 0.35, dampingFraction: 0.75), value: controller.taunt)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: controller.eliteIntro)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: controller.tip)
             .animation(.easeOut(duration: 0.2), value: controller.cardOffer == nil)
             .animation(.easeOut(duration: 0.25), value: controller.result == nil)
             .onAppear { applyInsets(geo) }
@@ -313,6 +319,36 @@ private struct TauntBubble: View {
             .padding(.top, 56)
             .padding(.trailing, 56)
             .frame(maxWidth: .infinity, alignment: .trailing)
+            Spacer()
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct TipCard: View {
+    let text: String
+
+    var body: some View {
+        VStack {
+            HStack(spacing: 10) {
+                HStack(spacing: -6) {
+                    ForEach(UnitRole.allCases, id: \.self) { role in
+                        Image(uiImage: ArtFactory.shared.unit(.hamster, era: 1, role: role)).resizable().scaledToFit().frame(width: 30, height: 30)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("TIP").font(Theme.font(12)).foregroundStyle(Theme.teal)
+                    Text(text).font(Theme.font(12)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(maxWidth: 360, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.cream))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.teal, lineWidth: 2.5))
+            .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+            .padding(.top, 60)
+            .padding(.leading, 56)
+            .frame(maxWidth: .infinity, alignment: .leading)
             Spacer()
         }
         .allowsHitTesting(false)

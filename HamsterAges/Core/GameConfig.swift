@@ -105,6 +105,15 @@ public enum GameConfig {
     public static let bossGuards = 3
     /// Armored rats take this share of arrow/bullet damage.
     public static let armoredPierceFactor: Double = 0.45
+    /// Role triangle: melee swarms bite big targets, heavies flatten archers, archers pick off charging melee.
+    public static func roleFactor(attacker: UnitRole, target: UnitRole) -> Double {
+        switch (attacker, target) {
+        case (.melee, .heavy): return 1.6
+        case (.heavy, .ranged): return 1.4
+        case (.ranged, .melee): return 1.3
+        default: return 1
+        }
+    }
     /// ...and this much from cannons, shells and heavy blows.
     public static let armoredHeavyFactor: Double = 1.3
     /// Survival mode: endless, enemy grows stronger every interval; unlocked after beating stage 10.

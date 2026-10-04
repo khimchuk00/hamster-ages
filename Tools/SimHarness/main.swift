@@ -3,3 +3,5 @@
 import Foundation
 
 print(BalanceHarness.report(games: 20))
+print("")
+print(BalanceHarness.dominanceReport())

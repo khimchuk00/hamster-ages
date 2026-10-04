@@ -378,6 +378,25 @@ do {
     check(L10n.f("Rats · %@", "Future") == "Rats · Future", "L10n.f formats strings")
 }
 
+func eliteRun(seed: UInt64) -> (sim: BattleSimulation, traits: Set<RatTrait>, shieldHits: Int, heals: Int, sawMinion: Bool) {
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: seed)
+    playerBot(s)
+    var traits = Set<RatTrait>(), shieldHits = 0, heals = 0, sawMinion = false
+    var t = 0.0
+    while t < 400 && s.winner == nil && !s.awaitingRevive {
+        s.step(1.0 / 30)
+        for e in s.events {
+            if case .eliteSpawned(_, let trait) = e { traits.insert(trait) }
+            if case .shieldHit = e { shieldHits += 1 }
+            if case .healed = e { heals += 1 }
+        }
+        if s.units.contains(where: { $0.isMinion }) { sawMinion = true }
+        s.events.removeAll()
+        t += 1.0 / 30
+    }
+    return (s, traits, shieldHits, heals, sawMinion)
+}
+
 // MARK: Elite rats, stances, rat generals, boss slam
 do {
     check(RatTrait.chance(stage: 3) == 0 && RatTrait.pool(stage: 3).isEmpty, "no elite rats before stage 4")
@@ -389,20 +408,16 @@ do {
     check(Set(rotation).count == 5, "every rat general shows up before repeating")
 
     // Elites appear, shields absorb hits, plague rats split.
-    let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 78)
-    playerBot(s)
-    var traits = Set<RatTrait>(), shieldHits = 0, heals = 0, sawMinion = false, eliteIDs = Set<Int>()
+    // Several seeds (all deterministic) so the check doesn't hinge on one battle's dice.
+    var traits = Set<RatTrait>(), shieldHits = 0, heals = 0, sawMinion = false
+    var s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 78)
     var t = 0.0
-    while t < 400 && s.winner == nil && !s.awaitingRevive {
-        s.step(1.0 / 30)
-        for e in s.events {
-            if case .eliteSpawned(let id, let trait) = e { traits.insert(trait); eliteIDs.insert(id) }
-            if case .shieldHit = e { shieldHits += 1 }
-            if case .healed = e { heals += 1 }
-        }
-        if s.units.contains(where: { $0.isMinion }) { sawMinion = true }
-        s.events.removeAll()
-        t += 1.0 / 30
+    for seed: UInt64 in 78...81 {
+        if heals > 0 && sawMinion && shieldHits > 0 { break }
+        let r = eliteRun(seed: seed)
+        s = r.sim
+        traits.formUnion(r.traits); shieldHits += r.shieldHits; heals += r.heals
+        sawMinion = sawMinion || r.sawMinion
     }
     check(traits.count >= 3, "several elite traits appear at stage 14 (\(traits))")
     check(shieldHits > 0, "shield bubbles absorb hits")

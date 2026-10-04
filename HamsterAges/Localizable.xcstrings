@@ -13810,6 +13810,77 @@
         }
       }
     },
+    "Melee beats heavy · heavy beats ranged · ranged beats melee" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближній б'є важких · важкі б'ють стрільців · стрільці б'ють ближній"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahkampf schlägt Schwere · Schwere schlagen Fernkampf · Fernkampf schlägt Nahkampf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuerpo a cuerpo vence a pesados · pesados a distancia · distancia a cuerpo a cuerpo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mêlée bat lourds · lourds battent distance · distance bat mêlée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mischia batte pesanti · pesanti battono distanza · distanza batte mischia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corpo a corpo vence pesados · pesados vencem distância · distância vence corpo a corpo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近接は重装に強い・重装は遠距離に強い・遠距離は近接に強い"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근접은 중장에 강하고 · 중장은 원거리에 · 원거리는 근접에 강해요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近战克重型 · 重型克远程 · 远程克近战"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近戰剋重型 · 重型剋遠程 · 遠程剋近戰"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yakın dövüş ağırı yener · ağır menzilliyi · menzilli yakın dövüşü"
+          }
+        }
+      }
+    },
     "Melee damage +%lld%%" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23421,6 +23492,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FARE KRAL MUHAFIZLARINI ÇAĞIRIYOR!"
+          }
+        }
+      }
+    },
+    "TIP" : {
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ПОРАДА"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TIPP"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONSEJO"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASTUCE"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SUGGERIMENTO"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DICA"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヒント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팁"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İPUCU"
           }
         }
       }

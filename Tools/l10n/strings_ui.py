@@ -151,3 +151,4 @@ VERBATIM += ["HAMSTER AGES"]
 T("Piggy Bank", "Скарбничка", "Sparschwein", "Hucha", "Tirelire", "Salvadanaio", "Cofrinho", "ブタの貯金箱", "돼지 저금통", "存钱罐", "撲滿", "Kumbara")
 T("FULL", "ПОВНА", "VOLL", "LLENA", "PLEINE", "PIENO", "CHEIO", "満タン", "가득", "已满", "已滿", "DOLU")
 VERBATIM += ["%lld★"]
+T("TIP", "ПОРАДА", "TIPP", "CONSEJO", "ASTUCE", "SUGGERIMENTO", "DICA", "ヒント", "팁", "提示", "提示", "İPUCU")

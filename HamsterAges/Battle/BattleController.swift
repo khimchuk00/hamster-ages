@@ -88,6 +88,9 @@ final class BattleController {
     /// "New elite rat" card shown the first time a trait appears this battle.
     var eliteIntro: RatTrait?
     @ObservationIgnored private var seenTraits = Set<RatTrait>()
+    /// One-off gameplay tip (role triangle in the 2nd battle).
+    var tip: String?
+    @ObservationIgnored private var tipAt: Double?
     @ObservationIgnored private var slamWarnings = 0
 
     // Tutorial (first battle only)
@@ -131,6 +134,7 @@ final class BattleController {
         rerollsLeft = progress.level(.charm)
         ratGeneral = sim.ratGeneral
         stancesEnabled = !tutorial
+        if progress.battlesPlayed == 1 && mode == .campaign { tipAt = 25 }
         isTutorial = tutorial
         tutorialStep = isTutorial ? .train : nil
         #if DEBUG
@@ -255,6 +259,14 @@ final class BattleController {
             set(\.bossHP, nil)
         }
         updateTutorial()
+        if let at = tipAt, sim.time >= at, cardOffer == nil {
+            tipAt = nil
+            let text = L10n.t("Melee beats heavy · heavy beats ranged · ranged beats melee")
+            tip = text
+            DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
+                if self?.tip == text { self?.tip = nil }
+            }
+        }
     }
 
     // MARK: Tutorial

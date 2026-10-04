@@ -24,14 +24,21 @@ public enum BalanceHarness {
         return m
     }
 
-    public static func run(stage: Int, meta: Int, games: Int) -> Row {
+    /// Mono-army strategies for the dominance check: if spamming one role wins too often, the counters are broken.
+    public static let strategies: [(name: String, weights: [Double])] = [
+        ("mixed", [0.48, 0.34, 0.18]), ("melee only", [1, 0, 0]), ("ranged only", [0, 1, 0]), ("heavy only", [0, 0, 1]),
+    ]
+
+    public static func run(stage: Int, meta: Int, games: Int, weights: [Double]? = nil) -> Row {
         var wins = 0
         var minutes = 0.0
         var eras = 0
         for g in 0..<games {
             let sim = BattleSimulation(difficulty: StageDifficulty(stage: stage), playerMods: metaMods(level: meta),
                                        seed: UInt64(stage * 1000 + meta * 100 + g + 1))
-            sim.controllers[.player] = BattleAI(thinkInterval: 0.9, evolveDelay: 1.5, usesCards: true)
+            let bot = BattleAI(thinkInterval: 0.9, evolveDelay: 1.5, usesCards: true)
+            if let weights { bot.weights = weights }
+            sim.controllers[.player] = bot
             if let c = sim.drawCards(for: .player).first { sim.applyCard(c.id, to: .player) }
             let dt = 1.0 / 30.0
             while sim.winner == nil && sim.time < 1200 {
@@ -50,6 +57,18 @@ public enum BalanceHarness {
     public static let defaultMatrix: [(stage: Int, meta: Int)] = [
         (1, 0), (2, 0), (3, 0), (5, 0), (6, 0), (8, 0), (8, 3), (10, 3), (10, 6), (15, 6), (15, 10), (20, 10), (25, 14),
     ]
+
+    /// Win% per strategy; a mono strategy beating "mixed" by a wide margin is flagged.
+    public static func dominanceReport(stages: [(Int, Int)] = [(5, 0), (10, 3), (15, 6), (20, 10)], games: Int = 16) -> String {
+        var lines = ["stage meta | " + strategies.map { $0.name }.joined(separator: " | ")]
+        for (stage, meta) in stages {
+            let rates = strategies.map { run(stage: stage, meta: meta, games: games, weights: $0.weights).winRate }
+            var line = String(format: "%5d %4d | ", stage, meta) + rates.map { String(format: "%4.0f%%", $0 * 100) }.joined(separator: " | ")
+            if let best = rates.dropFirst().max(), best > rates[0] + 0.25 { line += "  ⚠️ dominant mono strategy" }
+            lines.append(line)
+        }
+        return lines.joined(separator: "\n")
+    }
 
     public static func report(games: Int = 12) -> String {
         var lines = ["stage meta | win% | avg min | era"]
