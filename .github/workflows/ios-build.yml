@@ -93,7 +93,7 @@ jobs:
             # Try to rotate the iPad to landscape through the Simulator UI (needs GUI scripting; best effort).
             open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
             sleep 8
-            osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
+            perl -e 'alarm 20; exec @ARGV' osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
               -e 'tell application "System Events" to key code 124 using command down' || echo "rotate failed"
             sleep 3
             shot 20-ipad-home 8 -demo
