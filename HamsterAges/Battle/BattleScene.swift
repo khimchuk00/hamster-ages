@@ -25,6 +25,10 @@ final class BattleScene: SKScene {
     private var bodies: [Int: SKSpriteNode] = [:]
     private var hpBars: [Int: SKSpriteNode] = [:]
     private var walking = Set<Int>()
+    /// Resting tint per unit (boss / elite) that hit flashes return to.
+    private var tints: [Int: (color: UIColor, blend: CGFloat)] = [:]
+    private var bubbles: [Int: SKShapeNode] = [:]
+    private var facingBack = Set<Int>()
     private var projectileNodes: [Int: SKSpriteNode] = [:]
     private var projectileArc: [Int: (startY: CGFloat, endY: CGFloat, arc: CGFloat, rotates: Bool)] = [:]
 
@@ -294,6 +298,11 @@ final class BattleScene: SKScene {
             if u.isMoving != walking.contains(u.id) {
                 setWalking(u.id, u.isMoving)
             }
+            if u.isRetreating != facingBack.contains(u.id), let body = bodies[u.id] {
+                // Turn around while falling back, face the enemy again when the order changes.
+                if u.isRetreating { facingBack.insert(u.id) } else { facingBack.remove(u.id) }
+                body.xScale = -body.xScale
+            }
             if let bar = hpBars[u.id] {
                 let f = CGFloat(max(0, u.hp / u.maxHP))
                 bar.parent?.isHidden = f >= 0.999 && !u.isBoss
@@ -335,6 +344,21 @@ final class BattleScene: SKScene {
         bodies[id] = nil
         hpBars[id] = nil
         walking.remove(id)
+        tints[id] = nil
+        bubbles[id] = nil
+        facingBack.remove(id)
+    }
+
+    /// Resting colour of a unit: the Rat King is royal purple, elites carry their trait's hue.
+    private func restingTint(_ u: UnitEntity) -> (color: UIColor, blend: CGFloat)? {
+        if u.isBoss { return (UIColor(hex: 0xB0306A), 0.25) }
+        if u.isMinion { return (UIColor(hex: 0x8BC34A), 0.35) }
+        switch u.trait {
+        case .armored?: return (UIColor(hex: 0x7E97B0), 0.4)
+        case .plague?: return (UIColor(hex: 0x8BC34A), 0.3)
+        case .swift?: return (UIColor(hex: 0xFFD54A), 0.18)
+        case .shielded?, nil: return nil
+        }
     }
 
     private func makeUnitNode(_ u: UnitEntity) -> SKNode {
@@ -344,16 +368,16 @@ final class BattleScene: SKScene {
         let body = SKSpriteNode(texture: texture)
         body.name = "body"
         body.anchorPoint = CGPoint(x: ArtFactory.unitAnchorX(u.role), y: 0.06)
-        body.setScale(unitScale)
-        if u.isBoss {
-            body.setScale(unitScale * 1.4)
-            body.color = UIColor(hex: 0xB0306A)
-            body.colorBlendFactor = 0.25
+        body.setScale(unitScale * CGFloat(u.sizeScale))
+        if let tint = restingTint(u) {
+            body.color = tint.color
+            body.colorBlendFactor = tint.blend
+            tints[u.id] = tint
         }
         if u.side == .enemy { body.xScale = -abs(body.xScale) }
         body.userData = ["sy": body.yScale]
         let shadow = SKSpriteNode(texture: tex(ArtFactory.shared.groundShadow()))
-        let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * (u.isBoss ? 1.4 : 1)
+        let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * CGFloat(u.sizeScale)
         shadow.size = CGSize(width: shadowW, height: shadowW * 0.3)
         shadow.position = CGPoint(x: 0, y: 2)
         shadow.zPosition = -0.4
@@ -367,9 +391,41 @@ final class BattleScene: SKScene {
             crown.run(.repeatForever(.sequence([.moveBy(x: 0, y: 3, duration: 0.4), .moveBy(x: 0, y: -3, duration: 0.4)])))
             container.addChild(crown)
         }
+        if let trait = u.trait {
+            let badge = SKSpriteNode(texture: tex(ArtFactory.shared.traitBadge(trait)))
+            badge.setScale(hScale * 0.8)
+            badge.position = CGPoint(x: 0, y: body.size.height + 13 * hScale)
+            badge.zPosition = 2
+            badge.run(.repeatForever(.sequence([.moveBy(x: 0, y: 2, duration: 0.5), .moveBy(x: 0, y: -2, duration: 0.5)])))
+            container.addChild(badge)
+            if trait == .swift {
+                // Speed streaks trailing behind
+                for k in 0..<2 {
+                    let streak = SKSpriteNode(color: UIColor(white: 1, alpha: 0.55), size: CGSize(width: 10 * hScale, height: 1.6))
+                    streak.position = CGPoint(x: (u.side == .player ? -1 : 1) * 16 * hScale, y: (12 + CGFloat(k) * 8) * hScale)
+                    streak.zPosition = -0.2
+                    streak.run(.repeatForever(.sequence([.fadeAlpha(to: 0.15, duration: 0.18), .fadeAlpha(to: 0.8, duration: 0.18)])))
+                    container.addChild(streak)
+                }
+            }
+            if trait == .shielded {
+                let r = body.size.height * 0.62
+                let bubble = SKShapeNode(ellipseOf: CGSize(width: r * 2.1, height: r * 2))
+                bubble.position = CGPoint(x: 0, y: body.size.height * 0.48)
+                bubble.fillColor = UIColor(hex: 0x4FC3F7, alpha: 0.16)
+                bubble.strokeColor = UIColor(hex: 0xB3E5FC, alpha: 0.9)
+                bubble.lineWidth = 1.6
+                bubble.glowWidth = 1.5
+                bubble.zPosition = 1.5
+                bubble.run(.repeatForever(.sequence([.scale(to: 1.05, duration: 0.5), .scale(to: 0.97, duration: 0.5)])))
+                container.addChild(bubble)
+                bubbles[u.id] = bubble
+            }
+        }
 
         let barBG = SKSpriteNode(color: UIColor(white: 0, alpha: 0.45), size: CGSize(width: 24 * hScale, height: 3.5))
         barBG.position = CGPoint(x: 0, y: body.size.height + (u.isBoss ? 16 : 3))
+        if u.isMinion { barBG.xScale = 0.7 }
         barBG.isHidden = true
         if u.isBoss { barBG.xScale = 2.2; barBG.yScale = 1.6 }
         // Team-coloured bars (blue vs orange is colour-blind safe).
@@ -476,10 +532,9 @@ final class BattleScene: SKScene {
             case .unitHit(let id, let dmg):
                 guard let body = bodies[id], let node = unitNodes[id] else { break }
                 Sound.shared.play(.hit, minInterval: 0.07)
-                // Restore the Rat King's tint after the flash instead of wiping it on the first hit.
-                let isBoss = sim.units.first(where: { $0.id == id })?.isBoss == true
-                let restore = isBoss ? SKAction.colorize(with: UIColor(hex: 0xB0306A), colorBlendFactor: 0.25, duration: 0.14)
-                                     : SKAction.colorize(withColorBlendFactor: 0, duration: 0.14)
+                // Restore the boss / elite tint after the flash instead of wiping it on the first hit.
+                let restore = tints[id].map { SKAction.colorize(with: $0.color, colorBlendFactor: $0.blend, duration: 0.14) }
+                    ?? SKAction.colorize(withColorBlendFactor: 0, duration: 0.14)
                 body.run(.sequence([.colorize(with: .white, colorBlendFactor: 0.75, duration: 0), restore]), withKey: "flash")
                 if body.action(forKey: "kb") == nil, let u = sim.units.first(where: { $0.id == id }), !u.isBoss {
                     let d: CGFloat = u.side == .player ? -1 : 1
@@ -596,6 +651,41 @@ final class BattleScene: SKScene {
                 shake(intensity: 8)
                 Sound.shared.play(.boom)
 
+            case .shieldHit(let id, let left):
+                guard let bubble = bubbles[id], let node = unitNodes[id] else { break }
+                if left > 0 {
+                    bubble.run(.sequence([.group([.scale(to: 1.18, duration: 0.05), .fadeAlpha(to: 1, duration: 0.05)]),
+                                          .group([.scale(to: 1, duration: 0.15), .fadeAlpha(to: 0.4 + 0.2 * CGFloat(left), duration: 0.15)])]))
+                    Sound.shared.play(.tap, minInterval: 0.08)
+                    spark(at: CGPoint(x: node.position.x, y: node.position.y + bubble.position.y))
+                } else {
+                    bubble.removeAllActions()
+                    bubble.run(.sequence([.group([.scale(to: 1.6, duration: 0.18), .fadeOut(withDuration: 0.18)]), .removeFromParent()]))
+                    bubbles[id] = nil
+                    puff(at: CGPoint(x: node.position.x, y: node.position.y + bubble.position.y),
+                         color: UIColor(hex: 0xB3E5FC), count: 10, spread: 26)
+                    Sound.shared.play(.pop)
+                    floatText(L10n.t("POP!"), at: CGPoint(x: node.position.x, y: node.position.y + bubble.position.y * 2.2),
+                              color: UIColor(hex: 0xB3E5FC), size: 13 * hScale, rise: 26)
+                }
+
+            case .bossWindup(let id, let x, let radius):
+                bossWindup(id: id, x: x, radius: radius)
+
+            case .bossSlam(let id, let x, let radius):
+                bossSlam(id: id, x: x, radius: radius)
+
+            case .eliteSpawned(let id, _):
+                if let node = unitNodes[id] {
+                    let ring = SKShapeNode(ellipseOf: CGSize(width: 46 * hScale, height: 12 * hScale))
+                    ring.strokeColor = UIColor(hex: 0xFFD54A)
+                    ring.lineWidth = 2
+                    ring.position = CGPoint(x: node.position.x, y: node.position.y + 2)
+                    ring.zPosition = node.zPosition - 0.1
+                    fxLayer.addChild(ring)
+                    ring.run(.sequence([.group([.scale(to: 1.8, duration: 0.4), .fadeOut(withDuration: 0.4)]), .removeFromParent()]))
+                }
+
             case .spawned, .gameOver, .reviveOffered:
                 break
             }
@@ -662,6 +752,62 @@ final class BattleScene: SKScene {
                                      .fadeOut(withDuration: 0.4), .scale(to: 0.1, duration: 0.4)]),
                              .removeFromParent()]))
         }
+    }
+
+    /// Telegraph: a red danger zone fills the ground in front of the king while he rears up.
+    private func bossWindup(id: Int, x: Double, radius: Double) {
+        let dir: CGFloat = sim?.units.first(where: { $0.id == id })?.side == .player ? 1 : -1
+        let w = laneToScreen(x + Double(dir) * radius) - laneToScreen(x)
+        let zone = SKShapeNode(rect: CGRect(x: min(0, w), y: -8 * hScale, width: abs(w), height: 16 * hScale), cornerRadius: 8 * hScale)
+        zone.position = CGPoint(x: laneToScreen(x), y: groundY - 2)
+        zone.fillColor = UIColor(hex: 0xFF3B30, alpha: 0.18)
+        zone.strokeColor = UIColor(hex: 0xFF3B30, alpha: 0.9)
+        zone.lineWidth = 2
+        zone.zPosition = -1
+        zone.name = "slam-\(id)"
+        unitLayer.addChild(zone)
+        let windup = GameConfig.bossSlamWindup / max(1, controller?.speed ?? 1)
+        zone.run(.sequence([.repeat(.sequence([.fadeAlpha(to: 0.35, duration: windup / 8), .fadeAlpha(to: 1, duration: windup / 8)]), count: 4),
+                            .removeFromParent()]))
+        let warn = SKLabelNode(fontNamed: font)
+        warn.text = "!"
+        warn.fontSize = 30 * hScale
+        warn.fontColor = UIColor(hex: 0xFF3B30)
+        warn.position = CGPoint(x: laneToScreen(x) + w / 2, y: groundY + 40 * hScale)
+        warn.zPosition = 20
+        fxLayer.addChild(warn)
+        warn.setScale(0.2)
+        warn.run(.sequence([.scale(to: 1.2, duration: 0.15), .scale(to: 1, duration: 0.1), .wait(forDuration: windup - 0.4),
+                            .fadeOut(withDuration: 0.15), .removeFromParent()]))
+        if let body = bodies[id] {
+            // Rear up: lean back and rise
+            body.run(.sequence([.group([.rotate(toAngle: 0.18 * dir, duration: windup * 0.8), .moveTo(y: 10 * hScale, duration: windup * 0.8)])]), withKey: "windup")
+        }
+        Sound.shared.play(.card)
+    }
+
+    private func bossSlam(id: Int, x: Double, radius: Double) {
+        let dir: CGFloat = sim?.units.first(where: { $0.id == id })?.side == .player ? 1 : -1
+        if let body = bodies[id] {
+            body.removeAction(forKey: "windup")
+            body.run(.group([.rotate(toAngle: 0, duration: 0.06), .moveTo(y: 0, duration: 0.06)]))
+        }
+        let center = CGPoint(x: laneToScreen(x + Double(dir) * radius / 2), y: groundY)
+        let w = abs(laneToScreen(x + radius) - laneToScreen(x))
+        let wave = SKShapeNode(ellipseOf: CGSize(width: w * 0.4, height: 14 * hScale))
+        wave.position = center
+        wave.strokeColor = UIColor(hex: 0xFFE0B2)
+        wave.lineWidth = 4
+        wave.glowWidth = 2
+        wave.zPosition = 15
+        fxLayer.addChild(wave)
+        wave.run(.sequence([.group([.scaleX(to: 2.6, duration: 0.3), .fadeOut(withDuration: 0.3)]), .removeFromParent()]))
+        for k in 0..<4 {
+            puff(at: CGPoint(x: center.x + (CGFloat(k) - 1.5) * w / 4, y: groundY + 6), color: UIColor(hex: 0xC8A27A), count: 6, spread: 26)
+        }
+        shake(intensity: 9)
+        Sound.shared.play(.boom)
+        Haptics.boom()
     }
 
     private func muzzleFlash(at pos: CGPoint, era: Int, side: Side) {

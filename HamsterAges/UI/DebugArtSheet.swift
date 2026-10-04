@@ -3,7 +3,7 @@ import SwiftUI
 
 /// CI-only contact sheets for reviewing the procedural art: `-screen art`, `artrat`, `artbase`.
 struct DebugArtSheet: View {
-    enum Kind { case units(Species), bases, backgrounds }
+    enum Kind { case units(Species), bases, backgrounds, ratGenerals }
     let kind: Kind
 
     var body: some View {
@@ -33,6 +33,31 @@ struct DebugArtSheet: View {
                     }
                 }
                 .padding(.horizontal, 60)
+            case .ratGenerals:
+                VStack(spacing: 14) {
+                    HStack(spacing: 14) {
+                        ForEach(RatGeneral.allCases, id: \.self) { g in
+                            VStack(spacing: 4) {
+                                RatGeneralBadge(general: g, size: 96)
+                                Text(g.name).font(Theme.font(12)).foregroundStyle(Theme.ink)
+                                Text(g.style).font(Theme.font(10)).foregroundStyle(Theme.ink.opacity(0.7))
+                            }
+                            .frame(width: 120)
+                        }
+                    }
+                    HStack(spacing: 24) {
+                        ForEach(RatTrait.allCases, id: \.self) { t in
+                            HStack(spacing: 6) {
+                                Image(uiImage: ArtFactory.shared.traitBadge(t)).resizable().frame(width: 40, height: 40)
+                                VStack(alignment: .leading) {
+                                    Text(t.title).font(Theme.font(13)).foregroundStyle(Theme.ink)
+                                    Text(t.counter).font(Theme.font(9)).foregroundStyle(Theme.ink.opacity(0.7))
+                                }
+                                .frame(width: 130, alignment: .leading)
+                            }
+                        }
+                    }
+                }
             case .bases:
                 VStack(spacing: 4) {
                     HStack(alignment: .bottom, spacing: 10) {

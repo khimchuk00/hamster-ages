@@ -22,6 +22,16 @@ struct BattleView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
+                if let trait = controller.eliteIntro, controller.cardOffer == nil, controller.result == nil {
+                    EliteIntroCard(trait: trait)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                if let taunt = controller.taunt, controller.result == nil {
+                    TauntBubble(general: controller.ratGeneral, text: taunt)
+                        .transition(.scale(scale: 0.6, anchor: .topTrailing).combined(with: .opacity))
+                }
+
                 if let banner = controller.banner {
                     OutlinedText(text: banner, size: 34, color: Theme.gold)
                         .transition(.scale.combined(with: .opacity))
@@ -51,6 +61,8 @@ struct BattleView: View {
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: controller.banner)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: controller.tutorialVisible)
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: controller.taunt)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: controller.eliteIntro)
             .animation(.easeOut(duration: 0.2), value: controller.cardOffer == nil)
             .animation(.easeOut(duration: 0.25), value: controller.result == nil)
             .onAppear { applyInsets(geo) }
@@ -125,11 +137,19 @@ private struct BattleHUD: View {
                 }
                 .animation(.spring(response: 0.3), value: c.bossHP == nil)
                 Spacer(minLength: 4)
-                BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : L10n.f("Rats · %@", GameConfig.eraNames[c.enemyEra]),
+                BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : "\(c.ratGeneral.name) · \(GameConfig.eraNames[c.enemyEra])",
                         fraction: c.enemyHP, color: Theme.red, text: c.mode == .survival ? "∞" : nil, mirrored: true)
+                RatGeneralBadge(general: c.ratGeneral, size: 40)
                 RoundIconButton(icon: c.speed > 1 ? "forward.fill" : "play.fill", label: c.speed > 1 ? "×2" : "×1") { c.toggleSpeed() }
             }
             Spacer()
+            if c.stancesEnabled {
+                HStack {
+                    StanceControl(c: c)
+                    Spacer()
+                }
+                .padding(.bottom, 6)
+            }
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(UnitRole.allCases, id: \.self) { role in
                     UnitButton(role: role, era: c.era, skin: c.skin, cost: c.unitCosts[role.rawValue], affordable: c.food >= c.unitCosts[role.rawValue] && c.queue.count < GameConfig.maxQueue) {
@@ -162,6 +182,117 @@ private struct BattleHUD: View {
             }
             .allowsHitTesting(false)
         }
+    }
+}
+
+// MARK: - Rats & orders
+
+/// Rat commander portrait (faces left, toward the hamsters).
+struct RatGeneralBadge: View {
+    let general: RatGeneral
+    var size: CGFloat = 40
+
+    var body: some View {
+        Image(uiImage: ArtFactory.shared.ratGeneral(general))
+            .resizable().scaledToFit()
+            .scaleEffect(x: -1, y: 1)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Color(hex: general.color).opacity(0.35)))
+            .overlay(Circle().stroke(Color(hex: general.color), lineWidth: 2))
+            .clipShape(Circle())
+            .accessibilityLabel(general.name)
+    }
+}
+
+/// Fall back / Hold / Charge — one army-wide order.
+private struct StanceControl: View {
+    let c: BattleController
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Stance.allCases, id: \.self) { s in
+                let on = c.stance == s
+                Button { c.setStance(s) } label: {
+                    VStack(spacing: 0) {
+                        Image(systemName: s.icon).font(.system(size: 13, weight: .black))
+                        Text(s.title).font(Theme.font(8)).lineLimit(1).minimumScaleFactor(0.6)
+                    }
+                    .foregroundStyle(on ? Theme.ink : .white)
+                    .frame(width: 52, height: 34)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(on ? stanceColor(s) : Color.clear))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(RoundedRectangle(cornerRadius: 13).fill(Theme.panel))
+        .overlay(RoundedRectangle(cornerRadius: 13).stroke(.white.opacity(0.25), lineWidth: 1))
+        .animation(.spring(response: 0.25), value: c.stance)
+    }
+
+    private func stanceColor(_ s: Stance) -> Color {
+        switch s {
+        case .fallBack: return Theme.teal
+        case .hold: return Theme.gold
+        case .charge: return Theme.orange
+        }
+    }
+}
+
+private struct TauntBubble: View {
+    let general: RatGeneral
+    let text: String
+
+    var body: some View {
+        VStack {
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(general.name.localizedUppercase).font(Theme.font(10)).foregroundStyle(Color(hex: general.color))
+                    Text(text)
+                        .font(Theme.font(13)).foregroundStyle(Theme.ink)
+                        .multilineTextAlignment(.trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .frame(maxWidth: 300, alignment: .trailing)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Theme.cream))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: general.color), lineWidth: 2.5))
+                RatGeneralBadge(general: general, size: 46)
+            }
+            .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+            .padding(.top, 56)
+            .padding(.trailing, 56)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            Spacer()
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct EliteIntroCard: View {
+    let trait: RatTrait
+
+    var body: some View {
+        VStack {
+            HStack(spacing: 10) {
+                Image(uiImage: ArtFactory.shared.traitBadge(trait)).resizable().frame(width: 34, height: 34)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(L10n.f("NEW: %@", trait.title.localizedUppercase)).font(Theme.font(14)).foregroundStyle(Theme.red)
+                    Text(trait.detail).font(Theme.font(12)).foregroundStyle(Theme.ink)
+                    Label(trait.counter, systemImage: "lightbulb.fill").font(Theme.font(11)).foregroundStyle(Theme.teal)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .frame(maxWidth: 420)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.cream))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.red, lineWidth: 2.5))
+            .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+            .padding(.top, 96)
+            Spacer()
+        }
+        .allowsHitTesting(false)
     }
 }
 

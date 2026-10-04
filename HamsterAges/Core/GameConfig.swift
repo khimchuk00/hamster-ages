@@ -94,6 +94,15 @@ public enum GameConfig {
     public static let bossInterval: Double = 100
     public static let bossHP: Double = 2.5
     public static let bossDamage: Double = 1.25
+    /// Rat King ground slam: first after this long on the field, then every interval; telegraphed by a wind-up.
+    public static let bossSlamFirst: Double = 6
+    public static let bossSlamInterval: Double = 8
+    public static let bossSlamWindup: Double = 1.4
+    /// Reach in front of the king's body (lane units) and damage as a multiple of its attack.
+    public static let bossSlamRadius: Double = 110
+    public static let bossSlamDamage: Double = 1.8
+    /// Armored rats take this share of arrow/bullet damage.
+    public static let armoredPierceFactor: Double = 0.45
     /// Survival mode: endless, enemy grows stronger every interval; unlocked after beating stage 10.
     public static let survivalBaseStage = 8
     public static let survivalUnlockStage = 11

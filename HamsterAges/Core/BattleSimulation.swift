@@ -24,14 +24,40 @@ public final class UnitEntity {
     public let isBoss: Bool
     /// Damage taken multiplier (Shield Wall).
     public let armor: Double
+    /// Elite rat trait (nil for normal units).
+    public let trait: RatTrait?
+    /// Small rat that bursts out of a Plague Rat.
+    public let isMinion: Bool
+    /// Hits the Shield Rat's bubble can still absorb.
+    public internal(set) var shield: Int
     public var cooldown: Double = 0
     public var isMoving = false
+    /// Walking back toward its own base (Fall back stance).
+    public internal(set) var isRetreating = false
+    /// Rat King: > 0 while winding up a ground slam.
+    public internal(set) var windup: Double = 0
+    var slamCooldown = GameConfig.bossSlamFirst
     public var isAlive: Bool { hp > 0 }
+    /// Visual size relative to a normal unit of the same role.
+    public var sizeScale: Double { isBoss ? 1.4 : isMinion ? 0.7 : 1 }
 
-    init(id: Int, side: Side, role: UnitRole, era: Int, x: Double, stats s: UnitStats, mods m: SideModifiers, boss: Bool = false) {
+    init(id: Int, side: Side, role: UnitRole, era: Int, x: Double, stats s: UnitStats, mods m: SideModifiers,
+         boss: Bool = false, trait: RatTrait? = nil, minion: Bool = false) {
         isBoss = boss
+        self.trait = boss || minion ? nil : trait
+        isMinion = minion
+        shield = self.trait == .shielded ? RatTrait.shieldHits : 0
         armor = m.roleArmor[role.rawValue]
-        let hpK = boss ? GameConfig.bossHP : 1, dmgK = boss ? GameConfig.bossDamage : 1
+        var hpK = boss ? GameConfig.bossHP : 1, dmgK = boss ? GameConfig.bossDamage : 1, speedK = boss ? 0.8 : 1
+        var costK = boss ? 4.0 : 1
+        switch self.trait {
+        case .swift?: hpK *= 0.7; speedK *= 1.6
+        case .armored?: hpK *= 1.1; speedK *= 0.92
+        case .shielded?, .plague?: break
+        case nil: break
+        }
+        if self.trait != nil { costK *= 1.4 }       // elites pay a bigger bounty
+        if minion { hpK *= 0.35; dmgK *= 0.5; speedK *= 1.15; costK *= 0.2 }
         self.id = id
         self.side = side
         self.role = role
@@ -42,11 +68,11 @@ public final class UnitEntity {
         damage = s.damage * m.unitDamage * m.roleDamage[role.rawValue] * dmgK
         attackInterval = s.attackInterval / (m.attackSpeed * m.roleAttackSpeed[role.rawValue])
         range = s.isRanged ? s.range * m.rangedRange : s.range
-        speed = s.speed * m.moveSpeed * (boss ? 0.8 : 1)
-        width = s.width * (boss ? 1.4 : 1)
+        speed = s.speed * m.moveSpeed * speedK
+        width = s.width * (boss ? 1.4 : minion ? 0.7 : 1)
         isRanged = s.isRanged
         projectileSpeed = s.projectileSpeed
-        cost = s.cost * (boss ? 4 : 1)
+        cost = s.cost * costK
         depth = Double((id * 37) % 7) / 3.0 - 1.0
         cooldown = 0.2
     }
@@ -84,6 +110,13 @@ public enum BattleEvent {
     case lastStand(side: Side)
     case overtimeStarted
     case bossSpawned(unitID: Int)
+    /// A rat with an elite trait came out of the enemy base.
+    case eliteSpawned(unitID: Int, trait: RatTrait)
+    /// A Shield Rat's bubble absorbed a hit (`left` = 0 → popped).
+    case shieldHit(unitID: Int, left: Int)
+    /// The Rat King raises its paws — a slam lands in `GameConfig.bossSlamWindup` seconds.
+    case bossWindup(unitID: Int, x: Double, radius: Double)
+    case bossSlam(unitID: Int, x: Double, radius: Double)
     case waveUp(level: Int)
     case reviveOffered
     case suddenDeathStarted
@@ -127,6 +160,8 @@ public struct SideState {
     public var overclockTimer: Double = 0
     public var heroReady: Bool { heroAbility != nil && !heroUsed }
     public var bossesKilled = 0
+    /// Army-wide order (player HUD / AI general).
+    public var stance: Stance = .charge
 
     public var eraDef: EraDef { GameConfig.eras[era] }
     public var specialMaxCooldown: Double { eraDef.special.cooldown * mods.specialCooldown }
@@ -167,6 +202,8 @@ public final class BattleSimulation {
     private var bossTimer = GameConfig.bossFirstSpawn
 
     public let mode: BattleMode
+    /// The rat commander for this battle (AI personality + taunts).
+    public let ratGeneral: RatGeneral
     /// Siege Fog modifier.
     public private(set) var turretsDisabled = false
     public var activeModifier: StageModifier { mode.hasStageRules ? difficulty.modifier : .none }
@@ -188,14 +225,16 @@ public final class BattleSimulation {
     public init(difficulty: StageDifficulty, playerMods: SideModifiers, seed: UInt64, mode: BattleMode = .campaign) {
         self.difficulty = difficulty
         self.mode = mode
+        ratGeneral = mode == .survival ? .ratKing : RatGeneral.forStage(difficulty.stage)
         rng = SeededRandom(seed: seed)
-        let enemyMods = BattleSimulation.enemyModifiers(difficulty)
+        var enemyMods = BattleSimulation.enemyModifiers(difficulty)
+        ratGeneral.apply(to: &enemyMods)
         func makeSide(_ m: SideModifiers) -> SideState {
             let hp = GameConfig.eras[0].baseHP * m.baseHP
             return SideState(food: GameConfig.startFood + m.startFood, baseHP: hp, baseMaxHP: hp, mods: m)
         }
         sides = [makeSide(playerMods), makeSide(enemyMods)]
-        controllers[.enemy] = BattleAI(difficulty: difficulty)
+        controllers[.enemy] = BattleAI(difficulty: difficulty, general: ratGeneral)
         if mode.hasStageRules { applyStageModifier(difficulty.modifier) }
         if difficulty.isBoss {
             // Bosses open with a free epic card.
@@ -275,6 +314,21 @@ public final class BattleSimulation {
             $0.queue.append(QueuedUnit(role: role, era: $0.era))
         }
         return true
+    }
+
+    public func setStance(_ stance: Stance, for side: Side) {
+        mutate(side) { $0.stance = stance }
+    }
+
+    /// Elite traits the rats can field right now and the share of trained rats that get one.
+    public var eliteOdds: (pool: [RatTrait], chance: Double) {
+        switch mode {
+        case .survival:
+            let stage = GameConfig.survivalBaseStage + 2 * (survivalWave - 1)
+            return (RatTrait.pool(stage: stage), RatTrait.chance(stage: stage))
+        case .campaign, .challenge:
+            return (RatTrait.pool(stage: difficulty.stage), RatTrait.chance(stage: difficulty.stage))
+        }
     }
 
     @discardableResult
@@ -457,11 +511,11 @@ public final class BattleSimulation {
         return !units.contains { $0.side == side && $0.isAlive && abs($0.x - x) < ($0.width + width) / 2 + 2 }
     }
 
-    private func spawn(_ role: UnitRole, era: Int, side: Side, boss: Bool = false) {
+    private func spawn(_ role: UnitRole, era: Int, side: Side, boss: Bool = false, trait: RatTrait? = nil) {
         let stats = GameConfig.eras[era].unit(role)
         let u = UnitEntity(id: nextID, side: side, role: role, era: era,
                            x: BattleSimulation.spawnX(side, width: stats.width * (boss ? 1.4 : 1)),
-                           stats: stats, mods: state(side).mods, boss: boss)
+                           stats: stats, mods: state(side).mods, boss: boss, trait: trait)
         nextID += 1
         units.append(u)
         if boss {
@@ -470,6 +524,29 @@ public final class BattleSimulation {
             mutate(side) { $0.unitsTrained += 1 }
         }
         events.append(.spawned(unitID: u.id))
+        if let t = u.trait { events.append(.eliteSpawned(unitID: u.id, trait: t)) }
+    }
+
+    /// Rolls an elite trait for a freshly trained rat.
+    private func rollTrait(_ side: Side) -> RatTrait? {
+        guard side == .enemy else { return nil }
+        let odds = eliteOdds
+        guard !odds.pool.isEmpty, Double.random(in: 0..<1, using: &rng) < odds.chance else { return nil }
+        return odds.pool.randomElement(using: &rng)
+    }
+
+    /// A Plague Rat bursts into two small rats where it fell.
+    private func spawnMinions(from dead: UnitEntity) {
+        let stats = GameConfig.eras[dead.era].unit(.melee)
+        for k in 0..<2 {
+            let x = dead.x - dead.side.direction * Double(k) * 14
+            let u = UnitEntity(id: nextID, side: dead.side, role: .melee, era: dead.era, x: x,
+                               stats: stats, mods: state(dead.side).mods, minion: true)
+            u.cooldown = 0.5
+            nextID += 1
+            units.append(u)
+            events.append(.spawned(unitID: u.id))
+        }
     }
 
     /// Survival: every interval the rats get stronger and richer.
@@ -513,7 +590,7 @@ public final class BattleSimulation {
                 $0.queue.removeFirst()
                 $0.trainProgress = 0
             }
-            spawn(q.role, era: q.era, side: side)
+            spawn(q.role, era: q.era, side: side, trait: rollTrait(side))
         }
     }
 
@@ -566,10 +643,28 @@ public final class BattleSimulation {
         for side in Side.allCases {
             let dir = side.direction
             let enemyBaseFront = BattleSimulation.baseFront(side.opponent)
+            let stance = state(side).stance
+            // Stance line: units don't walk past it (Hold) or walk back to it (Fall back).
+            let line = stance.line.map { BattleSimulation.baseFront(side) + dir * $0 }
+            let haste = state(side).overclockTimer > 0 ? 1.5 : 1.0
             let own = units.filter { $0.side == side && $0.isAlive }.sorted { $0.x * dir > $1.x * dir }
             var ahead: UnitEntity?
             for u in own where u.isAlive {
                 u.cooldown -= dt
+                defer { ahead = u }
+                if u.isBoss && updateBossSlam(u, dt) { continue }
+
+                if stance == .fallBack, let line, (u.x - line) * dir > 0.5 {
+                    // Disengage and walk home; slightly slower than the advance so it's a real choice.
+                    u.isRetreating = true
+                    u.isMoving = true
+                    var newX = u.x - dir * u.speed * 0.9 * haste * dt
+                    if (newX - line) * dir < 0 { newX = line }
+                    u.x = newX
+                    continue
+                }
+                u.isRetreating = false
+
                 let foe = frontUnit(of: side.opponent)
                 let baseDist = (enemyBaseFront - u.x) * dir - u.width / 2
                 var targetUnit: UnitEntity?
@@ -582,22 +677,55 @@ public final class BattleSimulation {
                     u.isMoving = false
                     if u.cooldown <= 0 {
                         attack(u, target: targetUnit)
-                        u.cooldown = u.attackInterval / (state(side).overclockTimer > 0 ? 1.5 : 1)
+                        u.cooldown = u.attackInterval / haste
                     }
                 } else {
-                    var newX = u.x + dir * u.speed * (state(side).overclockTimer > 0 ? 1.5 : 1) * dt
+                    var newX = u.x + dir * u.speed * haste * dt
                     func clamp(_ limit: Double) {
                         if (newX - limit) * dir > 0 { newX = (u.x - limit) * dir > 0 ? u.x : limit }
                     }
                     if let a = ahead { clamp(a.x - dir * ((a.width + u.width) / 2 + GameConfig.unitSpacing)) }
                     if let f = foe { clamp(f.x - dir * ((f.width + u.width) / 2)) }
                     clamp(enemyBaseFront - dir * u.width / 2)
+                    if let line { clamp(line) }
                     u.isMoving = abs(newX - u.x) > 0.0001
                     u.x = newX
                 }
-                ahead = u
             }
         }
+    }
+
+    /// Rat King ground slam: a telegraphed wind-up, then heavy damage to everything in front of it.
+    /// Returns true while the king is busy (winding up), so it neither moves nor attacks.
+    private func updateBossSlam(_ u: UnitEntity, _ dt: Double) -> Bool {
+        let dir = u.side.direction
+        let radius = GameConfig.bossSlamRadius + u.width / 2
+        if u.windup > 0 {
+            u.windup -= dt
+            u.isMoving = false
+            if u.windup <= 0 {
+                u.windup = 0
+                events.append(.bossSlam(unitID: u.id, x: u.x, radius: radius))
+                let dmg = u.damage * GameConfig.bossSlamDamage * overtimeFactor
+                for t in units where t.side == u.side.opponent && t.isAlive
+                    && (t.x - u.x) * dir > -u.width / 2 && (t.x - u.x) * dir - t.width / 2 <= radius {
+                    damage(t, amount: dmg, by: u.side, sourceID: u.id, kind: .heavy)
+                }
+                u.cooldown = max(u.cooldown, 0.6)
+            }
+            return true
+        }
+        u.slamCooldown -= dt
+        guard u.slamCooldown <= 0 else { return false }
+        let victims = units.filter {
+            $0.side == u.side.opponent && $0.isAlive && ($0.x - u.x) * dir > 0 && ($0.x - u.x) * dir - $0.width / 2 <= radius
+        }
+        guard victims.count >= 2 || victims.contains(where: { $0.role == .heavy }) else { return false }
+        u.windup = GameConfig.bossSlamWindup
+        u.slamCooldown = GameConfig.bossSlamInterval
+        u.isMoving = false
+        events.append(.bossWindup(unitID: u.id, x: u.x, radius: radius))
+        return true
     }
 
     private func attack(_ u: UnitEntity, target: UnitEntity?) {
@@ -619,7 +747,8 @@ public final class BattleSimulation {
             projectiles.append(p)
             events.append(.projectileFired(id: p.id))
         } else if let t = target {
-            damage(t, amount: u.damage * overtimeFactor * charge, by: u.side, sourceID: u.id)
+            damage(t, amount: u.damage * overtimeFactor * charge, by: u.side, sourceID: u.id,
+                   kind: u.role == .heavy ? .heavy : .melee)
         } else {
             damageBase(u.side.opponent, amount: u.damage * overtimeFactor * charge * state(u.side).mods.baseDamage, by: u.side)
         }
@@ -657,11 +786,13 @@ public final class BattleSimulation {
         let primary = unit(p.targetID) ?? units.first {
             $0.side == p.side.opponent && $0.isAlive && abs($0.x - p.x) < $0.width / 2 + 10
         }
-        if let primary { damage(primary, amount: p.damage, by: p.side, sourceID: p.sourceID) }
+        // Cannonballs, shells and turret blasts crack armor; arrows and bullets don't.
+        let kind: DamageKind = p.isHeavy || (p.fromTurret && p.splash > 0) ? .heavy : .pierce
+        if let primary { damage(primary, amount: p.damage, by: p.side, sourceID: p.sourceID, kind: kind) }
         if p.splash > 0 {
             for u in units where u.side == p.side.opponent && u.isAlive && u !== primary
                 && abs(u.x - p.x) <= p.splash {
-                damage(u, amount: p.damage * p.splashFactor, by: p.side, sourceID: p.sourceID)
+                damage(u, amount: p.damage * p.splashFactor, by: p.side, sourceID: p.sourceID, kind: kind)
             }
         }
     }
@@ -674,7 +805,7 @@ public final class BattleSimulation {
             if s.timeLeft <= 0 {
                 events.append(.specialImpact(side: s.side, era: s.era))
                 for u in units where u.side == s.side.opponent && u.isAlive {
-                    damage(u, amount: s.damage, by: s.side, sourceID: nil)
+                    damage(u, amount: s.damage, by: s.side, sourceID: nil, kind: .special)
                 }
             } else {
                 keep.append(s)
@@ -683,9 +814,20 @@ public final class BattleSimulation {
         pendingSpecials = keep
     }
 
-    private func damage(_ target: UnitEntity, amount: Double, by attacker: Side, sourceID: Int?) {
+    private func damage(_ target: UnitEntity, amount: Double, by attacker: Side, sourceID: Int?, kind: DamageKind) {
         guard target.isAlive else { return }
-        let dealt = amount * target.armor
+        if target.shield > 0 {
+            if kind == .special {
+                target.shield = 0                     // specials pop the bubble and still hurt
+                events.append(.shieldHit(unitID: target.id, left: 0))
+            } else {
+                target.shield -= 1
+                events.append(.shieldHit(unitID: target.id, left: target.shield))
+                return
+            }
+        }
+        var dealt = amount * target.armor
+        if target.trait == .armored && kind == .pierce { dealt *= GameConfig.armoredPierceFactor }
         target.hp -= dealt
         events.append(.unitHit(unitID: target.id, damage: dealt))
         guard !target.isAlive else { return }
@@ -701,6 +843,7 @@ public final class BattleSimulation {
         }
         mutate(target.side) { $0.xp += xp * GameConfig.lossXPShare * $0.mods.xpGain }
         events.append(.reward(side: attacker, food: food, x: target.x))
+        if target.trait == .plague { spawnMinions(from: target) }
         let steal = state(attacker).mods.lifestealOnKill
         if steal > 0, let killer = unit(sourceID) {
             killer.hp = min(killer.maxHP, killer.hp + killer.maxHP * steal)
@@ -756,7 +899,7 @@ public final class BattleSimulation {
             mutate(side) { $0.overclockTimer = HeroAbility.overclockDuration }
         case .volley:
             let dmg = s.eraDef.special.damage * s.mods.specialDamage * 0.6
-            for u in units where u.side == side.opponent && u.isAlive { damage(u, amount: dmg, by: side, sourceID: nil) }
+            for u in units where u.side == side.opponent && u.isAlive { damage(u, amount: dmg, by: side, sourceID: nil, kind: .special) }
         case .picnic:
             mutate(side) { $0.food += $0.eraDef.income * $0.mods.income * 30 }
         case .eureka:
@@ -791,7 +934,7 @@ public final class BattleSimulation {
         mutate(.player) { $0.baseHP = $0.baseMaxHP * 0.4 }
         let front = BattleSimulation.baseFront(.player)
         for u in units where u.side == .enemy && u.isAlive && u.x - front < 260 {
-            damage(u, amount: u.maxHP * (u.isBoss ? 0.35 : 1.0), by: .player, sourceID: nil)
+            damage(u, amount: u.maxHP * (u.isBoss ? 0.35 : 1.0), by: .player, sourceID: nil, kind: .special)
         }
         events.append(.specialImpact(side: .player, era: state(.player).era))
     }

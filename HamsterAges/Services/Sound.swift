@@ -8,7 +8,7 @@ final class Sound {
     static let shared = Sound()
 
     enum Effect: CaseIterable {
-        case tap, hit, pop, coin, boom, evolve, win, lose, card
+        case tap, hit, pop, coin, boom, evolve, win, lose, card, squeak
     }
 
     var isEnabled: Bool {
@@ -67,6 +67,7 @@ final class Sound {
         case .win: return tone([(523, 0.1), (659, 0.1), (784, 0.1), (1046, 0.12), (784, 0.08), (1046, 0.35)], wave: .square, volume: 0.22)
         case .lose: return tone([(392, 0.16), (349, 0.16), (311, 0.16), (262, 0.4)], wave: .triangle, volume: 0.4)
         case .card: return sweep(from: 400, to: 1200, duration: 0.15, wave: .triangle, volume: 0.35)
+        case .squeak: return tone([(1760, 0.04), (2349, 0.05), (1568, 0.07)], wave: .triangle, volume: 0.22)
         }
     }
 

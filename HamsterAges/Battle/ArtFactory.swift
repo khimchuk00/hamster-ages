@@ -146,6 +146,134 @@ final class ArtFactory {
         }
     }
 
+    /// Portrait of a named rat commander: cape in their colour, era gear and a signature accessory.
+    func ratGeneral(_ g: RatGeneral) -> UIImage {
+        cached("rg-\(g.rawValue)") {
+            render(CGSize(width: 80, height: 80)) { ctx in
+                let ol = ArtFactory.outline
+                let cape = UIColor(hex: g.color)
+                let capePath = UIBezierPath()
+                capePath.move(to: CGPoint(x: 26, y: 42))
+                capePath.addQuadCurve(to: CGPoint(x: 8, y: 74), controlPoint: CGPoint(x: 6, y: 54))
+                capePath.addLine(to: CGPoint(x: 46, y: 74))
+                capePath.addQuadCurve(to: CGPoint(x: 44, y: 42), controlPoint: CGPoint(x: 52, y: 58))
+                capePath.close()
+                self.gradient(capePath, cape.blend(.white, 0.2), cape.blend(.black, 0.25))
+                self.stroke(capePath, ol, 1.5)
+                let o = CGPoint(x: 8, y: 10)
+                switch g {
+                case .gnawsworth: self.drawCritter(ctx, .rat, era: 1, at: o, scale: 1, hat: true, weapon: .melee)
+                case .skritch: self.drawCritter(ctx, .rat, era: 2, at: o, scale: 1, hat: false, weapon: .melee)
+                case .whiskerbane: self.drawCritter(ctx, .rat, era: 1, at: o, scale: 1, hat: false, weapon: .ranged)
+                case .squeak: self.drawCritter(ctx, .rat, era: 4, at: o, scale: 1, hat: false, weapon: .ranged)
+                case .cheddar: self.drawCritter(ctx, .rat, era: 0, at: o, scale: 1, hat: false, weapon: .melee)
+                case .ratKing: self.drawCritter(ctx, .rat, era: 3, at: o, scale: 1, hat: false, weapon: .melee)
+                }
+                let eye = CGPoint(x: o.x + 44, y: o.y + 33.5)
+                switch g {
+                case .gnawsworth:
+                    // Officer's medal
+                    self.fill(self.circle(o.x + 30, o.y + 46, 3.2), UIColor(hex: 0xFFC83D), stroke: ol, width: 1)
+                    self.fill(UIBezierPath(rect: CGRect(x: o.x + 28.5, y: o.y + 38, width: 3, height: 5)), cape)
+                case .skritch:
+                    // Eyepatch + red bandana
+                    self.line(CGPoint(x: o.x + 30, y: o.y + 24), CGPoint(x: o.x + 56, y: o.y + 38), ol, width: 1.6)
+                    self.fill(self.oval(eye.x - 5.5, eye.y - 4.5, 11, 9), UIColor(hex: 0x1D1A22), stroke: ol, width: 1)
+                    let band = UIBezierPath()
+                    band.move(to: CGPoint(x: o.x + 17, y: o.y + 26)); band.addQuadCurve(to: CGPoint(x: o.x + 44, y: o.y + 24),
+                                                                                        controlPoint: CGPoint(x: o.x + 30, y: o.y + 16))
+                    band.addLine(to: CGPoint(x: o.x + 42, y: o.y + 29)); band.addQuadCurve(to: CGPoint(x: o.x + 19, y: o.y + 31),
+                                                                                         controlPoint: CGPoint(x: o.x + 30, y: o.y + 23))
+                    band.close()
+                    self.fill(band, UIColor(hex: 0xD84315), stroke: ol, width: 1.2)
+                    self.fill(self.oval(o.x + 10, o.y + 26, 9, 5), UIColor(hex: 0xD84315), stroke: ol, width: 1)
+                case .whiskerbane:
+                    // Tiara and a pearl necklace
+                    let tiara = UIBezierPath()
+                    tiara.move(to: CGPoint(x: o.x + 20, y: o.y + 24)); tiara.addLine(to: CGPoint(x: o.x + 24, y: o.y + 14))
+                    tiara.addLine(to: CGPoint(x: o.x + 29, y: o.y + 21)); tiara.addLine(to: CGPoint(x: o.x + 33, y: o.y + 10))
+                    tiara.addLine(to: CGPoint(x: o.x + 37, y: o.y + 21)); tiara.addLine(to: CGPoint(x: o.x + 42, y: o.y + 14))
+                    tiara.addLine(to: CGPoint(x: o.x + 44, y: o.y + 24)); tiara.close()
+                    self.gradient(tiara, UIColor(hex: 0xF3E5F5), UIColor(hex: 0xBA68C8))
+                    self.stroke(tiara, ol, 1.2)
+                    self.gem(o.x + 33, o.y + 19, 2.2, UIColor(hex: 0x8E24AA))
+                    for i in 0..<6 {
+                        self.fill(self.circle(o.x + 24 + CGFloat(i) * 4, o.y + 46 + abs(CGFloat(i) - 2.5) * -1.2 + 2, 1.7), .white, stroke: ol, width: 0.6)
+                    }
+                case .squeak:
+                    // Monocle with a chain and a lab-coat collar
+                    let ring = self.circle(eye.x, eye.y, 6.2)
+                    UIColor(hex: 0xBFE9FF, alpha: 0.35).setFill(); ring.fill()
+                    self.stroke(ring, UIColor(hex: 0xFFC83D), 2)
+                    self.line(CGPoint(x: eye.x - 4, y: eye.y + 5), CGPoint(x: o.x + 36, y: o.y + 52), UIColor(hex: 0xFFC83D), width: 1)
+                    let collar = UIBezierPath()
+                    collar.move(to: CGPoint(x: o.x + 22, y: o.y + 40)); collar.addLine(to: CGPoint(x: o.x + 32, y: o.y + 52))
+                    collar.addLine(to: CGPoint(x: o.x + 26, y: o.y + 54)); collar.close()
+                    self.fill(collar, .white, stroke: ol, width: 1)
+                case .cheddar:
+                    // A wedge of cheese worn as a hat
+                    let cheese = UIBezierPath()
+                    cheese.move(to: CGPoint(x: o.x + 14, y: o.y + 24)); cheese.addLine(to: CGPoint(x: o.x + 46, y: o.y + 22))
+                    cheese.addLine(to: CGPoint(x: o.x + 26, y: o.y + 6)); cheese.close()
+                    self.gradient(cheese, UIColor(hex: 0xFFE082), UIColor(hex: 0xF9A825))
+                    self.stroke(cheese, ol, 1.4)
+                    for (x, y, r) in [(24.0, 17.0, 2.2), (32.0, 20.0, 1.6), (28.0, 12.0, 1.3)] as [(CGFloat, CGFloat, CGFloat)] {
+                        self.fill(self.circle(o.x + x, o.y + y, r), UIColor(hex: 0xE0A800))
+                    }
+                case .ratKing:
+                    let crown = UIBezierPath()
+                    crown.move(to: CGPoint(x: o.x + 17, y: o.y + 25)); crown.addLine(to: CGPoint(x: o.x + 15, y: o.y + 9))
+                    crown.addLine(to: CGPoint(x: o.x + 23, y: o.y + 17)); crown.addLine(to: CGPoint(x: o.x + 29, y: o.y + 5))
+                    crown.addLine(to: CGPoint(x: o.x + 35, y: o.y + 17)); crown.addLine(to: CGPoint(x: o.x + 43, y: o.y + 9))
+                    crown.addLine(to: CGPoint(x: o.x + 41, y: o.y + 25)); crown.close()
+                    self.gradient(crown, UIColor(hex: 0xFFE082), UIColor(hex: 0xF9A825))
+                    self.stroke(crown, ol, 1.4)
+                    self.gem(o.x + 29, o.y + 19, 2.4, UIColor(hex: 0xE04848))
+                }
+            }
+        }
+    }
+
+    /// Little round icon floating over elite rats.
+    func traitBadge(_ t: RatTrait) -> UIImage {
+        cached("tb-\(t.rawValue)") {
+            render(CGSize(width: 18, height: 18)) { _ in
+                let ol = ArtFactory.outline
+                let colors: [RatTrait: UInt32] = [.swift: 0xFFC83D, .armored: 0x90A4AE, .shielded: 0x4FC3F7, .plague: 0x8BC34A]
+                let c = UIColor(hex: colors[t]!)
+                let disc = self.circle(9, 9, 8)
+                self.gradient(disc, c.blend(.white, 0.35), c.blend(.black, 0.15))
+                self.stroke(disc, ol, 1.3)
+                let glyph = UIColor(hex: 0x2B2230)
+                switch t {
+                case .swift:
+                    let bolt = UIBezierPath()
+                    bolt.move(to: CGPoint(x: 10.5, y: 3)); bolt.addLine(to: CGPoint(x: 5.5, y: 10))
+                    bolt.addLine(to: CGPoint(x: 8.8, y: 10)); bolt.addLine(to: CGPoint(x: 7.5, y: 15))
+                    bolt.addLine(to: CGPoint(x: 12.5, y: 7.8)); bolt.addLine(to: CGPoint(x: 9.3, y: 7.8)); bolt.close()
+                    self.fill(bolt, glyph)
+                case .armored:
+                    let sh = UIBezierPath()
+                    sh.move(to: CGPoint(x: 9, y: 3.5)); sh.addLine(to: CGPoint(x: 13.5, y: 5.5))
+                    sh.addQuadCurve(to: CGPoint(x: 9, y: 15), controlPoint: CGPoint(x: 13.5, y: 12.5))
+                    sh.addQuadCurve(to: CGPoint(x: 4.5, y: 5.5), controlPoint: CGPoint(x: 4.5, y: 12.5)); sh.close()
+                    self.fill(sh, UIColor(hex: 0xECEFF1), stroke: glyph, width: 1.2)
+                    self.line(CGPoint(x: 9, y: 5), CGPoint(x: 9, y: 13.5), glyph, width: 1)
+                case .shielded:
+                    let ring = self.circle(9, 9, 4.6)
+                    self.stroke(ring, .white, 2)
+                    self.fill(self.circle(7.5, 7.5, 1.4), .white)
+                case .plague:
+                    for k in 0..<3 {
+                        let a = CGFloat(k) * 2 * .pi / 3 - .pi / 2
+                        self.fill(self.circle(9 + cos(a) * 3.4, 9 + sin(a) * 3.4, 2.4), glyph)
+                    }
+                    self.fill(self.circle(9, 9, 1.6), c)
+                }
+            }
+        }
+    }
+
     func crown() -> UIImage {
         cached("crown") {
             render(CGSize(width: 30, height: 20)) { _ in

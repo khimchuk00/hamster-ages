@@ -172,16 +172,40 @@ struct HomeView: View {
                                     .background(Capsule().fill(Theme.red))
                             }
                             OutlinedText(text: "Stage \(p.stage)", size: 30)
-                            if p.stage >= 3 {
-                                Text("Rat army strength \(Int(difficulty.aiStats * 100))%")
-                                    .font(Theme.font(12)).foregroundStyle(.white.opacity(0.8))
+                            if p.battlesPlayed >= 1 {
+                                let foe = RatGeneral.forStage(p.stage)
+                                HStack(spacing: 6) {
+                                    RatGeneralBadge(general: foe, size: 30)
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text(L10n.f("vs %@", foe.name)).font(Theme.font(12)).foregroundStyle(.white)
+                                            .lineLimit(1).minimumScaleFactor(0.7)
+                                        Text(p.stage >= 3 ? "\(foe.style) · \(Int(difficulty.aiStats * 100))%" : foe.style)
+                                            .font(Theme.font(10)).foregroundStyle(Theme.gold).lineLimit(1).minimumScaleFactor(0.7)
+                                    }
+                                }
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(Capsule().fill(Color.black.opacity(0.3)))
+                                .accessibilityElement(children: .combine)
                             }
-                            if difficulty.modifier != .none {
-                                Label(difficulty.modifier.title, systemImage: difficulty.modifier.icon)
-                                    .font(Theme.font(12)).foregroundStyle(Theme.gold)
-                                    .padding(.horizontal, 8).padding(.vertical, 3)
-                                    .background(Capsule().fill(Color.black.opacity(0.35)))
-                                    .help(difficulty.modifier.detail)
+                            let elites = RatTrait.pool(stage: p.stage)
+                            if difficulty.modifier != .none || !elites.isEmpty {
+                                HStack(spacing: 6) {
+                                    if difficulty.modifier != .none {
+                                        Label(difficulty.modifier.title, systemImage: difficulty.modifier.icon)
+                                            .font(Theme.font(12)).foregroundStyle(Theme.gold)
+                                            .help(difficulty.modifier.detail)
+                                    }
+                                    if !elites.isEmpty {
+                                        HStack(spacing: 2) {
+                                            ForEach(elites, id: \.self) { t in
+                                                Image(uiImage: ArtFactory.shared.traitBadge(t)).resizable().frame(width: 16, height: 16)
+                                                    .accessibilityLabel(t.title)
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(Capsule().fill(Color.black.opacity(0.35)))
                             }
                         }
 

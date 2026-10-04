@@ -3,8 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p .build-tools
+# Some Linux toolchain packages ship a libswiftObservation with an unresolved internal symbol; it's never called here.
+LINK=()
+[[ "$(uname)" == Linux ]] && LINK=(-Xlinker --allow-shlib-undefined)
 swiftc -swift-version 5 -O HamsterAges/Core/*.swift HamsterAges/Meta/*.swift HamsterAges/Services/Analytics.swift \
-  Tools/CoreTests/main.swift -o .build-tools/hamster-tests
+  Tools/CoreTests/main.swift "${LINK[@]}" -o .build-tools/hamster-tests
 .build-tools/hamster-tests | grep -v '\[ANALYTICS\]'
 if [[ "${1:-}" == "--balance" ]]; then
   swiftc -swift-version 5 -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o .build-tools/hamster-sim

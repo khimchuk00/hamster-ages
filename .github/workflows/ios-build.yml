@@ -77,6 +77,10 @@ jobs:
           shot 16-art-rats 6 -demo -screen artrat
           shot 17-art-bases 6 -demo -screen artbase
           shot 18-art-backgrounds 8 -demo -screen artbg
+          shot 24-art-rat-generals 6 -demo -screen artgen
+          shot 25-taunt 4 -demo -screen battle -autoplay -stage 7
+          shot 26-elites 34 -demo -screen battle -autoplay -stage 14 -era 1
+          shot 27-boss 40 -demo -screen battle -autoplay -stage 10 -era 2
           shot 11-home-uk 8 -demo -AppleLanguages "(uk)" -AppleLocale uk_UA
           shot 12-card-pick-ja 6 -demo -screen battle -AppleLanguages "(ja)" -AppleLocale ja_JP
           shot 13-heroes-de 6 -demo -screen heroes -AppleLanguages "(de)" -AppleLocale de_DE

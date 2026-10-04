@@ -364,5 +364,83 @@ do {
     check(L10n.f("Rats · %@", "Future") == "Rats · Future", "L10n.f formats strings")
 }
 
+// MARK: Elite rats, stances, rat generals, boss slam
+do {
+    check(RatTrait.chance(stage: 3) == 0 && RatTrait.pool(stage: 3).isEmpty, "no elite rats before stage 4")
+    check(RatTrait.pool(stage: 4) == [.swift] && RatTrait.pool(stage: 12).count == 4, "elite traits unlock with stages")
+    check(RatTrait.chance(stage: 40) <= 0.3, "elite share is capped")
+    check(RatGeneral.forStage(1) == .gnawsworth && RatGeneral.forStage(5) == .ratKing && RatGeneral.forStage(10) == .ratKing,
+          "first stages get the gentle general, boss stages the Rat King")
+    let rotation = (3...12).filter { $0 % 5 != 0 }.map(RatGeneral.forStage)
+    check(Set(rotation).count == 5, "every rat general shows up before repeating")
+
+    // Elites appear, shields absorb hits, plague rats split.
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 14), playerMods: SideModifiers(), seed: 77)
+    playerBot(s)
+    var traits = Set<RatTrait>(), shieldHits = 0, sawMinion = false, eliteIDs = Set<Int>()
+    var t = 0.0
+    while t < 400 && s.winner == nil && !s.awaitingRevive {
+        s.step(1.0 / 30)
+        for e in s.events {
+            if case .eliteSpawned(let id, let trait) = e { traits.insert(trait); eliteIDs.insert(id) }
+            if case .shieldHit = e { shieldHits += 1 }
+        }
+        if s.units.contains(where: { $0.isMinion }) { sawMinion = true }
+        s.events.removeAll()
+        t += 1.0 / 30
+    }
+    check(traits.count >= 3, "several elite traits appear at stage 14 (\(traits))")
+    check(shieldHits > 0, "shield bubbles absorb hits")
+    check(sawMinion, "plague rats burst into minions")
+    check(s.units.allSatisfy { $0.side == .enemy || $0.trait == nil }, "only rats get elite traits")
+
+    // Hold keeps the army under the turrets; Fall back walks it home.
+    let h = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 5)
+    playerBot(h)
+    h.setStance(.hold, for: .player)
+    run(h, seconds: 40)
+    let front = BattleSimulation.baseFront(.player)
+    check(h.units.filter { $0.side == .player }.allSatisfy { $0.x <= front + 215.5 }, "Hold: no unit walks past the hold line")
+    h.setStance(.charge, for: .player)
+    var pushed = 0.0
+    run(h, seconds: 60) { sim in
+        pushed = max(pushed, sim.units.filter { $0.side == .player }.map(\.x).max() ?? 0)
+        return false
+    }
+    h.setStance(.fallBack, for: .player)
+    run(h, seconds: 25)
+    let mine = h.units.filter { $0.side == .player }
+    check(pushed > front + 215 || mine.isEmpty, "Charge pushes past the hold line")
+    check(mine.allSatisfy { $0.x <= front + 30.5 }, "Fall back: everyone returns to the base")
+
+    // Turtle general holds until it has a crowd.
+    let turtleStage = (3...30).first { RatGeneral.forStage($0) == .whiskerbane }!
+    let w = BattleSimulation(difficulty: StageDifficulty(stage: turtleStage), playerMods: SideModifiers(), seed: 3)
+    check(w.ratGeneral == .whiskerbane, "stage \(turtleStage) is led by Whiskerbane")
+    run(w, seconds: 20)
+    let ef = BattleSimulation.baseFront(.enemy)
+    let rats = w.units.filter { $0.side == .enemy }
+    check(rats.count >= 6 || rats.allSatisfy { $0.x >= ef - 215.5 }, "Whiskerbane holds under her turrets until she has 6 rats")
+
+    // Rat King telegraphs a slam, then hits.
+    let b = BattleSimulation(difficulty: StageDifficulty(stage: 10), playerMods: SideModifiers(), seed: 11)
+    playerBot(b)
+    var windupAt: Double?, slamAt: Double?
+    t = 0
+    while t < 400 && b.winner == nil && !b.awaitingRevive && slamAt == nil {
+        b.step(1.0 / 60)
+        for e in b.events {
+            if case .bossWindup = e, windupAt == nil { windupAt = b.time }
+            if case .bossSlam = e, windupAt != nil { slamAt = b.time }
+        }
+        b.events.removeAll()
+        t += 1.0 / 60
+    }
+    check(windupAt != nil && slamAt != nil, "the Rat King winds up and slams")
+    if let w0 = windupAt, let s0 = slamAt {
+        check(abs((s0 - w0) - GameConfig.bossSlamWindup) < 0.05, "the slam lands exactly after the wind-up")
+    }
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

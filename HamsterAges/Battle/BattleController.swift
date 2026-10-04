@@ -72,6 +72,18 @@ final class BattleController {
     var cinematic = false
     @ObservationIgnored private var hitStop = 0.0
 
+    // Rats & orders
+    let ratGeneral: RatGeneral
+    /// Army order buttons (hidden in the very first battle to keep it simple).
+    let stancesEnabled: Bool
+    var stance: Stance = .charge
+    /// The rat general's speech bubble.
+    var taunt: String?
+    /// "New elite rat" card shown the first time a trait appears this battle.
+    var eliteIntro: RatTrait?
+    @ObservationIgnored private var seenTraits = Set<RatTrait>()
+    @ObservationIgnored private var slamWarnings = 0
+
     // Tutorial (first battle only)
     let isTutorial: Bool
     var tutorialStep: TutorialStep?
@@ -110,6 +122,8 @@ final class BattleController {
         }
         sim.setHeroAbility(general?.ability, for: .player)
         rerollsLeft = progress.level(.charm)
+        ratGeneral = sim.ratGeneral
+        stancesEnabled = !tutorial
         isTutorial = tutorial
         tutorialStep = isTutorial ? .train : nil
         #if DEBUG
@@ -169,6 +183,15 @@ final class BattleController {
                 case .overtimeStarted:
                     flashBanner(L10n.t("OVERTIME! TURRETS DOWN"))
                     Haptics.boom()
+                case .eliteSpawned(_, let trait) where !seenTraits.contains(trait):
+                    seenTraits.insert(trait)
+                    showEliteIntro(trait)
+                case .bossWindup:
+                    // Teach the counter the first couple of times: pull back out of the slam zone.
+                    if stancesEnabled && slamWarnings < 2 && stance != .fallBack {
+                        slamWarnings += 1
+                        flashBanner(L10n.t("SLAM INCOMING — FALL BACK!"))
+                    }
                 default: break
                 }
             }
@@ -329,6 +352,15 @@ final class BattleController {
 
     func toggleSpeed() { speed = speed == 1 ? 2 : 1 }
 
+    func setStance(_ s: Stance) {
+        guard stancesEnabled, s != stance else { return }
+        stance = s
+        sim.setStance(s, for: .player)
+        Haptics.tap()
+        Sound.shared.play(.tap)
+        Analytics.log(.stance(s.rawValue))
+    }
+
     func useHero() {
         guard let ability = sim.state(.player).heroAbility, sim.useHeroAbility(.player) else {
             Haptics.fail()
@@ -385,6 +417,16 @@ final class BattleController {
         sim.applyCard(card.id, to: .player)
         if firstPick, sim.activeModifier != .none {
             flashBanner(sim.activeModifier.title.localizedUppercase + "!")
+        }
+        if firstPick && !isTutorial {
+            let line = ratGeneral.taunt
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                self?.taunt = line
+                Sound.shared.play(.squeak)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.6) { [weak self] in
+                if self?.taunt == line { self?.taunt = nil }
+            }
         }
         Analytics.log(.cardPicked(id: card.id.rawValue, rarity: String(describing: card.rarity), era: sim.state(.player).era))
         cardOffer = nil
@@ -463,6 +505,14 @@ final class BattleController {
     /// Hit-stop: the whole battle pauses for a few frames so big impacts land.
     private func impact(_ seconds: Double) {
         hitStop = max(hitStop, seconds)
+    }
+
+    private func showEliteIntro(_ trait: RatTrait) {
+        eliteIntro = trait
+        Sound.shared.play(.card)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            if self?.eliteIntro == trait { self?.eliteIntro = nil }
+        }
     }
 
     private func flashBanner(_ text: String) {

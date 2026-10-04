@@ -20,6 +20,7 @@ enum AnalyticsEvent {
     case crateOpened(general: String, rarity: String, free: Bool)
     case questClaimed(kind: String)
     case farmCollected(amount: Int, doubled: Bool)
+    case stance(Int)
 
     var name: String {
         switch self {
@@ -39,6 +40,7 @@ enum AnalyticsEvent {
         case .crateOpened: return "crate_opened"
         case .questClaimed: return "quest_claimed"
         case .farmCollected: return "farm_collected"
+        case .stance: return "stance"
         }
     }
 
@@ -61,6 +63,7 @@ enum AnalyticsEvent {
         case let .crateOpened(g, r, free): return ["general": g, "rarity": r, "free": "\(free)"]
         case let .questClaimed(kind): return ["quest": kind]
         case let .farmCollected(amount, doubled): return ["amount": "\(amount)", "doubled": "\(doubled)"]
+        case let .stance(s): return ["stance": ["fall_back", "hold", "charge"][s]]
         }
     }
 }

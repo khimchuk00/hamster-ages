@@ -98,10 +98,17 @@ struct RootView: View {
             // CI screenshots: `-screen battle` jumps straight into a battle.
             let args = ProcessInfo.processInfo.arguments
             if let i = args.firstIndex(of: "-screen"), i + 1 < args.count, args[i + 1] == "battle" {
-                battle = BattleController(stage: store.progress.stage, progress: store.progress)
+                let forced = args.firstIndex(of: "-stage").flatMap { $0 + 1 < args.count ? Int(args[$0 + 1]) : nil }
+                battle = BattleController(stage: forced ?? store.progress.stage, progress: store.progress)
             }
             if let i = args.firstIndex(of: "-screen"), i + 1 < args.count, args[i + 1].hasPrefix("art") {
-                artSheet = args[i + 1] == "artrat" ? .units(.rat) : args[i + 1] == "artbase" ? .bases : args[i + 1] == "artbg" ? .backgrounds : .units(.hamster)
+                switch args[i + 1] {
+                case "artrat": artSheet = .units(.rat)
+                case "artbase": artSheet = .bases
+                case "artbg": artSheet = .backgrounds
+                case "artgen": artSheet = .ratGenerals
+                default: artSheet = .units(.hamster)
+                }
             }
             #endif
         }
