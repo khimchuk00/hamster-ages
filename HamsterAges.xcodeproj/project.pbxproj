@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10000000000000000001A /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000001C /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000001A /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,6 +70,7 @@
 			);
 			name = HamsterAges;
 			packageProductDependencies = (
+				A10000000000000000001C /* GoogleMobileAds */,
 			);
 			productName = HamsterAges;
 			productReference = A1000000000000000000D2 /* HamsterAges.app */;
@@ -108,6 +111,9 @@
 			);
 			mainGroup = A1000000000000000000C1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A10000000000000000001B /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1000000000000000000C2 /* Products */;
 			projectDirPath = "";
@@ -269,6 +275,8 @@
 				ENABLE_PREVIEWS = YES;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HamsterAges-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data is used to show ads that are more relevant to you and keep Hamster Ages free.";
 				INFOPLIST_KEY_CFBundleDisplayName = "Hamster Ages";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.strategy-games";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
@@ -303,6 +311,8 @@
 				ENABLE_PREVIEWS = YES;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HamsterAges-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data is used to show ads that are more relevant to you and keep Hamster Ages free.";
 				INFOPLIST_KEY_CFBundleDisplayName = "Hamster Ages";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.strategy-games";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
@@ -327,6 +337,25 @@
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A10000000000000000001B /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000001C /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000001B /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCConfigurationList section */
 		A1000000000000000000E1 /* Build configuration list for PBXNativeTarget "HamsterAges" */ = {

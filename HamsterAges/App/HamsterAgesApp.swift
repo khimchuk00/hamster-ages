@@ -26,6 +26,17 @@ struct HamsterAgesApp: App {
 enum AppServices {
     static let progress = ProgressStore()
     static let store = Store(progress: progress)
+    /// Real AdMob in normal runs; the instant stub for CI/screenshots (`-demo`) and when `-stubads` is passed.
+    static let ads: AdService = {
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-demo") || args.contains("-stubads") { return StubAdService() }
+        return AdMobService()
+    }()
+
+    static func startAdsIfReady() {
+        guard progress.progress.tutorialDone == true else { return }
+        (ads as? AdMobService)?.start()
+    }
 }
 
 struct RootView: View {
@@ -36,7 +47,7 @@ struct RootView: View {
     @State private var artSheet: DebugArtSheet.Kind?
     #endif
     @Environment(\.scenePhase) private var scenePhase
-    private let ads: AdService = StubAdService()
+    private let ads: AdService = AppServices.ads
 
     init() {
         _store = State(initialValue: AppServices.progress)
@@ -48,6 +59,7 @@ struct RootView: View {
             if let battle {
                 BattleView(controller: battle, store: store, ads: ads) {
                     withAnimation(.easeInOut(duration: 0.3)) { self.battle = nil }
+                    AppServices.startAdsIfReady()
                     let p = store.progress
                     if p.wins >= 1 { Reminders.requestPermissionIfNeeded() }
                     if AdPolicy.shouldShowInterstitial(battlesPlayed: p.battlesPlayed, removeAds: p.removeAds == true) {
@@ -73,6 +85,7 @@ struct RootView: View {
             #endif
         }
         .onAppear {
+            AppServices.startAdsIfReady()
             #if DEBUG
             // CI screenshots: `-screen battle` jumps straight into a battle.
             let args = ProcessInfo.processInfo.arguments

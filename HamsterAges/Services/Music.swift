@@ -53,6 +53,14 @@ final class Music {
         current = nil
     }
 
+    /// Ducks the soundtrack while a full-screen ad plays.
+    func pause() { if player.isPlaying { player.pause() } }
+
+    func resume() {
+        guard isEnabled, current != nil, engine.isRunning, !player.isPlaying else { return }
+        player.play()
+    }
+
     /// Renders every theme off the main thread at launch so entering a battle never hitches.
     func prewarm() {
         let sr = format.sampleRate

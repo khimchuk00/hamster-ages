@@ -98,6 +98,7 @@ T("Vibration", "Вібрація", "Vibration", "Vibración", "Vibrations", "Vib
 T("Reminders", "Нагадування", "Erinnerungen", "Recordatorios", "Rappels", "Promemoria", "Lembretes", "リマインダー", "알림", "提醒", "提醒", "Hatırlatıcılar")
 T("Restoring…", "Відновлення…", "Wird wiederhergestellt …", "Restaurando…", "Restauration…", "Ripristino…", "Restaurando…", "復元中…", "복원 중…", "正在恢复…", "正在恢復…", "Geri yükleniyor…")
 T("Restore Purchases", "Відновити покупки", "Käufe wiederherstellen", "Restaurar compras", "Restaurer les achats", "Ripristina acquisti", "Restaurar compras", "購入を復元", "구매 복원", "恢复购买", "恢復購買", "Satın alımları geri yükle")
+T("Privacy Choices", "Налаштування приватності", "Datenschutzoptionen", "Opciones de privacidad", "Choix de confidentialité", "Scelte sulla privacy", "Opções de privacidade", "プライバシーの選択", "개인정보 선택", "隐私选项", "隱私選項", "Gizlilik Seçimleri")
 T("Privacy Policy", "Політика конфіденційності", "Datenschutzerklärung", "Política de privacidad", "Politique de confidentialité", "Informativa sulla privacy", "Política de privacidade", "プライバシーポリシー", "개인정보 처리방침", "隐私政策", "隱私權政策", "Gizlilik Politikası")
 T("Support", "Підтримка", "Support", "Soporte", "Assistance", "Assistenza", "Suporte", "サポート", "지원", "支持", "支援", "Destek")
 T("Reset Progress", "Скинути прогрес", "Fortschritt zurücksetzen", "Reiniciar progreso", "Réinitialiser la progression", "Azzera progressi", "Reiniciar progresso", "進行状況をリセット", "진행 초기화", "重置进度", "重設進度", "İlerlemeyi sıfırla")

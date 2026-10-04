@@ -14,6 +14,7 @@ enum AnalyticsEvent {
     case evolve(era: Int, seconds: Int)
     case upgradeBought(id: String, level: Int, cost: Int)
     case adRewarded(placement: String)
+    case adShown(placement: String, rewarded: Bool)
     case dailyClaimed(day: Int)
     case purchase(productID: String)
     case crateOpened(general: String, rarity: String, free: Bool)
@@ -32,6 +33,7 @@ enum AnalyticsEvent {
         case .evolve: return "evolve"
         case .upgradeBought: return "upgrade_bought"
         case .adRewarded: return "ad_rewarded"
+        case .adShown: return "ad_shown"
         case .dailyClaimed: return "daily_claimed"
         case .purchase: return "purchase"
         case .crateOpened: return "crate_opened"
@@ -53,6 +55,7 @@ enum AnalyticsEvent {
         case let .evolve(era, sec): return ["era": "\(era)", "seconds": "\(sec)"]
         case let .upgradeBought(id, level, cost): return ["upgrade": id, "level": "\(level)", "cost": "\(cost)"]
         case let .adRewarded(p): return ["placement": p]
+        case let .adShown(p, r): return ["placement": p, "rewarded": "\(r)"]
         case let .dailyClaimed(day): return ["day": "\(day)"]
         case let .purchase(id): return ["product": id]
         case let .crateOpened(g, r, free): return ["general": g, "rarity": r, "free": "\(free)"]

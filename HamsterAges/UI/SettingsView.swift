@@ -58,6 +58,12 @@ struct SettingsView: View {
                         }
                         .buttonStyle(ChunkyButtonStyle(color: Theme.teal, cornerRadius: 12, depth: 3))
                         .disabled(restoring)
+                        if AdMobService.privacyOptionsRequired {
+                            Button { AdMobService.presentPrivacyOptions() } label: {
+                                Label("Privacy Choices", systemImage: "checkmark.shield.fill").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(ChunkyButtonStyle(color: Theme.purple, cornerRadius: 12, depth: 3))
+                        }
                         if let url = AppLinks.privacyPolicy {
                             Link(destination: url) {
                                 Label("Privacy Policy", systemImage: "hand.raised.fill").frame(maxWidth: .infinity)
