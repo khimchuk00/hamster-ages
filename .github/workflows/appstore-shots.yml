@@ -1,9 +1,12 @@
 name: App Store screenshots (all languages)
 
-# Manual: Actions → "App Store screenshots" → Run workflow.
+# Run: Actions → "App Store screenshots" → Run workflow, or push any commit to the `shots` branch
+#   git push -f origin HEAD:shots
 # Raw 6.9" simulator captures per language land on the `appstore-shots` branch;
 # Tools/aso/make_screenshots.py turns them into captioned App Store images.
 on:
+  push:
+    branches: [shots]
   workflow_dispatch:
     inputs:
       languages:
@@ -31,7 +34,7 @@ jobs:
 
       - name: Capture
         env:
-          LANGS: ${{ github.event.inputs.languages }}
+          LANGS: ${{ github.event.inputs.languages || 'en uk de es fr it pt-BR ja ko zh-Hans zh-Hant tr' }}
         run: |
           set -x
           UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro Max \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
