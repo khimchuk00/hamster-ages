@@ -2,8 +2,8 @@ import SwiftUI
 
 enum AppLinks {
     /// Set before release (App Store requires a privacy policy URL). Hidden in the UI while nil.
-    static let privacyPolicy: URL? = nil
-    static let support: URL? = nil
+    static let privacyPolicy: URL? = URL(string: "https://github.com/khimchuk00/hamster-ages/blob/main/PRIVACY.md")
+    static let support: URL? = URL(string: "https://github.com/khimchuk00/hamster-ages/issues")
 }
 
 struct SettingsView: View {

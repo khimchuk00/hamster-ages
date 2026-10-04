@@ -57,6 +57,8 @@ Plays offline. No account needed. Available in 12 languages.
 15–20 с танк проти лицарів · 20–25 с руйнування бази щурів, VICTORY · 25–30 с логотип.
 
 ## Перед сабмітом
+- [x] Privacy Policy URL: https://github.com/khimchuk00/hamster-ages/blob/main/PRIVACY.md · Support URL: https://github.com/khimchuk00/hamster-ages/issues (працюють, коли репо публічне)
+- [ ] AdMob: справжні App ID + 2 ad units (див. README → Реклама), GDPR-повідомлення в AdMob
 - [ ] App Store Connect: 4 IAP (ID у README), податкові/банківські дані
 - [ ] Privacy: `PrivacyInfo.xcprivacy` є; після підключення аналітики/реклами оновити «App Privacy» і маніфест
 - [ ] ATT-промпт тільки разом з рекламним SDK
