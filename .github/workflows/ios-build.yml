@@ -34,6 +34,12 @@ jobs:
           echo "::notice::warnings=$(grep -c 'warning: ' diagnostics.txt) errors=$(grep -c 'error: ' diagnostics.txt)"
           exit $status
 
+      - name: Release build check (catches DEBUG-only code leaking out)
+        run: |
+          xcodebuild -project HamsterAges.xcodeproj -scheme HamsterAges -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build-release -configuration Release CODE_SIGNING_ALLOWED=NO build > release.log 2>&1 \
+            || (grep -E "error: " release.log | head -30; exit 1)
+
       - name: Collect localizable strings
         run: |
           mkdir -p loc
@@ -68,6 +74,7 @@ jobs:
           shot 9-shop 6 -demo -screen shop
           shot 15-art-hamsters 6 -demo -screen art
           shot 16-art-rats 6 -demo -screen artrat
+          shot 17-art-bases 6 -demo -screen artbase
           shot 11-home-uk 8 -demo -AppleLanguages "(uk)" -AppleLocale uk_UA
           shot 12-card-pick-ja 6 -demo -screen battle -AppleLanguages "(ja)" -AppleLocale ja_JP
           shot 13-heroes-de 6 -demo -screen heroes -AppleLanguages "(de)" -AppleLocale de_DE
@@ -99,7 +106,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/out && cp -R shots loc /tmp/out/ 2>/dev/null || true
-          cp build.log diagnostics.txt tests.log sim.log /tmp/out/ 2>/dev/null || true
+          cp build.log release.log diagnostics.txt tests.log sim.log /tmp/out/ 2>/dev/null || true
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan ci-artifacts
           git rm -rf . -q

@@ -32,7 +32,9 @@ struct RootView: View {
     @State private var store: ProgressStore
     @State private var shop: Store
     @State private var battle: BattleController?
-    @State private var artSheet: Species?
+    #if DEBUG
+    @State private var artSheet: DebugArtSheet.Kind?
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     private let ads: AdService = StubAdService()
 
@@ -65,7 +67,7 @@ struct RootView: View {
                 .transition(.opacity)
             }
             #if DEBUG
-            if let artSheet { DebugArtSheet(species: artSheet) }
+            if let artSheet { DebugArtSheet(kind: artSheet) }
             #endif
         }
         .onAppear {
@@ -76,7 +78,7 @@ struct RootView: View {
                 battle = BattleController(stage: store.progress.stage, progress: store.progress)
             }
             if let i = args.firstIndex(of: "-screen"), i + 1 < args.count, args[i + 1].hasPrefix("art") {
-                artSheet = args[i + 1] == "artrat" ? .rat : .hamster
+                artSheet = args[i + 1] == "artrat" ? .units(.rat) : args[i + 1] == "artbase" ? .bases : .units(.hamster)
             }
             #endif
         }
