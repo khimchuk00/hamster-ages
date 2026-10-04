@@ -14,8 +14,10 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 W, H = 2868, 1320
 IPAD = False
 SHOTS = ["1-battle", "2-cards", "3-future", "4-heroes", "5-home", "6-upgrades"]
-FONT = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
-FONT_INDEX = {"ja": 0, "ko": 1, "zh-Hans": 2, "zh-Hant": 3}  # others use JP face (full Latin/Cyrillic)
+FONT = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"          # CJK captions (fonts-noto-cjk)
+FONT_INDEX = {"ja": 0, "ko": 1, "zh-Hans": 2, "zh-Hant": 3}
+# Latin/Cyrillic captions: Inter Display Black (SIL OFL, bundled) — Noto CJK lacks Ukrainian і/ї/є.
+FONT_LATIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "InterDisplay-Black.otf")
 
 CAPTIONS = {
     "en": ["5 AGES OF WAR", "EVERY BATTLE IS DIFFERENT", "FROM CLUBS TO LASER MECHS",
@@ -49,7 +51,9 @@ TOP, BOTTOM = (255, 166, 77), (122, 72, 196)
 
 
 def font(lang, size):
-    return ImageFont.truetype(FONT, size, index=FONT_INDEX.get(lang, 0))
+    if lang in FONT_INDEX:
+        return ImageFont.truetype(FONT, size, index=FONT_INDEX[lang])
+    return ImageFont.truetype(FONT_LATIN, size)
 
 
 def background():

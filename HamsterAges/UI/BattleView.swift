@@ -415,7 +415,7 @@ private struct SpecialButton: View {
             .frame(width: 62, height: 62)
             .overlay(alignment: .bottom) {
                 Text(GameConfig.eras[era].special.name.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(2).multilineTextAlignment(.center)
+                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.55)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)
@@ -444,7 +444,7 @@ private struct HeroButton: View {
             .frame(width: 56, height: 56)
             .overlay(alignment: .bottom) {
                 Text(general.ability.title.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(2).multilineTextAlignment(.center)
+                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.55)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)
