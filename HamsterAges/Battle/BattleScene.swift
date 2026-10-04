@@ -336,6 +336,7 @@ final class BattleScene: SKScene {
             body.colorBlendFactor = 0.25
         }
         if u.side == .enemy { body.xScale = -abs(body.xScale) }
+        body.userData = ["sy": body.yScale]
         let shadow = SKSpriteNode(texture: tex(ArtFactory.shared.groundShadow()))
         let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * (u.isBoss ? 1.4 : 1)
         shadow.size = CGSize(width: shadowW, height: shadowW * 0.3)
@@ -380,15 +381,20 @@ final class BattleScene: SKScene {
         guard let body = bodies[id] else { return }
         if on {
             walking.insert(id)
-            let up = SKAction.group([.moveTo(y: 3 * hScale, duration: 0.16), .rotate(toAngle: 0.06, duration: 0.16)])
-            let down = SKAction.group([.moveTo(y: 0, duration: 0.16), .rotate(toAngle: -0.04, duration: 0.16)])
+            // Bouncy hop: stretch on the way up, squash on landing.
+            let sy = body.userData?["sy"] as? CGFloat ?? body.yScale
+            let up = SKAction.group([.moveTo(y: 3.5 * hScale, duration: 0.16), .rotate(toAngle: 0.06, duration: 0.16),
+                                     .scaleY(to: sy * 1.05, duration: 0.16)])
+            let down = SKAction.group([.moveTo(y: 0, duration: 0.16), .rotate(toAngle: -0.04, duration: 0.16),
+                                       .scaleY(to: sy * 0.95, duration: 0.16)])
             up.timingMode = .easeOut
             down.timingMode = .easeIn
             body.run(.repeatForever(.sequence([up, down])), withKey: "walk")
         } else {
             walking.remove(id)
             body.removeAction(forKey: "walk")
-            body.run(.group([.moveTo(y: 0, duration: 0.08), .rotate(toAngle: 0, duration: 0.08)]))
+            let sy = body.userData?["sy"] as? CGFloat ?? body.yScale
+            body.run(.group([.moveTo(y: 0, duration: 0.08), .rotate(toAngle: 0, duration: 0.08), .scaleY(to: sy, duration: 0.08)]))
         }
     }
 

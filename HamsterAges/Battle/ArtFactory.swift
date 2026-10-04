@@ -419,97 +419,232 @@ final class ArtFactory {
 
     private func drawHat(_ ctx: UIGraphicsImageRendererContext, era: Int, palette p: Palette) {
         let ol = ArtFactory.outline
+        let gold = UIColor(hex: 0xF2C14E)
         switch era {
-        case 0: // headband + leaf
-            fill(UIBezierPath(roundedRect: CGRect(x: 14, y: 27, width: 32, height: 5), cornerRadius: 2.5), p.team, stroke: p.teamDark, width: 1)
+        case 0: // headband with trailing tails + a feather
             let tails = UIBezierPath()
-            tails.move(to: CGPoint(x: 15, y: 29)); tails.addLine(to: CGPoint(x: 6, y: 25)); tails.addLine(to: CGPoint(x: 7, y: 33)); tails.close()
-            fill(tails, p.team)
-            fill(oval(26, 12, 7, 15), UIColor(hex: 0x6AB04C), stroke: UIColor(hex: 0x3E7A2B), width: 1)
-        case 1: // knight helmet + plume
-            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 33), radius: 16, startAngle: .pi, endAngle: 0, clockwise: true)
+            tails.move(to: CGPoint(x: 15, y: 28)); tails.addQuadCurve(to: CGPoint(x: 3, y: 23), controlPoint: CGPoint(x: 9, y: 22))
+            tails.addLine(to: CGPoint(x: 6, y: 29)); tails.addQuadCurve(to: CGPoint(x: 3, y: 35), controlPoint: CGPoint(x: 6, y: 32))
+            tails.addQuadCurve(to: CGPoint(x: 15, y: 31), controlPoint: CGPoint(x: 9, y: 35)); tails.close()
+            shade(tails, p.team, width: 1)
+            shade(UIBezierPath(roundedRect: CGRect(x: 13, y: 26.5, width: 34, height: 5.5), cornerRadius: 2.7), p.team, width: 1)
+            let feather = UIBezierPath()
+            feather.move(to: CGPoint(x: 29, y: 27)); feather.addQuadCurve(to: CGPoint(x: 26, y: 6), controlPoint: CGPoint(x: 21, y: 15))
+            feather.addQuadCurve(to: CGPoint(x: 29, y: 27), controlPoint: CGPoint(x: 33, y: 14)); feather.close()
+            shade(feather, UIColor(hex: 0x6AB04C), width: 1)
+            line(CGPoint(x: 28.5, y: 26), CGPoint(x: 26.3, y: 8), UIColor(hex: 0x3E7A2B), width: 0.7)
+        case 1: // kettle helm with rivets, nasal guard and plume
+            let plume = UIBezierPath()
+            plume.move(to: CGPoint(x: 27, y: 18)); plume.addQuadCurve(to: CGPoint(x: 14, y: 6), controlPoint: CGPoint(x: 26, y: 5))
+            plume.addQuadCurve(to: CGPoint(x: 33, y: 18), controlPoint: CGPoint(x: 26, y: 12)); plume.close()
+            shade(plume, p.team, width: 1)
+            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 33), radius: 16.5, startAngle: .pi, endAngle: 0, clockwise: true)
             dome.close()
-            fill(dome, UIColor(hex: 0xAEB8C2), stroke: UIColor(hex: 0x5F6B77))
-            fill(UIBezierPath(rect: CGRect(x: 15, y: 30, width: 32, height: 4)), UIColor(hex: 0x8C98A4))
-            fill(oval(22, 9, 9, 14), p.team, stroke: p.teamDark, width: 1)
-        case 2: // tricorn
+            shade(dome, UIColor(hex: 0xB4BEC8), width: 1.5)
+            shade(UIBezierPath(roundedRect: CGRect(x: 13.5, y: 30, width: 35, height: 4.5), cornerRadius: 2), UIColor(hex: 0x8C98A4), width: 1)
+            for x in [18.0, 25.0, 32.0, 39.0, 45.0] as [CGFloat] { fill(circle(x, 32.2, 0.9), UIColor(hex: 0xEEF2F5)) }
+            shade(UIBezierPath(roundedRect: CGRect(x: 43, y: 33, width: 3.2, height: 8), cornerRadius: 1.2), UIColor(hex: 0x8C98A4), width: 0.8)
+            line(CGPoint(x: 22, y: 21), CGPoint(x: 27, y: 18.5), UIColor(white: 1, alpha: 0.75), width: 1.4)
+        case 2: // tricorn with gold trim and cockade
             let hat = UIBezierPath()
-            hat.move(to: CGPoint(x: 12, y: 29))
-            hat.addQuadCurve(to: CGPoint(x: 31, y: 12), controlPoint: CGPoint(x: 16, y: 14))
-            hat.addQuadCurve(to: CGPoint(x: 50, y: 29), controlPoint: CGPoint(x: 46, y: 14))
-            hat.addQuadCurve(to: CGPoint(x: 12, y: 29), controlPoint: CGPoint(x: 31, y: 22))
-            fill(hat, UIColor(hex: 0x2E3047), stroke: ol)
-            fill(circle(40, 21, 3.2), p.team)
-        case 3: // army helmet
-            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 32), radius: 17, startAngle: .pi, endAngle: 0, clockwise: true)
+            hat.move(to: CGPoint(x: 11, y: 29))
+            hat.addQuadCurve(to: CGPoint(x: 31, y: 11), controlPoint: CGPoint(x: 15, y: 13))
+            hat.addQuadCurve(to: CGPoint(x: 51, y: 29), controlPoint: CGPoint(x: 47, y: 13))
+            hat.addQuadCurve(to: CGPoint(x: 11, y: 29), controlPoint: CGPoint(x: 31, y: 22))
+            shade(hat, UIColor(hex: 0x33365A), width: 1.5)
+            let trim = UIBezierPath()
+            trim.move(to: CGPoint(x: 12.5, y: 28)); trim.addQuadCurve(to: CGPoint(x: 49.5, y: 28), controlPoint: CGPoint(x: 31, y: 21))
+            trim.lineWidth = 1.8; gold.setStroke(); trim.stroke()
+            gem(40, 20.5, 3.6, p.team)
+            fill(circle(40, 20.5, 1.2), .white)
+        case 3: // steel helmet with netting and team band
+            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 32), radius: 17.5, startAngle: .pi, endAngle: 0, clockwise: true)
             dome.close()
-            fill(dome, UIColor(hex: 0x6B7B3A), stroke: UIColor(hex: 0x3F4A1E))
-            fill(UIBezierPath(roundedRect: CGRect(x: 11, y: 30, width: 40, height: 4), cornerRadius: 2), UIColor(hex: 0x56632C))
-            fill(UIBezierPath(rect: CGRect(x: 16, y: 24, width: 30, height: 3)), p.team)
-        default: // future helmet + visor
-            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 33), radius: 16, startAngle: .pi, endAngle: 0, clockwise: true)
+            shade(dome, UIColor(hex: 0x6B7B3A), width: 1.5)
+            for i in 0..<4 { line(CGPoint(x: 18 + CGFloat(i) * 7, y: 18 + (i % 2 == 0 ? 2 : 0)), CGPoint(x: 22 + CGFloat(i) * 7, y: 31), UIColor(hex: 0x3F4A1E, alpha: 0.6), width: 0.7) }
+            fill(UIBezierPath(rect: CGRect(x: 15, y: 24, width: 32, height: 3.2)), p.team)
+            shade(UIBezierPath(roundedRect: CGRect(x: 10.5, y: 30, width: 41, height: 4.5), cornerRadius: 2.2), UIColor(hex: 0x56632C), width: 1)
+            line(CGPoint(x: 21, y: 20), CGPoint(x: 27, y: 17), UIColor(white: 1, alpha: 0.45), width: 1.6)
+        default: // sci-fi helmet with a glowing visor and antenna
+            let dome = UIBezierPath(arcCenter: CGPoint(x: 31, y: 33), radius: 16.5, startAngle: .pi, endAngle: 0, clockwise: true)
             dome.close()
-            fill(dome, UIColor(hex: 0xE3E8F0), stroke: UIColor(hex: 0x7C8796))
-            line(CGPoint(x: 24, y: 18), CGPoint(x: 19, y: 7), UIColor(hex: 0x7C8796), width: 1.6)
-            fill(circle(19, 7, 3), p.team)
+            shade(dome, UIColor(hex: 0xE6EBF2), outline: UIColor(hex: 0x6E7A8A), width: 1.5, light: 0.7, dark: 0.12)
+            line(CGPoint(x: 24, y: 18), CGPoint(x: 19, y: 6), UIColor(hex: 0x7C8796), width: 1.6)
+            gem(19, 6, 2.8, p.team)
+            fill(UIBezierPath(rect: CGRect(x: 15, y: 27, width: 32, height: 2.4)), p.team)
             ctx.cgContext.saveGState()
-            ctx.cgContext.setShadow(offset: .zero, blur: 4, color: UIColor(hex: 0x5EF2FF).cgColor)
-            fill(UIBezierPath(roundedRect: CGRect(x: 35, y: 29, width: 17, height: 9), cornerRadius: 4), UIColor(hex: 0x5EF2FF, alpha: 0.85), stroke: UIColor(hex: 0x1E8FA6), width: 1)
+            ctx.cgContext.setShadow(offset: .zero, blur: 5, color: UIColor(hex: 0x5EF2FF).cgColor)
+            let visor = UIBezierPath(roundedRect: CGRect(x: 35, y: 29, width: 18, height: 9.5), cornerRadius: 4.5)
+            gradient(visor, UIColor(hex: 0xC8FBFF), UIColor(hex: 0x2BB8D6))
+            stroke(visor, UIColor(hex: 0x1E8FA6), 1)
             ctx.cgContext.restoreGState()
+            line(CGPoint(x: 38, y: 31.5), CGPoint(x: 43, y: 31.5), UIColor(white: 1, alpha: 0.85), width: 1.2)
         }
+    }
+
+    // MARK: Weapons (critter frame; the hand sits at ~(46, 48))
+
+    /// Shaded fill + outline in one go.
+    private func shade(_ path: UIBezierPath, _ base: UIColor, outline: UIColor = ArtFactory.outline, width: CGFloat = 1.1,
+                       light: CGFloat = 0.45, dark: CGFloat = 0.18) {
+        gradient(path, base.blend(.white, light), base.blend(.black, dark))
+        stroke(path, outline, width)
+    }
+
+    /// Straight blade along +x from `from` to `to` (local coords), with a fuller and a bright edge.
+    private func blade(from x0: CGFloat, to x1: CGFloat, width w: CGFloat, steel: UIColor) {
+        let b = UIBezierPath()
+        b.move(to: CGPoint(x: x0, y: -w / 2)); b.addLine(to: CGPoint(x: x1 - w * 1.2, y: -w / 2))
+        b.addLine(to: CGPoint(x: x1, y: 0)); b.addLine(to: CGPoint(x: x1 - w * 1.2, y: w / 2))
+        b.addLine(to: CGPoint(x: x0, y: w / 2)); b.close()
+        gradient(b, .white, steel, from: CGPoint(x: x0, y: -w / 2), to: CGPoint(x: x0, y: w / 2))
+        stroke(b, ArtFactory.outline, 1.1)
+        line(CGPoint(x: x0 + 2, y: 0), CGPoint(x: x1 - w * 2, y: 0), steel.blend(.black, 0.3), width: w * 0.22)   // fuller
+        line(CGPoint(x: x0 + 2, y: -w / 2 + 0.7), CGPoint(x: x1 - w * 1.4, y: -w / 2 + 0.7), UIColor(white: 1, alpha: 0.9), width: 0.7)
+    }
+
+    private func gem(_ x: CGFloat, _ y: CGFloat, _ r: CGFloat, _ color: UIColor) {
+        let g = circle(x, y, r)
+        gradient(g, color.blend(.white, 0.55), color.blend(.black, 0.2))
+        stroke(g, ArtFactory.outline, 0.7)
+        fill(circle(x - r * 0.35, y - r * 0.35, r * 0.3), UIColor(white: 1, alpha: 0.85))
+    }
+
+    private func grip(from x0: CGFloat, to x1: CGFloat, height h: CGFloat, color: UIColor) {
+        let g = UIBezierPath(roundedRect: CGRect(x: x0, y: -h / 2, width: x1 - x0, height: h), cornerRadius: h * 0.35)
+        shade(g, color, width: 0.9)
+        var x = x0 + 1.6
+        while x < x1 - 0.8 { line(CGPoint(x: x, y: -h / 2 + 0.4), CGPoint(x: x + 1.2, y: h / 2 - 0.4), color.blend(.black, 0.4), width: 0.6); x += 2.2 }
     }
 
     private func drawWeapon(_ ctx: UIGraphicsImageRendererContext, era: Int, role: UnitRole, palette p: Palette) {
         let c = ctx.cgContext
         let ol = ArtFactory.outline
+        let steel = UIColor(hex: 0xB9C4CF), gold = UIColor(hex: 0xF2C14E), wood = UIColor(hex: 0x9C6A3F), leather = UIColor(hex: 0x6B3F22)
         if role == .melee {
             c.saveGState()
-            c.translateBy(x: 47, y: 47)
-            c.rotate(by: -0.9)
+            c.translateBy(x: 46, y: 48.5)
+            c.rotate(by: -1.08)          // raised, pointing up-forward
             switch era {
-            case 0:
-                fill(UIBezierPath(roundedRect: CGRect(x: 0, y: -2.5, width: 18, height: 5), cornerRadius: 2), UIColor(hex: 0x8D5A33), stroke: ol, width: 1)
-                fill(circle(19, 0, 5.5), UIColor(hex: 0x9C6A3F), stroke: ol, width: 1)
-            case 1:
-                fill(UIBezierPath(rect: CGRect(x: 3, y: -2, width: 20, height: 4)), UIColor(hex: 0xDDE4EA), stroke: UIColor(hex: 0x7F8C99), width: 1)
-                fill(UIBezierPath(rect: CGRect(x: 1, y: -5, width: 3, height: 10)), UIColor(hex: 0xE3B341))
-            case 2:
-                let blade = UIBezierPath()
-                blade.move(to: CGPoint(x: 3, y: -2)); blade.addQuadCurve(to: CGPoint(x: 25, y: -6), controlPoint: CGPoint(x: 15, y: -1))
-                blade.addQuadCurve(to: CGPoint(x: 3, y: 2), controlPoint: CGPoint(x: 15, y: 4)); blade.close()
-                fill(blade, UIColor(hex: 0xE6EBF0), stroke: UIColor(hex: 0x7F8C99), width: 1)
-                fill(UIBezierPath(rect: CGRect(x: 1, y: -4, width: 3, height: 8)), UIColor(hex: 0xE3B341))
-            case 3:
-                fill(UIBezierPath(rect: CGRect(x: 0, y: -2, width: 7, height: 4)), UIColor(hex: 0x2C2C2C))
-                fill(UIBezierPath(rect: CGRect(x: 7, y: -1.5, width: 11, height: 3)), UIColor(hex: 0xBFC6CC), stroke: UIColor(hex: 0x6E7780), width: 0.8)
-            default:
-                c.setShadow(offset: .zero, blur: 5, color: p.team.cgColor)
-                fill(UIBezierPath(roundedRect: CGRect(x: 3, y: -2.5, width: 24, height: 5), cornerRadius: 2.5), UIColor.white.blend(p.team, 0.4))
-                fill(UIBezierPath(rect: CGRect(x: 0, y: -3, width: 4, height: 6)), UIColor(hex: 0x5A6270))
+            case 0: // stone axe lashed to a wooden haft
+                let haft = UIBezierPath(roundedRect: CGRect(x: -4, y: -2.2, width: 38, height: 4.4), cornerRadius: 2)
+                shade(haft, wood)
+                let head = UIBezierPath()
+                head.move(to: CGPoint(x: 24, y: -2)); head.addLine(to: CGPoint(x: 27, y: -12))
+                head.addLine(to: CGPoint(x: 34, y: -15)); head.addLine(to: CGPoint(x: 37, y: -9))
+                head.addLine(to: CGPoint(x: 35, y: -2)); head.close()
+                shade(head, UIColor(hex: 0x9AA1A6), width: 1.2)
+                line(CGPoint(x: 28, y: -11), CGPoint(x: 33, y: -6), UIColor(hex: 0x6F767B), width: 0.8)       // chip facet
+                line(CGPoint(x: 31, y: -13), CGPoint(x: 35, y: -10), UIColor(white: 1, alpha: 0.6), width: 0.8)
+                for i in 0..<3 { line(CGPoint(x: 24 + CGFloat(i) * 3.4, y: -3), CGPoint(x: 26 + CGFloat(i) * 3.4, y: 3), UIColor(hex: 0xD9B77E), width: 1.3) }
+            case 1: // knight's longsword
+                gem(-4, 0, 2.6, p.team)                                                   // pommel
+                grip(from: -2, to: 7, height: 4, color: leather)
+                let guardBar = UIBezierPath()
+                guardBar.move(to: CGPoint(x: 7, y: -8)); guardBar.addQuadCurve(to: CGPoint(x: 7, y: 8), controlPoint: CGPoint(x: 11, y: 0))
+                guardBar.addLine(to: CGPoint(x: 9.6, y: 8)); guardBar.addQuadCurve(to: CGPoint(x: 9.6, y: -8), controlPoint: CGPoint(x: 13.5, y: 0))
+                guardBar.close()
+                shade(guardBar, gold, width: 0.9)
+                blade(from: 10, to: 42, width: 5.6, steel: steel)
+                gem(10.5, 0, 1.7, p.team)
+            case 2: // cavalry sabre with a basket guard
+                grip(from: -3, to: 6, height: 4, color: UIColor(hex: 0x2B2B2B))
+                let basket = UIBezierPath()
+                basket.move(to: CGPoint(x: 6, y: -5)); basket.addQuadCurve(to: CGPoint(x: -3, y: 6), controlPoint: CGPoint(x: 6, y: 9))
+                basket.lineWidth = 3.4; ol.setStroke(); basket.stroke()
+                basket.lineWidth = 2; gold.setStroke(); basket.stroke()
+                let s = UIBezierPath()
+                s.move(to: CGPoint(x: 6, y: -2.6)); s.addQuadCurve(to: CGPoint(x: 42, y: -9), controlPoint: CGPoint(x: 26, y: -1))
+                s.addQuadCurve(to: CGPoint(x: 6, y: 2.6), controlPoint: CGPoint(x: 26, y: 5)); s.close()
+                gradient(s, .white, steel, from: CGPoint(x: 6, y: -3), to: CGPoint(x: 6, y: 3))
+                stroke(s, ol, 1.1)
+                let edge = UIBezierPath()
+                edge.move(to: CGPoint(x: 8, y: -1.8)); edge.addQuadCurve(to: CGPoint(x: 38, y: -7.4), controlPoint: CGPoint(x: 25, y: -0.6))
+                edge.lineWidth = 0.7; UIColor(white: 1, alpha: 0.9).setStroke(); edge.stroke()
+                fill(UIBezierPath(roundedRect: CGRect(x: 5, y: -4.5, width: 2.6, height: 9), cornerRadius: 1), gold, stroke: ol, width: 0.7)
+            case 3: // machete
+                grip(from: -3, to: 8, height: 5, color: UIColor(hex: 0x3A3A3A))
+                fill(UIBezierPath(rect: CGRect(x: 7.5, y: -4, width: 2.2, height: 8)), UIColor(hex: 0x555B60), stroke: ol, width: 0.7)
+                let m = UIBezierPath()
+                m.move(to: CGPoint(x: 9.5, y: -2.8)); m.addLine(to: CGPoint(x: 34, y: -3.6))
+                m.addQuadCurve(to: CGPoint(x: 37, y: 3.6), controlPoint: CGPoint(x: 39, y: -1))
+                m.addLine(to: CGPoint(x: 9.5, y: 2.8)); m.close()
+                gradient(m, UIColor(hex: 0xF4F6F8), UIColor(hex: 0x8E979F), from: CGPoint(x: 10, y: -3), to: CGPoint(x: 10, y: 3))
+                stroke(m, ol, 1.1)
+                line(CGPoint(x: 11, y: -2), CGPoint(x: 33, y: -2.8), UIColor(white: 1, alpha: 0.9), width: 0.7)
+            default: // plasma sword
+                grip(from: -3, to: 7, height: 4.6, color: UIColor(hex: 0x5A6270))
+                fill(UIBezierPath(roundedRect: CGRect(x: 6, y: -5.5, width: 3.4, height: 11), cornerRadius: 1.5), UIColor(hex: 0xD3DAE4), stroke: ol, width: 0.8)
+                c.saveGState()
+                c.setShadow(offset: .zero, blur: 7, color: p.team.cgColor)
+                fill(UIBezierPath(roundedRect: CGRect(x: 9, y: -3.4, width: 34, height: 6.8), cornerRadius: 3.4), p.team.blend(.white, 0.25))
+                c.restoreGState()
+                fill(UIBezierPath(roundedRect: CGRect(x: 10, y: -1.4, width: 31, height: 2.8), cornerRadius: 1.4), .white)
+                gem(-3.5, 0, 2.2, p.team)
             }
             c.restoreGState()
         } else {
             switch era {
-            case 0:
-                line(CGPoint(x: 47, y: 47), CGPoint(x: 54, y: 39), UIColor(hex: 0x7A4B26), width: 1.4)
-                fill(circle(55, 38, 3.8), UIColor(hex: 0x8D8D8D), stroke: ol, width: 1)
-            case 1:
+            case 0: // forked slingshot loaded with a pebble
+                let fork = UIBezierPath()
+                fork.move(to: CGPoint(x: 45, y: 52)); fork.addLine(to: CGPoint(x: 50, y: 41))
+                fork.move(to: CGPoint(x: 50, y: 41)); fork.addLine(to: CGPoint(x: 46, y: 31))
+                fork.move(to: CGPoint(x: 50, y: 41)); fork.addLine(to: CGPoint(x: 57, y: 33))
+                fork.lineCapStyle = .round
+                fork.lineWidth = 4.4; ol.setStroke(); fork.stroke()
+                fork.lineWidth = 2.6; wood.setStroke(); fork.stroke()
+                line(CGPoint(x: 46, y: 31), CGPoint(x: 51, y: 36), UIColor(hex: 0xC0392B), width: 1.2)
+                line(CGPoint(x: 57, y: 33), CGPoint(x: 51, y: 36), UIColor(hex: 0xC0392B), width: 1.2)
+                let rock = circle(51.5, 36.5, 3.4)
+                shade(rock, UIColor(hex: 0x9A9A9A))
+            case 1: // recurve bow, arrow nocked
                 let bow = UIBezierPath()
-                bow.move(to: CGPoint(x: 49, y: 30)); bow.addQuadCurve(to: CGPoint(x: 49, y: 62), controlPoint: CGPoint(x: 63, y: 46))
-                bow.lineWidth = 2.6; UIColor(hex: 0x8D5A33).setStroke(); bow.stroke()
-                line(CGPoint(x: 49, y: 30), CGPoint(x: 49, y: 62), UIColor(white: 0.95, alpha: 1), width: 0.8)
-            case 2:
-                fill(UIBezierPath(rect: CGRect(x: 34, y: 43, width: 29, height: 3.5)), UIColor(hex: 0x3B2F2F))
-                fill(UIBezierPath(roundedRect: CGRect(x: 30, y: 43, width: 12, height: 7), cornerRadius: 2), UIColor(hex: 0x8D5A33), stroke: ol, width: 0.8)
-            case 3:
-                fill(UIBezierPath(rect: CGRect(x: 34, y: 42, width: 27, height: 4.5)), UIColor(hex: 0x3A3F44))
-                fill(UIBezierPath(rect: CGRect(x: 45, y: 46, width: 4, height: 7)), UIColor(hex: 0x2A2E33))
-                fill(UIBezierPath(rect: CGRect(x: 42, y: 38.5, width: 9, height: 3)), UIColor(hex: 0x2A2E33))
-            default:
-                fill(UIBezierPath(roundedRect: CGRect(x: 39, y: 40, width: 19, height: 9), cornerRadius: 3), UIColor(hex: 0xEEF2F7), stroke: p.teamDark, width: 1.2)
+                bow.move(to: CGPoint(x: 47, y: 27)); bow.addQuadCurve(to: CGPoint(x: 53, y: 32), controlPoint: CGPoint(x: 52, y: 27))
+                bow.addQuadCurve(to: CGPoint(x: 53, y: 58), controlPoint: CGPoint(x: 62, y: 45))
+                bow.addQuadCurve(to: CGPoint(x: 47, y: 63), controlPoint: CGPoint(x: 52, y: 63))
+                bow.lineCapStyle = .round
+                bow.lineWidth = 4.6; ol.setStroke(); bow.stroke()
+                bow.lineWidth = 2.8; UIColor(hex: 0xA0673A).setStroke(); bow.stroke()
+                fill(UIBezierPath(roundedRect: CGRect(x: 55.5, y: 43, width: 4, height: 6), cornerRadius: 1.5), leather)
+                line(CGPoint(x: 47.5, y: 28), CGPoint(x: 40, y: 46), UIColor(white: 0.95, alpha: 1), width: 0.8)
+                line(CGPoint(x: 40, y: 46), CGPoint(x: 47.5, y: 62), UIColor(white: 0.95, alpha: 1), width: 0.8)
+                line(CGPoint(x: 38, y: 46), CGPoint(x: 64, y: 46), UIColor(hex: 0x7A4B26), width: 1.4)
+                let tip = UIBezierPath()
+                tip.move(to: CGPoint(x: 62, y: 43.6)); tip.addLine(to: CGPoint(x: 66, y: 46)); tip.addLine(to: CGPoint(x: 62, y: 48.4)); tip.close()
+                shade(tip, steel, width: 0.6)
+                let fl = UIBezierPath()
+                fl.move(to: CGPoint(x: 38, y: 46)); fl.addLine(to: CGPoint(x: 34, y: 43)); fl.addLine(to: CGPoint(x: 41, y: 46))
+                fl.addLine(to: CGPoint(x: 34, y: 49)); fl.close()
+                fill(fl, p.team, stroke: ol, width: 0.6)
+            case 2: // flintlock musket with brass bands
+                let stock = UIBezierPath()
+                stock.move(to: CGPoint(x: 27, y: 44)); stock.addLine(to: CGPoint(x: 44, y: 43))
+                stock.addLine(to: CGPoint(x: 44, y: 48)); stock.addLine(to: CGPoint(x: 27, y: 53)); stock.close()
+                shade(stock, wood)
+                let barrel = UIBezierPath(rect: CGRect(x: 40, y: 41.6, width: 26, height: 3.6))
+                shade(barrel, UIColor(hex: 0x4A4F55), width: 0.9)
+                for x in [47.0, 56.0] as [CGFloat] { fill(UIBezierPath(rect: CGRect(x: x, y: 41.2, width: 2, height: 4.4)), gold, stroke: ol, width: 0.5) }
+                fill(UIBezierPath(rect: CGRect(x: 40, y: 39, width: 3, height: 3)), UIColor(hex: 0x4A4F55), stroke: ol, width: 0.6)   // flint hammer
+            case 3: // assault rifle with magazine and scope
+                let stock = UIBezierPath(roundedRect: CGRect(x: 27, y: 42, width: 13, height: 8), cornerRadius: 2)
+                shade(stock, UIColor(hex: 0x5B4A36))
+                let body = UIBezierPath(roundedRect: CGRect(x: 38, y: 40.5, width: 18, height: 6.5), cornerRadius: 1.5)
+                shade(body, UIColor(hex: 0x3A3F44))
+                shade(UIBezierPath(rect: CGRect(x: 55, y: 42, width: 11, height: 3)), UIColor(hex: 0x2A2E33), width: 0.8)
+                let mag = UIBezierPath()
+                mag.move(to: CGPoint(x: 46, y: 47)); mag.addLine(to: CGPoint(x: 50.5, y: 47))
+                mag.addLine(to: CGPoint(x: 52, y: 55)); mag.addLine(to: CGPoint(x: 48, y: 55.5)); mag.close()
+                shade(mag, UIColor(hex: 0x2A2E33), width: 0.8)
+                shade(UIBezierPath(roundedRect: CGRect(x: 42, y: 36.5, width: 11, height: 3.6), cornerRadius: 1.8), UIColor(hex: 0x2A2E33), width: 0.8)
+                fill(circle(53, 38.3, 1.1), UIColor(hex: 0x7FD6FF))
+            default: // plasma rifle
+                let gun = UIBezierPath(roundedRect: CGRect(x: 30, y: 39, width: 30, height: 10), cornerRadius: 4.5)
+                shade(gun, UIColor(hex: 0xE3E8F0), outline: p.teamDark, width: 1.2, light: 0.6, dark: 0.12)
+                fill(UIBezierPath(roundedRect: CGRect(x: 34, y: 42.5, width: 20, height: 2.6), cornerRadius: 1.3), p.team)
+                shade(UIBezierPath(roundedRect: CGRect(x: 40, y: 48, width: 6, height: 6), cornerRadius: 1.5), UIColor(hex: 0x5A6270), width: 0.8)
                 c.saveGState()
-                c.setShadow(offset: .zero, blur: 4, color: p.team.cgColor)
-                fill(circle(58.5, 44.5, 3), p.team)
+                c.setShadow(offset: .zero, blur: 6, color: p.team.cgColor)
+                fill(circle(61, 44, 3.4), p.team.blend(.white, 0.35))
                 c.restoreGState()
             }
         }
@@ -521,70 +656,149 @@ final class ArtFactory {
         let c = ctx.cgContext
         let p = ArtFactory.palette(s)
         let ol = ArtFactory.outline
+        let gold = UIColor(hex: 0xF2C14E), wood = UIColor(hex: 0x9C6A3F)
         switch era {
-        case 0: // Boulder Brute: big critter + bone helmet + stone hammer
-            drawCritter(ctx, s, era: 0, at: CGPoint(x: 6, y: -2), scale: 1.28, hat: false, weapon: nil)
-            let skull = UIBezierPath(arcCenter: CGPoint(x: 46, y: 39), radius: 19, startAngle: .pi, endAngle: 0, clockwise: true)
+        case 0: // Boulder Brute: big critter, skull helmet, giant stone maul raised overhead
+            drawCritter(ctx, s, era: 0, at: CGPoint(x: 4, y: -2), scale: 1.28, hat: false, weapon: nil)
+            let skull = UIBezierPath(arcCenter: CGPoint(x: 44, y: 39), radius: 19, startAngle: .pi, endAngle: 0, clockwise: true)
             skull.close()
-            fill(skull, UIColor(hex: 0xF2EAD8), stroke: ol)
-            fill(oval(32, 16, 8, 14), UIColor(hex: 0xF2EAD8), stroke: ol, width: 1)
-            c.saveGState()
-            c.translateBy(x: 66, y: 62)
-            c.rotate(by: -1.05)
-            fill(UIBezierPath(roundedRect: CGRect(x: 0, y: -3, width: 26, height: 6), cornerRadius: 2), UIColor(hex: 0x7A4B26), stroke: ol, width: 1)
-            fill(UIBezierPath(roundedRect: CGRect(x: 20, y: -11, width: 14, height: 22), cornerRadius: 5), UIColor(hex: 0x8F8F8F), stroke: ol, width: 1.4)
-            c.restoreGState()
-        case 1: // Iron Knight: lance + shield
-            line(CGPoint(x: 40, y: 54), CGPoint(x: 95, y: 44), UIColor(hex: 0x8D5A33), width: 3.5)
-            fill(UIBezierPath(rect: CGRect(x: 86, y: 41.5, width: 9, height: 5)), UIColor(hex: 0xC9D1D9))
-            drawCritter(ctx, s, era: 1, at: CGPoint(x: 8, y: 4), scale: 1.18, hat: true, weapon: nil)
-            let shield = UIBezierPath()
-            shield.move(to: CGPoint(x: 56, y: 40)); shield.addLine(to: CGPoint(x: 76, y: 40))
-            shield.addQuadCurve(to: CGPoint(x: 66, y: 74), controlPoint: CGPoint(x: 78, y: 64))
-            shield.addQuadCurve(to: CGPoint(x: 56, y: 40), controlPoint: CGPoint(x: 54, y: 64)); shield.close()
-            fill(shield, p.team, stroke: ol, width: 1.6)
-            fill(UIBezierPath(rect: CGRect(x: 64.5, y: 44, width: 3, height: 24)), UIColor(hex: 0xE3B341))
-        case 2: // Cannon on wheels, critter behind
-            drawCritter(ctx, s, era: 2, at: CGPoint(x: -4, y: 14), scale: 0.95, hat: true, weapon: nil)
-            c.saveGState()
-            c.translateBy(x: 44, y: 50)
-            c.rotate(by: -0.12)
-            fill(UIBezierPath(roundedRect: CGRect(x: 0, y: -9, width: 48, height: 18), cornerRadius: 8), UIColor(hex: 0x2D2D2D), stroke: ol)
-            fill(UIBezierPath(rect: CGRect(x: 40, y: -11, width: 6, height: 22)), UIColor(hex: 0x3D3D3D))
-            fill(UIBezierPath(rect: CGRect(x: 10, y: -9, width: 4, height: 18)), p.team)
-            c.restoreGState()
-            fill(circle(50, 63, 14), UIColor(hex: 0x8D5A33), stroke: ol)
-            for i in 0..<6 {
-                let a = CGFloat(i) * .pi / 3
-                line(CGPoint(x: 50, y: 63), CGPoint(x: 50 + cos(a) * 12, y: 63 + sin(a) * 12), UIColor(hex: 0x5E3A1E), width: 2)
+            shade(skull, UIColor(hex: 0xF2EAD8), width: 1.6)
+            for (x, y) in [(30.0, 18.0), (54.0, 18.0)] as [(CGFloat, CGFloat)] {
+                let horn = UIBezierPath()
+                horn.move(to: CGPoint(x: x - 4, y: y + 8)); horn.addQuadCurve(to: CGPoint(x: x + (x < 40 ? -6 : 6), y: y - 8), controlPoint: CGPoint(x: x + (x < 40 ? -8 : 8), y: y + 2))
+                horn.addQuadCurve(to: CGPoint(x: x + 4, y: y + 8), controlPoint: CGPoint(x: x, y: y))
+                horn.close()
+                shade(horn, UIColor(hex: 0xEDE3CC), width: 1.2)
             }
-            fill(circle(50, 63, 3.5), UIColor(hex: 0x5E3A1E))
-        case 3: // Tank
-            drawCritter(ctx, s, era: 3, at: CGPoint(x: 26, y: -6), scale: 0.62, hat: true, weapon: nil)
-            fill(UIBezierPath(roundedRect: CGRect(x: 30, y: 22, width: 38, height: 22), cornerRadius: 10), UIColor(hex: 0x6B7B3A), stroke: ol)
-            fill(UIBezierPath(rect: CGRect(x: 62, y: 28, width: 33, height: 6)), UIColor(hex: 0x56632C), stroke: ol, width: 1.2)
-            fill(UIBezierPath(roundedRect: CGRect(x: 4, y: 38, width: 86, height: 22), cornerRadius: 8), UIColor(hex: 0x7A8B45), stroke: ol)
-            fill(UIBezierPath(rect: CGRect(x: 10, y: 44, width: 74, height: 4)), p.team)
-            fill(UIBezierPath(roundedRect: CGRect(x: 2, y: 56, width: 90, height: 20), cornerRadius: 10), UIColor(hex: 0x33352B), stroke: ol)
-            for i in 0..<6 { fill(circle(12 + CGFloat(i) * 14, 66, 5.5), UIColor(hex: 0x5A5D4C), stroke: ol, width: 1) }
-        default: // Mech with critter pilot
-            let leg = UIColor(hex: 0x8E99A8)
-            line(CGPoint(x: 40, y: 54), CGPoint(x: 28, y: 74), leg, width: 7)
-            line(CGPoint(x: 52, y: 54), CGPoint(x: 62, y: 74), leg, width: 7)
-            fill(UIBezierPath(roundedRect: CGRect(x: 18, y: 72, width: 18, height: 6), cornerRadius: 3), UIColor(hex: 0x5A6270))
-            fill(UIBezierPath(roundedRect: CGRect(x: 54, y: 72, width: 18, height: 6), cornerRadius: 3), UIColor(hex: 0x5A6270))
-            fill(UIBezierPath(roundedRect: CGRect(x: 20, y: 18, width: 54, height: 40), cornerRadius: 12), UIColor(hex: 0xD3DAE4), stroke: UIColor(hex: 0x6E7A8A), width: 2)
-            fill(UIBezierPath(rect: CGRect(x: 24, y: 50, width: 46, height: 4)), p.team)
+            fill(oval(36, 28, 6, 5), UIColor(hex: 0x3B2F2A)); fill(oval(46, 28, 6, 5), UIColor(hex: 0x3B2F2A))
             c.saveGState()
-            fill(circle(46, 35, 14), UIColor(hex: 0x5EF2FF, alpha: 0.35), stroke: UIColor(hex: 0x1E8FA6), width: 1.5)
-            drawCritter(ctx, s, era: 4, at: CGPoint(x: 29, y: 18), scale: 0.5, hat: false, weapon: nil)
+            c.translateBy(x: 64, y: 62)
+            c.rotate(by: -1.2)
+            shade(UIBezierPath(roundedRect: CGRect(x: -4, y: -3, width: 40, height: 6), cornerRadius: 3), wood, width: 1.2)
+            let head = UIBezierPath(roundedRect: CGRect(x: 26, y: -13, width: 16, height: 26), cornerRadius: 6)
+            shade(head, UIColor(hex: 0x9AA1A6), width: 1.6)
+            line(CGPoint(x: 30, y: -9), CGPoint(x: 38, y: -4), UIColor(white: 1, alpha: 0.5), width: 1.2)
+            for i in 0..<3 { line(CGPoint(x: 24 + CGFloat(i) * 2.5, y: -4), CGPoint(x: 24 + CGFloat(i) * 2.5, y: 4), UIColor(hex: 0xD9B77E), width: 1.6) }
             c.restoreGState()
-            fill(UIBezierPath(roundedRect: CGRect(x: 66, y: 34, width: 28, height: 9), cornerRadius: 4), UIColor(hex: 0xAAB4C2), stroke: UIColor(hex: 0x6E7A8A), width: 1.2)
+            fill(oval(54, 52, 13, 11), p.fur.blend(.white, 0.2), stroke: ol, width: 1.4)          // fist on the haft
+        case 1: // Iron Knight: lance with pennant, kite shield, plated critter
+            line(CGPoint(x: 34, y: 56), CGPoint(x: 95, y: 42), ol, width: 5.2)
+            line(CGPoint(x: 34, y: 56), CGPoint(x: 95, y: 42), wood, width: 3.4)
+            let tip = UIBezierPath()
+            tip.move(to: CGPoint(x: 84, y: 41.5)); tip.addLine(to: CGPoint(x: 96, y: 41.8)); tip.addLine(to: CGPoint(x: 85, y: 47.5)); tip.close()
+            shade(tip, UIColor(hex: 0xC9D1D9), width: 0.8)
+            let pennant = UIBezierPath()
+            pennant.move(to: CGPoint(x: 72, y: 45)); pennant.addLine(to: CGPoint(x: 82, y: 36))
+            pennant.addLine(to: CGPoint(x: 80, y: 41)); pennant.addLine(to: CGPoint(x: 86, y: 39)); pennant.addLine(to: CGPoint(x: 76, y: 48)); pennant.close()
+            shade(pennant, p.team, width: 0.9)
+            drawCritter(ctx, s, era: 1, at: CGPoint(x: 6, y: 4), scale: 1.18, hat: true, weapon: nil)
+            let shield = UIBezierPath()
+            shield.move(to: CGPoint(x: 54, y: 39)); shield.addLine(to: CGPoint(x: 78, y: 39))
+            shield.addQuadCurve(to: CGPoint(x: 66, y: 77), controlPoint: CGPoint(x: 80, y: 66))
+            shield.addQuadCurve(to: CGPoint(x: 54, y: 39), controlPoint: CGPoint(x: 52, y: 66)); shield.close()
+            shade(shield, p.team, width: 1.8)
+            let rim = UIBezierPath()
+            rim.move(to: CGPoint(x: 56.5, y: 41.5)); rim.addLine(to: CGPoint(x: 75.5, y: 41.5))
+            rim.addQuadCurve(to: CGPoint(x: 66, y: 73), controlPoint: CGPoint(x: 77, y: 64))
+            rim.addQuadCurve(to: CGPoint(x: 56.5, y: 41.5), controlPoint: CGPoint(x: 55, y: 64)); rim.close()
+            rim.lineWidth = 1.6; gold.setStroke(); rim.stroke()
+            let chevron = UIBezierPath()
+            chevron.move(to: CGPoint(x: 58, y: 50)); chevron.addLine(to: CGPoint(x: 66, y: 58)); chevron.addLine(to: CGPoint(x: 74, y: 50))
+            chevron.lineWidth = 3.4; chevron.lineCapStyle = .round; gold.setStroke(); chevron.stroke()
+            gem(66, 64, 2.6, UIColor(hex: 0xFFFFFF))
+        case 2: // bronze cannon on a wooden carriage, gunner with a lit fuse
+            drawCritter(ctx, s, era: 2, at: CGPoint(x: -6, y: 14), scale: 0.95, hat: true, weapon: nil)
+            shade(UIBezierPath(roundedRect: CGRect(x: 26, y: 54, width: 40, height: 9), cornerRadius: 3), wood, width: 1.2)   // carriage
             c.saveGState()
-            c.setShadow(offset: .zero, blur: 6, color: p.team.cgColor)
-            fill(circle(93, 38.5, 3.5), p.team)
+            c.translateBy(x: 42, y: 50)
+            c.rotate(by: -0.14)
+            let barrel = UIBezierPath()
+            barrel.move(to: CGPoint(x: 0, y: -10)); barrel.addLine(to: CGPoint(x: 44, y: -7.5))
+            barrel.addLine(to: CGPoint(x: 44, y: 7.5)); barrel.addLine(to: CGPoint(x: 0, y: 10))
+            barrel.addQuadCurve(to: CGPoint(x: 0, y: -10), controlPoint: CGPoint(x: -8, y: 0)); barrel.close()
+            gradient(barrel, UIColor(hex: 0xF0C77A), UIColor(hex: 0x8A5A1E), from: CGPoint(x: 0, y: -10), to: CGPoint(x: 0, y: 10))
+            stroke(barrel, ol, 1.6)
+            for x in [10.0, 30.0] as [CGFloat] { shade(UIBezierPath(rect: CGRect(x: x, y: -10, width: 3.5, height: 20)), UIColor(hex: 0xC99A45), width: 0.9) }
+            shade(UIBezierPath(roundedRect: CGRect(x: 42, y: -10, width: 6, height: 20), cornerRadius: 2), UIColor(hex: 0xC99A45), width: 1.1)
+            fill(oval(44.5, -5, 3, 10), UIColor(hex: 0x1E1A16))
+            line(CGPoint(x: 4, y: -7), CGPoint(x: 40, y: -5.4), UIColor(white: 1, alpha: 0.55), width: 1.4)
+            c.restoreGState()
+            let wheel = circle(48, 63, 14)
+            shade(wheel, wood, width: 1.8)
+            for i in 0..<8 {
+                let a = CGFloat(i) * .pi / 4
+                line(CGPoint(x: 48, y: 63), CGPoint(x: 48 + cos(a) * 12, y: 63 + sin(a) * 12), UIColor(hex: 0x5E3A1E), width: 1.8)
+            }
+            let tire = circle(48, 63, 12.6)
+            tire.lineWidth = 2.2; UIColor(hex: 0x4A4F55).setStroke(); tire.stroke()
+            gem(48, 63, 3.4, UIColor(hex: 0x8A8F96))
+            // lit fuse
+            line(CGPoint(x: 30, y: 52), CGPoint(x: 35, y: 41), UIColor(hex: 0x7A4B26), width: 1.4)
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 5, color: UIColor(hex: 0xFFB347).cgColor)
+            fill(circle(35, 40, 2.4), UIColor(hex: 0xFFD54A))
+            c.restoreGState()
+        case 3: // tank with a commander in the hatch
+            drawCritter(ctx, s, era: 3, at: CGPoint(x: 26, y: -8), scale: 0.62, hat: true, weapon: nil)
+            shade(UIBezierPath(roundedRect: CGRect(x: 60, y: 27.5, width: 35, height: 7), cornerRadius: 2), UIColor(hex: 0x56632C), width: 1.3)   // gun
+            shade(UIBezierPath(roundedRect: CGRect(x: 88, y: 26, width: 7, height: 10), cornerRadius: 2), UIColor(hex: 0x4E5A28), width: 1.1)
+            let turret = UIBezierPath(roundedRect: CGRect(x: 28, y: 20, width: 40, height: 22), cornerRadius: 10)
+            shade(turret, UIColor(hex: 0x6E7F3C), width: 1.8)
+            shade(UIBezierPath(roundedRect: CGRect(x: 36, y: 18, width: 16, height: 5), cornerRadius: 2), UIColor(hex: 0x56632C), width: 1)  // hatch
+            let hull = UIBezierPath()
+            hull.move(to: CGPoint(x: 2, y: 42)); hull.addLine(to: CGPoint(x: 86, y: 40)); hull.addLine(to: CGPoint(x: 94, y: 52))
+            hull.addLine(to: CGPoint(x: 4, y: 56)); hull.close()
+            shade(hull, UIColor(hex: 0x7A8B45), width: 1.8)
+            fill(UIBezierPath(rect: CGRect(x: 8, y: 46, width: 76, height: 3.6)), p.team)
+            star(at: CGPoint(x: 48, y: 31), r: 5.5, color: UIColor.white.blend(p.team, 0.25))
+            let track = UIBezierPath(roundedRect: CGRect(x: 1, y: 54, width: 92, height: 22), cornerRadius: 11)
+            shade(track, UIColor(hex: 0x3A3C30), width: 1.8)
+            for i in 0..<6 {
+                let w = circle(12 + CGFloat(i) * 14, 65, 6)
+                shade(w, UIColor(hex: 0x7D806D), width: 1.1)
+                fill(circle(12 + CGFloat(i) * 14, 65, 2), UIColor(hex: 0x3A3C30))
+            }
+            for i in 0..<15 { line(CGPoint(x: 5 + CGFloat(i) * 6, y: 55), CGPoint(x: 5 + CGFloat(i) * 6, y: 57.5), UIColor(hex: 0x1F201A), width: 1.2) }
+        default: // mech with a critter pilot
+            let leg = UIColor(hex: 0x8E99A8)
+            for (hip, foot) in [(CGPoint(x: 40, y: 54), CGPoint(x: 28, y: 73)), (CGPoint(x: 54, y: 54), CGPoint(x: 64, y: 73))] {
+                line(hip, foot, ol, width: 9)
+                line(hip, foot, leg, width: 6.5)
+                c.saveGState()
+                c.setShadow(offset: .zero, blur: 4, color: p.team.cgColor)
+                fill(circle((hip.x + foot.x) / 2, (hip.y + foot.y) / 2, 3.2), p.team.blend(.white, 0.3), stroke: ol, width: 0.8)
+                c.restoreGState()
+                shade(UIBezierPath(roundedRect: CGRect(x: foot.x - 10, y: 71.5, width: 20, height: 7), cornerRadius: 3), UIColor(hex: 0x5A6270), width: 1.1)
+            }
+            let torso = UIBezierPath(roundedRect: CGRect(x: 18, y: 16, width: 58, height: 42), cornerRadius: 14)
+            shade(torso, UIColor(hex: 0xD9DFE8), outline: UIColor(hex: 0x5E6A7A), width: 2, light: 0.6, dark: 0.15)
+            fill(UIBezierPath(rect: CGRect(x: 22, y: 50, width: 50, height: 4)), p.team)
+            fill(circle(46, 34, 15), UIColor(hex: 0x10263A, alpha: 0.35))
+            drawCritter(ctx, s, era: 4, at: CGPoint(x: 29, y: 17), scale: 0.5, hat: false, weapon: nil)
+            let glass = circle(46, 34, 15)
+            gradient(glass, UIColor(hex: 0xBFF8FF, alpha: 0.45), UIColor(hex: 0x5EF2FF, alpha: 0.15))
+            stroke(glass, UIColor(hex: 0x1E8FA6), 1.8)
+            line(CGPoint(x: 38, y: 25), CGPoint(x: 43, y: 22), UIColor(white: 1, alpha: 0.8), width: 1.6)
+            // shoulder cannon
+            shade(UIBezierPath(roundedRect: CGRect(x: 62, y: 30, width: 30, height: 11), cornerRadius: 5), UIColor(hex: 0xAAB4C2), outline: UIColor(hex: 0x5E6A7A), width: 1.4)
+            fill(UIBezierPath(rect: CGRect(x: 68, y: 34.5, width: 18, height: 2)), p.team)
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 7, color: p.team.cgColor)
+            fill(circle(92, 35.5, 4), p.team.blend(.white, 0.35))
             c.restoreGState()
         }
+    }
+
+    private func star(at center: CGPoint, r: CGFloat, color: UIColor) {
+        let path = UIBezierPath()
+        for i in 0..<10 {
+            let a = -CGFloat.pi / 2 + CGFloat(i) * .pi / 5
+            let rr = i % 2 == 0 ? r : r * 0.45
+            let pt = CGPoint(x: center.x + cos(a) * rr, y: center.y + sin(a) * rr)
+            i == 0 ? path.move(to: pt) : path.addLine(to: pt)
+        }
+        path.close()
+        fill(path, color, stroke: ArtFactory.outline, width: 0.8)
     }
 
     // MARK: Bases (130x160, facing right)
