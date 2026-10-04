@@ -29,6 +29,8 @@ final class BattleController {
     let challengeFirstClear: Bool
     let general: GeneralID?
     let generalLevel: Int
+    /// Player's equipped fur skin (cosmetic).
+    let skin: FurSkin
     let sim: BattleSimulation
     @ObservationIgnored private(set) var scene: BattleScene!
     @ObservationIgnored private var accumulator = 0.0
@@ -90,6 +92,7 @@ final class BattleController {
         }
         general = progress.equipped.flatMap { progress.generalLevel($0) > 0 ? $0 : nil }
         generalLevel = general.map { progress.generalLevel($0) } ?? 0
+        skin = progress.skin
         sim = BattleSimulation(difficulty: difficulty, playerMods: progress.battleModifiers,
                                seed: mode == .challenge ? DailyChallenge.seed(for: today) : UInt64.random(in: 1...UInt64.max),
                                mode: mode)

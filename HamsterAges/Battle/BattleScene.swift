@@ -325,7 +325,7 @@ final class BattleScene: SKScene {
     private func makeUnitNode(_ u: UnitEntity) -> SKNode {
         let container = SKNode()
         container.zPosition = CGFloat(-u.depth) + (u.role == .heavy ? -0.5 : 0)
-        let texture = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role))
+        let texture = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: controller?.skin ?? .classic))
         let body = SKSpriteNode(texture: texture)
         body.name = "body"
         body.anchorPoint = CGPoint(x: ArtFactory.unitAnchorX(u.role), y: 0.06)

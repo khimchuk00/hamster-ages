@@ -81,6 +81,17 @@ struct PlayerProgress: Codable {
     var bestSurvival: Double?
     var starMilestonesClaimed: Int?
     var challengeClearedDay: Int?
+    // Hamster Pass & skins
+    var passSeason: Int?
+    var passXP: Int?
+    var passClaimedFree: [Int]?
+    var passClaimedPremium: [Int]?
+    var passPremiumSeason: Int?
+    var skins: [String]?
+    var equippedSkin: String?
+
+    var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
+    func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
 
     var totalStars: Int { stars.values.reduce(0, +) }
     var nextStarMilestone: (stars: Int, reward: StarRoad.Reward) { StarRoad.milestone(starMilestonesClaimed ?? 0) }
@@ -158,6 +169,7 @@ final class ProgressStore {
         progress.seeds += seeds
         progress.battlesPlayed += 1
         progress.bestSurvival = max(progress.bestSurvival ?? 0, seconds)
+        addPassXP(HamsterPass.xp(survivalWave: Int(seconds / GameConfig.survivalRampInterval) + 1))
         refreshDailyState()
         advanceQuest(.trainUnits, by: stats.unitsTrained)
         advanceQuest(.killRats, by: stats.kills)
@@ -174,6 +186,7 @@ final class ProgressStore {
     func recordChallenge(won: Bool, seeds: Int, stats: BattleStats, now: Date = .now) {
         progress.seeds += seeds
         progress.battlesPlayed += 1
+        addPassXP(HamsterPass.xp(challengeWon: won), now: now)
         refreshDailyState(now: now)
         if won {
             progress.wins += 1
@@ -189,6 +202,7 @@ final class ProgressStore {
 
     func recordBattle(stage: Int, won: Bool, seeds: Int, stars: Int, stats: BattleStats = BattleStats()) {
         progress.seeds += seeds
+        addPassXP(HamsterPass.xp(battleWon: won, stars: stars))
         refreshDailyState()
         if won { advanceQuest(.winBattles, by: 1) }
         advanceQuest(.trainUnits, by: stats.unitsTrained)
@@ -252,6 +266,7 @@ final class ProgressStore {
         let reward = board.quests[index].kind.reward
         progress.questBoard = board
         progress.seeds += reward
+        addPassXP(HamsterPass.questXP)
         save()
         Analytics.log(.questClaimed(kind: board.quests[index].kind.rawValue))
         return reward
@@ -351,6 +366,82 @@ final class ProgressStore {
         save()
     }
 
+    // MARK: Hamster Pass
+
+    /// Starts a fresh track when a new season begins (XP and claims reset; owned skins stay).
+    func ensurePassSeason(now: Date = .now) {
+        let season = HamsterPass.season(now: now)
+        guard progress.passSeason != season else { return }
+        progress.passSeason = season
+        progress.passXP = 0
+        progress.passClaimedFree = []
+        progress.passClaimedPremium = []
+        save()
+    }
+
+    var passXP: Int { progress.passXP ?? 0 }
+    var passTier: Int { HamsterPass.tier(xp: passXP) }
+    func hasPremiumPass(now: Date = .now) -> Bool { progress.passPremiumSeason == HamsterPass.season(now: now) }
+
+    func addPassXP(_ n: Int, now: Date = .now) {
+        guard n > 0 else { return }
+        ensurePassSeason(now: now)
+        progress.passXP = min(HamsterPass.tiers * HamsterPass.xpPerTier, passXP + n)
+        save()
+    }
+
+    func canClaimPass(tier: Int, premium: Bool, now: Date = .now) -> Bool {
+        guard tier >= 1, tier <= passTier, progress.passSeason == HamsterPass.season(now: now) else { return false }
+        if premium {
+            return hasPremiumPass(now: now) && !(progress.passClaimedPremium ?? []).contains(tier)
+        }
+        return !(progress.passClaimedFree ?? []).contains(tier)
+    }
+
+    /// Claims one reward from the free or premium track.
+    func claimPass(tier: Int, premium: Bool, now: Date = .now) -> PassClaim? {
+        ensurePassSeason(now: now)
+        guard canClaimPass(tier: tier, premium: premium, now: now) else { return nil }
+        let reward = premium ? HamsterPass.premiumReward(tier: tier, season: HamsterPass.season(now: now))
+                             : HamsterPass.freeReward(tier: tier)
+        if premium { progress.passClaimedPremium = (progress.passClaimedPremium ?? []) + [tier] }
+        else { progress.passClaimedFree = (progress.passClaimedFree ?? []) + [tier] }
+        var crate: CrateResult?
+        switch reward {
+        case .seeds(let n): progress.seeds += n
+        case .crate: crate = openCrate(free: false, questBonus: true)
+        case .skin(let skin): unlockSkin(skin)
+        }
+        save()
+        return PassClaim(reward: reward, crate: crate)
+    }
+
+    /// Number of rewards ready to claim (badge on the home screen).
+    func passClaimable(now: Date = .now) -> Int {
+        guard progress.passSeason == HamsterPass.season(now: now) else { return 0 }
+        return (1...HamsterPass.tiers).reduce(0) { n, t in
+            n + (canClaimPass(tier: t, premium: false, now: now) ? 1 : 0) + (canClaimPass(tier: t, premium: true, now: now) ? 1 : 0)
+        }
+    }
+
+    func unlockPremiumPass(now: Date = .now) {
+        ensurePassSeason(now: now)
+        progress.passPremiumSeason = HamsterPass.season(now: now)
+        save()
+    }
+
+    func unlockSkin(_ s: FurSkin) {
+        guard !progress.owns(s) else { return }
+        progress.skins = (progress.skins ?? []) + [s.rawValue]
+        save()
+    }
+
+    func equipSkin(_ s: FurSkin) {
+        guard progress.owns(s) else { return }
+        progress.equippedSkin = s.rawValue
+        save()
+    }
+
     // Daily reward (7-day streak; missing a day resets)
     func dailyStatus(now: Date = .now) -> (available: Bool, dayIndex: Int) {
         let cal = Calendar.current
@@ -384,6 +475,10 @@ final class ProgressStore {
         fresh.lastDailyClaim = progress.lastDailyClaim
         fresh.dailyStreak = progress.dailyStreak
         fresh.lastFreeCrate = progress.lastFreeCrate
+        // A bought pass and earned cosmetics survive a progress reset.
+        fresh.passPremiumSeason = progress.passPremiumSeason
+        fresh.skins = progress.skins
+        fresh.equippedSkin = progress.equippedSkin
         progress = fresh
         save()
     }
@@ -405,6 +500,11 @@ final class ProgressStore {
         p.lastFarmCollect = Date.now.addingTimeInterval(-3 * 3600)
         p.lastDailyClaim = .now
         p.dailyStreak = 3
+        p.passSeason = HamsterPass.season()
+        p.passXP = 740
+        p.passClaimedFree = [1, 2, 3]
+        p.skins = ["golden"]
+        p.equippedSkin = "classic"
         progress = p
         refreshDailyState()
         save()

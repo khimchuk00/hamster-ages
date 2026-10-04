@@ -22,11 +22,12 @@ final class ArtFactory {
         let fur, furDark, belly, innerEar, team, teamDark: UIColor
     }
 
-    static func palette(_ s: Species) -> Palette {
+    static func palette(_ s: Species, skin: FurSkin = .classic) -> Palette {
         switch s {
         case .hamster:
-            return Palette(fur: UIColor(hex: 0xF4A259), furDark: UIColor(hex: 0xB0642A),
-                           belly: UIColor(hex: 0xFFEBCD), innerEar: UIColor(hex: 0xF5A3A3),
+            let c = skin.colors
+            return Palette(fur: UIColor(hex: c.fur), furDark: UIColor(hex: c.furDark),
+                           belly: UIColor(hex: c.belly), innerEar: UIColor(hex: 0xF5A3A3),
                            team: UIColor(hex: 0x23A8C9), teamDark: UIColor(hex: 0x15708A))
         case .rat:
             return Palette(fur: UIColor(hex: 0x9B93B5), furDark: UIColor(hex: 0x575073),
@@ -44,8 +45,15 @@ final class ArtFactory {
     /// Horizontal anchor that keeps the critter's body (not the canvas) centred on the unit's lane position.
     static func unitAnchorX(_ role: UnitRole) -> CGFloat { role == .heavy ? 0.5 : 32 / lightUnitSize.width }
 
-    func unit(_ species: Species, era: Int, role: UnitRole) -> UIImage {
-        cached("u-\(species)-\(era)-\(role)") {
+    /// Fur skin applied to hamsters while a sprite is being drawn (generals' portraits always use classic).
+    private var activeSkin: FurSkin = .classic
+    private func pal(_ s: Species) -> Palette { ArtFactory.palette(s, skin: s == .hamster ? activeSkin : .classic) }
+
+    func unit(_ species: Species, era: Int, role: UnitRole, skin: FurSkin = .classic) -> UIImage {
+        let skin = species == .hamster ? skin : .classic
+        return cached("u-\(species)-\(era)-\(role)-\(skin.rawValue)") {
+            activeSkin = skin
+            defer { activeSkin = .classic }
             let size = role == .heavy ? CGSize(width: 96, height: 80) : ArtFactory.lightUnitSize   // extra width for raised blades
             return render(size) { ctx in
                 if role == .heavy {
@@ -229,7 +237,7 @@ final class ArtFactory {
     private func drawCritter(_ ctx: UIGraphicsImageRendererContext, _ s: Species, era: Int, at origin: CGPoint,
                              scale: CGFloat, hat: Bool, weapon: UnitRole?) {
         let c = ctx.cgContext
-        let p = ArtFactory.palette(s)
+        let p = pal(s)
         let ol = ArtFactory.outline
         let light = p.fur.blend(.white, 0.32)
         c.saveGState()
@@ -658,7 +666,7 @@ final class ArtFactory {
 
     private func drawHeavy(_ ctx: UIGraphicsImageRendererContext, _ s: Species, _ era: Int) {
         let c = ctx.cgContext
-        let p = ArtFactory.palette(s)
+        let p = pal(s)
         let ol = ArtFactory.outline
         let gold = UIColor(hex: 0xF2C14E), wood = UIColor(hex: 0x9C6A3F)
         switch era {
@@ -809,7 +817,7 @@ final class ArtFactory {
 
     private func drawBase(_ ctx: UIGraphicsImageRendererContext, _ s: Species, _ era: Int) {
         let c = ctx.cgContext
-        let p = ArtFactory.palette(s)
+        let p = pal(s)
         let ol = ArtFactory.outline
         let wood = UIColor(hex: 0xA97142)
         func flag(_ x: CGFloat, _ top: CGFloat, _ bottom: CGFloat) {
@@ -937,7 +945,7 @@ final class ArtFactory {
 
     private func drawTurret(_ ctx: UIGraphicsImageRendererContext, _ era: Int, _ s: Species) {
         let c = ctx.cgContext
-        let p = ArtFactory.palette(s)
+        let p = pal(s)
         let ol = ArtFactory.outline
         let wood = UIColor(hex: 0x9C6A3F)
         switch era {

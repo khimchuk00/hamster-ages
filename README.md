@@ -30,7 +30,7 @@ Tools/SimHarness/  headless AI-vs-AI прогони для балансу
 
 ## Покупки (локально)
 Edit Scheme → Run → Options → StoreKit Configuration → `HamsterAges.storekit`. Тоді магазин працює в симуляторі без App Store Connect.
-Product ID: `com.valkhim.hamsterages.{removeads, starterpack, seeds.small, seeds.large}` — ті самі треба завести в App Store Connect.
+Product ID: `com.valkhim.hamsterages.{removeads, starterpack, seeds.small, seeds.large, pass}` (`pass` — consumable «Gold Hamster Pass», купується щосезону) — ті самі треба завести в App Store Connect.
 
 ## Тести логіки
 `Tools/test.sh` — компілює ядро + мету без Xcode і проганяє 77 перевірок (детермінізм, економіка, еволюція, карти,
@@ -56,6 +56,7 @@ swiftc -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o /tmp/hamster-s
 - StoreKit 2 (`Services/Store.swift`) + магазин, стартовий набір після 3-го бою.
 - Політика interstitial: не раніше 3-го бою, раз на 2 бої, ніколи з No Ads.
 - Генерали: колекція з 8 героїв, скрині, рівні за дублікати.
+- Hamster Pass: 28-денні сезони, 20 рівнів, безкоштовна й Золота доріжки (сіди, скрині, скіни хутра); скіни: Classic, Cocoa, Golden, Snowball, Midnight.
 - Щоденні квести, idle-ферма насіння, бос Щурячий Король на кожному 5-му етапі.
 - Режим «Виживання», Game Center (лідерборди + досягнення; capability у `HamsterAges.entitlements`),
   локальні нагадування, процедурна музика, екран налаштувань.

@@ -120,3 +120,16 @@ def UK(key, one, few, many):
     v = list(S[key]); v[0] = {"one": one, "few": few, "many": many, "other": many}; S[key] = tuple(v)
 
 UK("%lld kills", "%lld вбивство", "%lld вбивства", "%lld вбивств")
+
+VERBATIM += ["· %@"]
+# Hamster Pass
+T("Hamster Pass", "Хом'ячий пропуск", "Hamster-Pass", "Pase Hámster", "Passe Hamster", "Pass Criceto", "Passe Hamster", "ハムスターパス", "햄스터 패스", "仓鼠通行证", "倉鼠通行證", "Hamster Pası")
+T("HAMSTER PASS", "ХОМ'ЯЧИЙ ПРОПУСК", "HAMSTER-PASS", "PASE HÁMSTER", "PASSE HAMSTER", "PASS CRICETO", "PASSE HAMSTER", "ハムスターパス", "햄스터 패스", "仓鼠通行证", "倉鼠通行證", "HAMSTER PASI")
+T("Season %lld · %lld days left", "Сезон %1$lld · залишилось днів: %2$lld", "Saison %1$lld · noch %2$lld Tage", "Temporada %1$lld · quedan %2$lld días", "Saison %1$lld · %2$lld jours restants", "Stagione %1$lld · %2$lld giorni rimasti", "Temporada %1$lld · faltam %2$lld dias", "シーズン%1$lld・残り%2$lld日", "시즌 %1$lld · %2$lld일 남음", "第%1$lld赛季 · 剩余%2$lld天", "第%1$lld賽季 · 剩餘%2$lld天", "Sezon %1$lld · %2$lld gün kaldı")
+T("Tier %lld/%lld", "Рівень %lld/%lld", "Stufe %lld/%lld", "Nivel %lld/%lld", "Palier %lld/%lld", "Livello %lld/%lld", "Nível %lld/%lld", "ティア%lld/%lld", "단계 %lld/%lld", "等级 %lld/%lld", "等級 %lld/%lld", "Kademe %lld/%lld")
+T("FREE", "БЕЗПЛАТНО", "GRATIS", "GRATIS", "GRATUIT", "GRATIS", "GRÁTIS", "無料", "무료", "免费", "免費", "ÜCRETSİZ")
+T("GOLD", "ЗОЛОТО", "GOLD", "ORO", "OR", "ORO", "OURO", "ゴールド", "골드", "黄金", "黃金", "ALTIN")
+T("Gold Pass active", "Золотий пропуск активний", "Gold-Pass aktiv", "Pase Oro activo", "Passe Or actif", "Pass Oro attivo", "Passe Ouro ativo", "ゴールドパス有効", "골드 패스 활성", "黄金通行证已激活", "黃金通行證已啟用", "Altın Pas aktif")
+T("Unlock Gold Pass", "Відкрити Золотий пропуск", "Gold-Pass freischalten", "Desbloquear Pase Oro", "Débloquer le Passe Or", "Sblocca il Pass Oro", "Liberar Passe Ouro", "ゴールドパスを解放", "골드 패스 잠금 해제", "解锁黄金通行证", "解鎖黃金通行證", "Altın Pas'ı Aç")
+T("Skins", "Образи", "Skins", "Aspectos", "Looks", "Aspetti", "Visuais", "スキン", "스킨", "皮肤", "造型", "Görünümler")
+T("Earn pass XP by winning battles, clearing quests and challenges.", "Досвід пропуску дають перемоги, завдання та виклики.", "Pass-EP gibt es für Siege, Aufgaben und Herausforderungen.", "Gana XP del pase ganando batallas, misiones y desafíos.", "Gagne de l'XP de passe avec les victoires, quêtes et défis.", "Ottieni XP del pass vincendo battaglie, missioni e sfide.", "Ganhe XP do passe vencendo batalhas, missões e desafios.", "バトル勝利・クエスト・チャレンジでパス経験値を獲得。", "전투 승리, 퀘스트, 도전으로 패스 경험치를 얻으세요.", "赢得战斗、完成任务和挑战可获得通行证经验。", "贏得戰鬥、完成任務和挑戰可獲得通行證經驗。", "Pas XP'sini savaş kazanarak, görev ve meydan okumaları bitirerek kazan.")

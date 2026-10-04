@@ -231,3 +231,12 @@ UK("Use special attacks %lld times", "Використай суперудар %l
 UK("Evolve %lld times", "Еволюціонуй %lld раз", "Еволюціонуй %lld рази", "Еволюціонуй %lld разів")
 UK("Buy %lld upgrades", "Купи %lld покращення", "Купи %lld покращення", "Купи %lld покращень")
 UK("%lld seeds are waiting. Collect them before the hamsters eat them all.", "На тебе чекає %lld насінина. Збери, поки хом'ячки все не з'їли.", "На тебе чекають %lld насінини. Збери, поки хом'ячки все не з'їли.", "На тебе чекає %lld насінин. Збери, поки хом'ячки все не з'їли.")
+
+# Hamster Pass & skins
+T("Classic", "Класика", "Klassisch", "Clásico", "Classique", "Classico", "Clássico", "クラシック", "클래식", "经典", "經典", "Klasik")
+T("Cocoa", "Какао", "Kakao", "Cacao", "Cacao", "Cacao", "Cacau", "ココア", "코코아", "可可", "可可", "Kakao")
+T("Golden", "Золотий", "Golden", "Dorado", "Doré", "Dorato", "Dourado", "ゴールデン", "황금", "黄金", "黃金", "Altın")
+T("Snowball", "Сніжок", "Schneeball", "Bola de nieve", "Boule de neige", "Palla di neve", "Bola de neve", "スノーボール", "눈덩이", "雪球", "雪球", "Kartopu")
+T("Midnight", "Опівнічний", "Mitternacht", "Medianoche", "Minuit", "Mezzanotte", "Meia-noite", "ミッドナイト", "미드나잇", "午夜", "午夜", "Gece Yarısı")
+T("New skin: %@", "Новий образ: %@", "Neuer Skin: %@", "Nuevo aspecto: %@", "Nouveau look : %@", "Nuovo aspetto: %@", "Novo visual: %@", "新スキン：%@", "새 스킨: %@", "新皮肤：%@", "新造型：%@", "Yeni görünüm: %@")
+T("Crate", "Скриня", "Kiste", "Cofre", "Caisse", "Cassa", "Baú", "箱", "상자", "宝箱", "寶箱", "Sandık")

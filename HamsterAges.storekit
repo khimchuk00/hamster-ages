@@ -61,6 +61,21 @@
       "productID": "com.valkhim.hamsterages.seeds.large",
       "referenceName": "Seed Barrel",
       "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "6740000005",
+      "localizations": [
+        {
+          "description": "Unlocks the Gold track of the current Hamster Pass season.",
+          "displayName": "Gold Hamster Pass",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.pass",
+      "referenceName": "Gold Hamster Pass",
+      "type": "Consumable"
     }
   ],
   "settings": {},

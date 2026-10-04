@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var showUpgrades = false
     @State private var showShop = false
     @State private var showSettings = false
+    @State private var showPass = false
     @State private var starToast: String?
     @State private var showDaily = false
     @State private var bob = false
@@ -42,6 +43,7 @@ struct HomeView: View {
                                 .padding(.horizontal, 10).padding(.vertical, 4)
                                 .background(Capsule().fill(Theme.gold))
                         }
+                        HStack(spacing: 8) {
                         StarRoadPill(progress: p, toast: starToast) {
                             guard let r = store.claimStarReward() else { return }
                             Haptics.success()
@@ -53,6 +55,26 @@ struct HomeView: View {
                                 starToast = "+\(r.seeds) 🌻"
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { withAnimation { starToast = nil } }
+                        }
+                        if p.tutorialDone == true {
+                            Button { showPass = true } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "crown.fill").foregroundStyle(Theme.gold)
+                                    Text("HAMSTER PASS").foregroundStyle(Theme.gold)
+                                    Text("\(store.passTier)/\(HamsterPass.tiers)").foregroundStyle(.white).monospacedDigit()
+                                }
+                                .font(Theme.font(12))
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(Capsule().fill(Theme.panel))
+                                .overlay(Capsule().stroke(Theme.gold.opacity(0.7), lineWidth: 1.5))
+                                .overlay(alignment: .topTrailing) {
+                                    if store.passClaimable() > 0 {
+                                        Circle().fill(Theme.red).frame(width: 12, height: 12).offset(x: 3, y: -3)
+                                    }
+                                }
+                            }
+                            .buttonStyle(PressScale())
+                        }
                         }
                         if p.battlesPlayed >= 3 && p.starterBought != true {
                             Button { showShop = true } label: {
@@ -75,7 +97,7 @@ struct HomeView: View {
                         HStack(alignment: .bottom, spacing: 12) {
                         HStack(alignment: .bottom, spacing: -6) {
                             ForEach([0, 2, 4], id: \.self) { era in
-                                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: era == 4 ? .heavy : (era == 2 ? .ranged : .melee)))
+                                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: era == 4 ? .heavy : (era == 2 ? .ranged : .melee), skin: p.skin))
                                     .resizable().scaledToFit()
                                     .frame(height: era == 4 ? 70 : 52)
                                     .offset(y: bob ? (era % 2 == 0 ? -4 : 0) : (era % 2 == 0 ? 0 : -4))
@@ -251,6 +273,7 @@ struct HomeView: View {
                 case "upgrades": showUpgrades = true
                 case "shop": showShop = true
                 case "quests": showQuests = true
+                case "pass": showPass = true
                 default: break
                 }
             }
@@ -267,6 +290,7 @@ struct HomeView: View {
         .sheet(isPresented: $showGenerals) { GeneralsView(store: store, ads: ads).presentationSizing(.page) }
         .sheet(isPresented: $showQuests) { QuestsView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showSettings) { SettingsView(store: store, shop: shop).presentationSizing(.page) }
+        .sheet(isPresented: $showPass) { PassView(store: store, shop: shop).presentationSizing(.page) }
         #if DEBUG
         .sheet(isPresented: $showBalance) { BalanceDebugView() }
         #endif

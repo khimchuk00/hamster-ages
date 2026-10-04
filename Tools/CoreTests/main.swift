@@ -276,6 +276,44 @@ MainActor.assumeIsolated {
     UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
 }
 
+// MARK: Hamster Pass & skins
+MainActor.assumeIsolated {
+    let e = HamsterPass.epoch
+    check(HamsterPass.season(now: e.addingTimeInterval(60)) == 1 && HamsterPass.season(now: e.addingTimeInterval(28 * 86_400 + 60)) == 2,
+          "pass seasons are 28 days")
+    check(HamsterPass.season(now: e.addingTimeInterval(-86_400)) == 1, "dates before the epoch clamp to season 1")
+    let now = e.addingTimeInterval(3 * 86_400)
+    UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+    let store = ProgressStore()
+    store.addPassXP(250, now: now)
+    check(store.passTier == 2 && store.passXP == 250, "pass XP → tier")
+    let seeds0 = store.progress.seeds
+    let c1 = store.claimPass(tier: 1, premium: false, now: now)
+    check(c1?.reward == .seeds(70) && store.progress.seeds == seeds0 + 70, "free tier 1 pays seeds")
+    check(store.claimPass(tier: 1, premium: false, now: now) == nil, "a tier can't be claimed twice")
+    check(store.claimPass(tier: 3, premium: false, now: now) == nil, "locked tiers can't be claimed")
+    check(store.claimPass(tier: 1, premium: true, now: now) == nil, "premium track needs the pass")
+    store.unlockPremiumPass(now: now)
+    store.addPassXP(5000, now: now)
+    check(store.passXP == HamsterPass.tiers * HamsterPass.xpPerTier, "pass XP caps at the last tier")
+    let golden = store.claimPass(tier: 10, premium: true, now: now)
+    check(golden?.reward == .skin(.golden) && store.progress.owns(.golden), "premium tier 10 unlocks the golden skin")
+    let crate = store.claimPass(tier: 5, premium: false, now: now)
+    check(crate?.crate != nil, "crate tiers open a crate")
+    store.equipSkin(.golden)
+    check(store.progress.skin == .golden, "skin equips")
+    store.equipSkin(.midnight)
+    check(store.progress.skin == .golden, "unowned skin can't be equipped")
+    let next = e.addingTimeInterval(29 * 86_400)
+    store.addPassXP(30, now: next)
+    check(store.passXP == 30 && !store.hasPremiumPass(now: next) && store.progress.owns(.golden),
+          "new season resets XP and premium, keeps skins")
+    check(HamsterPass.premiumReward(tier: 20, season: 1) != HamsterPass.premiumReward(tier: 20, season: 2), "final skin rotates by season")
+    store.resetAll()
+    check(store.progress.owns(.golden) && store.progress.skin == .golden, "reset keeps cosmetics")
+    UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+}
+
 // Showcase jump + localization fallbacks
 do {
     let s = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 9)
