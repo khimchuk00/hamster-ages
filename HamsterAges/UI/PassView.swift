@@ -31,12 +31,11 @@ struct PassView: View {
 
                 HStack(spacing: 8) {
                     VStack(spacing: 8) {
-                        Text("FREE").font(Theme.font(11)).foregroundStyle(.white.opacity(0.8)).frame(height: 22)
-                        Text("GOLD").font(Theme.font(11)).foregroundStyle(Theme.gold)
-                            .frame(height: 74)
-                        Spacer(minLength: 0)
+                        Text("FREE").font(Theme.font(11)).foregroundStyle(.white.opacity(0.8)).frame(height: 74)
+                        Text("GOLD").font(Theme.font(11)).foregroundStyle(Theme.gold).frame(height: 74)
                     }
-                    .padding(.top, 34)
+                    .padding(.top, 36)
+                    .frame(maxHeight: .infinity, alignment: .top)
                     .frame(width: 44)
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal, showsIndicators: false) {

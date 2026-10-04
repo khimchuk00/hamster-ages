@@ -56,6 +56,7 @@ struct HomeView: View {
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { withAnimation { starToast = nil } }
                         }
+                        .fixedSize()
                         if p.tutorialDone == true {
                             Button { showPass = true } label: {
                                 HStack(spacing: 6) {
@@ -67,6 +68,7 @@ struct HomeView: View {
                                 .padding(.horizontal, 10).padding(.vertical, 5)
                                 .background(Capsule().fill(Theme.panel))
                                 .overlay(Capsule().stroke(Theme.gold.opacity(0.7), lineWidth: 1.5))
+                                .fixedSize()
                                 .overlay(alignment: .topTrailing) {
                                     if store.passClaimable() > 0 {
                                         Circle().fill(Theme.red).frame(width: 12, height: 12).offset(x: 3, y: -3)
