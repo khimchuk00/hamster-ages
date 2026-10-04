@@ -712,6 +712,11 @@ final class BattleScene: SKScene {
                 floatText("+\(Int(amount.rounded()))", at: CGPoint(x: top.x, y: top.y + 10 * hScale),
                           color: UIColor(hex: 0xF48FB1), size: 11 * hScale, rise: 20)
 
+            case .setBonus(let side, _):
+                if let base = baseNodes[side] {
+                    puff(at: CGPoint(x: base.position.x, y: base.position.y + 80 * hScale), color: UIColor(hex: 0xFFD54A), count: 20, spread: 70)
+                }
+
             case .bossSummon(let id):
                 if let node = unitNodes[id] {
                     puff(at: CGPoint(x: node.position.x - 30 * hScale, y: node.position.y + 20 * hScale),
