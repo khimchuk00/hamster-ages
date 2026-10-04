@@ -1018,8 +1018,17 @@ final class ArtFactory {
             gradient(planet, UIColor(hex: 0xE7C6FF), UIColor(hex: 0x7A4FC2))
             let ring = UIBezierPath(ovalIn: CGRect(x: w * 0.22 - 58, y: h * 0.24 - 9, width: 116, height: 18))
             ring.lineWidth = 3; UIColor(hex: 0xF4E1FF, alpha: 0.8).setStroke(); ring.stroke()
-            fill(circle(sunCenter.x, sunCenter.y, 20), UIColor(hex: 0xF4F1FF))
-            fill(circle(sunCenter.x + 8, sunCenter.y - 6, 18), UIColor(hex: top))
+            // Crescent moon: the disc minus an offset disc (even-odd, clipped to the disc).
+            glow(sunCenter, 60, UIColor(hex: 0xF4F1FF))
+            let disc = circle(sunCenter.x, sunCenter.y, 20)
+            c.saveGState()
+            disc.addClip()
+            let crescent = UIBezierPath()
+            crescent.append(disc)
+            crescent.append(circle(sunCenter.x + 9, sunCenter.y - 6, 18))
+            crescent.usesEvenOddFillRule = true
+            fill(crescent, UIColor(hex: 0xF4F1FF))
+            c.restoreGState()
         } else {
             let sun = era == 2 ? UIColor(hex: 0xFFD27A) : UIColor(hex: 0xFFF3B0)
             glow(sunCenter, 110, sun)

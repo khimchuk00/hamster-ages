@@ -261,12 +261,12 @@ struct HomeView: View {
             // Don't greet brand-new players with a popup before their first battle.
             if store.progress.tutorialDone == true && store.dailyStatus().available { showDaily = true }
         }
-        .sheet(isPresented: $showUpgrades) { UpgradesView(store: store) }
-        .sheet(isPresented: $showDaily) { DailyRewardView(store: store) }
-        .sheet(isPresented: $showShop) { ShopView(store: shop, progress: store) }
-        .sheet(isPresented: $showGenerals) { GeneralsView(store: store, ads: ads) }
-        .sheet(isPresented: $showQuests) { QuestsView(store: store) }
-        .sheet(isPresented: $showSettings) { SettingsView(store: store, shop: shop) }
+        .sheet(isPresented: $showUpgrades) { UpgradesView(store: store).presentationSizing(.page) }
+        .sheet(isPresented: $showDaily) { DailyRewardView(store: store).presentationSizing(.page) }
+        .sheet(isPresented: $showShop) { ShopView(store: shop, progress: store).presentationSizing(.page) }
+        .sheet(isPresented: $showGenerals) { GeneralsView(store: store, ads: ads).presentationSizing(.page) }
+        .sheet(isPresented: $showQuests) { QuestsView(store: store).presentationSizing(.page) }
+        .sheet(isPresented: $showSettings) { SettingsView(store: store, shop: shop).presentationSizing(.page) }
         #if DEBUG
         .sheet(isPresented: $showBalance) { BalanceDebugView() }
         #endif

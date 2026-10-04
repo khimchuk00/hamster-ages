@@ -56,6 +56,7 @@ struct RootView: View {
                 }
                 .transition(.opacity)
             } else {
+                ScaledUI {
                 HomeView(store: store, shop: shop, ads: ads) { mode in
                     withAnimation(.easeInOut(duration: 0.3)) {
                         let stage = mode == .challenge
@@ -63,6 +64,7 @@ struct RootView: View {
                             : store.progress.stage
                         battle = BattleController(stage: stage, progress: store.progress, mode: mode)
                     }
+                }
                 }
                 .transition(.opacity)
             }

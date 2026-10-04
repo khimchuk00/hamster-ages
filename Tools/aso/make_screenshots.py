@@ -2,7 +2,8 @@
 """Turns raw simulator captures into captioned App Store screenshots (6.9", 2868×1320 landscape).
 
   git fetch origin appstore-shots && git archive origin/appstore-shots | tar -x -C /tmp/raw
-  python3 Tools/aso/make_screenshots.py /tmp/raw/raw AppStoreShots
+  python3 Tools/aso/make_screenshots.py /tmp/raw/raw AppStoreShots/iphone
+  python3 Tools/aso/make_screenshots.py --ipad /tmp/raw/raw-ipad AppStoreShots/ipad     # 13" iPad, 2752×2064
 
 Input:  <raw>/<lang>/{1-battle,2-cards,3-future,4-heroes,5-home,6-upgrades}.png
 Output: <out>/<lang>/01.png … 06.png
@@ -11,6 +12,7 @@ import os, sys
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 2868, 1320
+IPAD = False
 SHOTS = ["1-battle", "2-cards", "3-future", "4-heroes", "5-home", "6-upgrades"]
 FONT = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
 FONT_INDEX = {"ja": 0, "ko": 1, "zh-Hans": 2, "zh-Hant": 3}  # others use JP face (full Latin/Cyrillic)
@@ -68,26 +70,27 @@ def background():
 
 def caption(img, lang, text):
     d = ImageDraw.Draw(img)
-    size = 112
+    size = 140 if IPAD else 112
     while size > 50:
         f = font(lang, size)
         if d.textlength(text, font=f) <= W - 240:
             break
         size -= 4
     tw = d.textlength(text, font=f)
-    x, y = (W - tw) / 2, 70
+    x, y = (W - tw) / 2, 110 if IPAD else 70
     d.text((x, y + 8), text, font=f, fill=(0, 0, 0, 90), stroke_width=14, stroke_fill=(40, 20, 60))
     d.text((x, y), text, font=f, fill=(255, 255, 255), stroke_width=12, stroke_fill=INK)
 
 
 def device(shot):
     if shot.height > shot.width:
-        shot = shot.rotate(90, expand=True)
+        shot = shot.rotate(-90 if IPAD else 90, expand=True)
     shot = shot.convert("RGB")
-    # Trim the side margins: hides the Dynamic Island cut-out (the game keeps content out of that safe area).
-    m = int(shot.width * 0.06)
-    shot = shot.crop((m, 0, shot.width - m, shot.height))
-    max_w, max_h = W - 260, H - 300
+    if not IPAD:
+        # Trim the side margins: hides the Dynamic Island cut-out (the game keeps content out of that safe area).
+        m = int(shot.width * 0.06)
+        shot = shot.crop((m, 0, shot.width - m, shot.height))
+    max_w, max_h = W - 260, H - (380 if IPAD else 300)
     scale = min(max_w / shot.width, max_h / shot.height)
     shot = shot.resize((int(shot.width * scale), int(shot.height * scale)), Image.LANCZOS)
     bezel = 22
@@ -122,8 +125,13 @@ def compose(lang, raw_dir, out_dir):
 
 
 def main():
-    raw, out = sys.argv[1], sys.argv[2]
-    langs = sys.argv[3:] or sorted(d for d in os.listdir(raw) if d in CAPTIONS)
+    global W, H, IPAD
+    args = sys.argv[1:]
+    if args and args[0] == "--ipad":
+        IPAD, W, H = True, 2752, 2064
+        args = args[1:]
+    raw, out = args[0], args[1]
+    langs = args[2:] or sorted(d for d in os.listdir(raw) if d in CAPTIONS)
     for lang in langs:
         compose(lang, os.path.join(raw, lang), os.path.join(out, lang))
 

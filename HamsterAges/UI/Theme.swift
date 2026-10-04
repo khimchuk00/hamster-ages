@@ -129,3 +129,19 @@ struct ProgressRing: View {
             .rotationEffect(.degrees(-90))
     }
 }
+
+/// Scales phone-sized UI up uniformly on big screens (iPad), so layouts keep their proportions instead of
+/// floating in empty space. Phones (≈ 400–440 pt tall in landscape) render at 1×.
+struct ScaledUI<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        GeometryReader { geo in
+            let s = max(1, min(geo.size.height / 440, 1.6))
+            content
+                .frame(width: geo.size.width / s, height: geo.size.height / s)
+                .scaleEffect(s, anchor: .center)
+                .frame(width: geo.size.width, height: geo.size.height)
+        }
+    }
+}

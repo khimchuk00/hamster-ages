@@ -19,7 +19,7 @@ permissions:
 jobs:
   shots:
     runs-on: macos-15
-    timeout-minutes: 75
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -43,15 +43,16 @@ jobs:
           APP=$(find build/Build/Products -name "HamsterAges.app" -maxdepth 3 | head -1)
           xcrun simctl install "$UDID" "$APP"
           ID=com.valkhim.hamsterages
+          capture_all() { # output dir prefix
           for L in $LANGS; do
-            mkdir -p "raw/$L"
+            mkdir -p "$1/$L"
             loc=$(echo "$L" | tr '-' '_')
             shot() { # name, wait, args...
               local name=$1 wait=$2; shift 2
               xcrun simctl terminate "$UDID" $ID || true
               xcrun simctl launch "$UDID" $ID -AppleLanguages "($L)" -AppleLocale "$loc" "$@"
               sleep "$wait"
-              xcrun simctl io "$UDID" screenshot "raw/$L/$name.png"
+              xcrun simctl io "$UDID" screenshot "$OUT/$L/$name.png"
             }
             shot 1-battle 38 -demo -screen battle -autoplay -era 1
             shot 2-cards 7 -demo -screen battle -era 2
@@ -60,11 +61,27 @@ jobs:
             shot 5-home 8 -demo
             shot 6-upgrades 7 -demo -screen upgrades
           done
+          }
+          OUT=raw; capture_all raw
+          # iPad Pro 13" (landscape via the Simulator UI)
+          IPAD=$(xcrun simctl list devices available | grep -E "iPad Pro 13" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          if [ -n "$IPAD" ]; then
+            xcrun simctl shutdown "$UDID" || true
+            UDID=$IPAD
+            xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl install "$UDID" "$APP"
+            open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+            sleep 8
+            perl -e 'alarm 20; exec @ARGV' osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
+              -e 'tell application "System Events" to key code 124 using command down' || echo "rotate failed"
+            sleep 3
+            OUT=raw-ipad; capture_all raw-ipad
+          fi
 
       - name: Publish to the appstore-shots branch
         if: always()
         run: |
-          mkdir -p /tmp/out && cp -R raw /tmp/out/ 2>/dev/null || true
+          mkdir -p /tmp/out && cp -R raw raw-ipad /tmp/out/ 2>/dev/null || true
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan appstore-shots
           git rm -rf . -q

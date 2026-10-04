@@ -13,6 +13,8 @@ struct BattleView: View {
                 SpriteView(scene: controller.scene, preferredFramesPerSecond: 60, options: [.ignoresSiblingOrder])
                     .ignoresSafeArea()
 
+                ScaledUI {
+                ZStack {
                 BattleHUD(c: controller)
 
                 if controller.tutorialVisible, let step = controller.tutorialStep, controller.cardOffer == nil, controller.result == nil {
@@ -43,6 +45,8 @@ struct BattleView: View {
                 if let result = controller.result {
                     ResultView(result: result, store: store, ads: ads, onContinue: onExit)
                         .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+                }
                 }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: controller.banner)
