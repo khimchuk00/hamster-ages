@@ -359,6 +359,7 @@ final class BattleScene: SKScene {
         case .plague?: return (UIColor(hex: 0x8BC34A), 0.3)
         case .swift?: return (UIColor(hex: 0xFFD54A), 0.18)
         case .medic?: return (UIColor(hex: 0xF8BBD0), 0.25)
+        case .giant?: return (UIColor(hex: 0x8D6E63), 0.2)
         case .shielded?, nil: return nil
         }
     }

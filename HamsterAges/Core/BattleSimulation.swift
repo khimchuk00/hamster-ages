@@ -42,7 +42,7 @@ public final class UnitEntity {
     var summoned = false
     public var isAlive: Bool { hp > 0 }
     /// Visual size relative to a normal unit of the same role.
-    public var sizeScale: Double { isBoss ? 1.4 : isMinion ? 0.7 : 1 }
+    public var sizeScale: Double { isBoss ? 1.4 : isMinion ? 0.7 : trait == .giant ? 1.3 : 1 }
 
     init(id: Int, side: Side, role: UnitRole, era: Int, x: Double, stats s: UnitStats, mods m: SideModifiers,
          boss: Bool = false, trait: RatTrait? = nil, minion: Bool = false) {
@@ -57,6 +57,7 @@ public final class UnitEntity {
         case .swift?: hpK *= 0.7; speedK *= 1.6
         case .armored?: hpK *= 1.1; speedK *= 0.92
         case .medic?: dmgK *= 0.5
+        case .giant?: hpK *= 2.4; dmgK *= 1.4; speedK *= 0.75
         case .shielded?, .plague?: break
         case nil: break
         }
@@ -73,7 +74,7 @@ public final class UnitEntity {
         attackInterval = s.attackInterval / (m.attackSpeed * m.roleAttackSpeed[role.rawValue])
         range = s.isRanged ? s.range * m.rangedRange : s.range
         speed = s.speed * m.moveSpeed * speedK
-        width = s.width * (boss ? 1.4 : minion ? 0.7 : 1)
+        width = s.width * (boss ? 1.4 : minion ? 0.7 : self.trait == .giant ? 1.3 : 1)
         isRanged = s.isRanged
         projectileSpeed = s.projectileSpeed
         cost = s.cost * costK
@@ -345,7 +346,7 @@ public final class BattleSimulation {
             return (RatTrait.pool(stage: stage), RatTrait.chance(stage: stage))
         case .campaign, .challenge:
             // Hard mode fields every elite type the rats will ever have, and more of them.
-            let stage = difficulty.isHard ? max(difficulty.stage, 12) : difficulty.stage
+            let stage = difficulty.isHard ? max(difficulty.stage, 15) : difficulty.stage
             return (RatTrait.pool(stage: stage), min(0.4, RatTrait.chance(stage: stage) + (difficulty.isHard ? 0.12 : 0)))
         }
     }

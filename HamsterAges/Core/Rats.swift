@@ -5,7 +5,7 @@ import Foundation
 /// Elite rats appear from stage 4. Each trait has a clear counter so the player has a reason to adapt
 /// their army mix instead of spamming one unit.
 public enum RatTrait: String, CaseIterable, Codable {
-    case swift, armored, shielded, plague, medic
+    case swift, armored, shielded, plague, medic, giant
 
     public var title: String {
         switch self {
@@ -14,6 +14,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .shielded: return L10n.t("Shield Rat")
         case .plague: return L10n.t("Plague Rat")
         case .medic: return L10n.t("Rat Medic")
+        case .giant: return L10n.t("Giant Rat")
         }
     }
 
@@ -25,6 +26,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .shielded: return L10n.t("Its bubble blocks the first 3 hits")
         case .plague: return L10n.t("Bursts into 2 small rats when it falls")
         case .medic: return L10n.t("Heals hurt rats around it")
+        case .giant: return L10n.t("Huge, slow and hits hard")
         }
     }
 
@@ -36,6 +38,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .shielded: return L10n.t("Counter: many quick hits (ranged, turrets)")
         case .plague: return L10n.t("Counter: splash damage and specials")
         case .medic: return L10n.t("Counter: take it out first — specials, long range")
+        case .giant: return L10n.t("Counter: melee swarms and specials")
         }
     }
 
@@ -46,6 +49,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .shielded: return "circle.circle.fill"
         case .plague: return "allergens.fill"
         case .medic: return "heart.fill"
+        case .giant: return "figure.stand"
         }
     }
 
@@ -57,6 +61,7 @@ public enum RatTrait: String, CaseIterable, Codable {
         case .shielded: return 9
         case .plague: return 12
         case .medic: return 6
+        case .giant: return 15
         }
     }
 
@@ -67,7 +72,13 @@ public enum RatTrait: String, CaseIterable, Codable {
     public static let medicRange = 150.0
 
     /// Medics only come as ranged rats (they hang back).
-    public func fits(_ role: UnitRole) -> Bool { self != .medic || role == .ranged }
+    public func fits(_ role: UnitRole) -> Bool {
+        switch self {
+        case .medic: return role == .ranged
+        case .giant: return role == .melee
+        default: return true
+        }
+    }
 
     public static func pool(stage: Int) -> [RatTrait] { allCases.filter { stage >= $0.firstStage } }
 

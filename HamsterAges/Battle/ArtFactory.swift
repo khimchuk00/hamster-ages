@@ -269,7 +269,7 @@ final class ArtFactory {
             render(CGSize(width: 18, height: 18)) { _ in
                 let ol = ArtFactory.outline
                 let colors: [RatTrait: UInt32] = [.swift: 0xFFC83D, .armored: 0x90A4AE, .shielded: 0x4FC3F7,
-                                                .plague: 0x8BC34A, .medic: 0xF48FB1]
+                                                .plague: 0x8BC34A, .medic: 0xF48FB1, .giant: 0xA1887F]
                 let c = UIColor(hex: colors[t]!)
                 let disc = self.circle(9, 9, 8)
                 self.gradient(disc, c.blend(.white, 0.35), c.blend(.black, 0.15))
@@ -299,6 +299,13 @@ final class ArtFactory {
                         self.fill(self.circle(9 + cos(a) * 3.4, 9 + sin(a) * 3.4, 2.4), glyph)
                     }
                     self.fill(self.circle(9, 9, 1.6), c)
+                case .giant:
+                    // Up-arrow "big" glyph
+                    let arrow = UIBezierPath()
+                    arrow.move(to: CGPoint(x: 9, y: 3.5)); arrow.addLine(to: CGPoint(x: 14, y: 9)); arrow.addLine(to: CGPoint(x: 11, y: 9))
+                    arrow.addLine(to: CGPoint(x: 11, y: 14.5)); arrow.addLine(to: CGPoint(x: 7, y: 14.5)); arrow.addLine(to: CGPoint(x: 7, y: 9))
+                    arrow.addLine(to: CGPoint(x: 4, y: 9)); arrow.close()
+                    self.fill(arrow, .white, stroke: glyph, width: 1)
                 case .medic:
                     let heart = UIBezierPath()
                     heart.move(to: CGPoint(x: 9, y: 14))

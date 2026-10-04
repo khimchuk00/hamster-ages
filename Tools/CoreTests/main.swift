@@ -400,7 +400,7 @@ func eliteRun(seed: UInt64) -> (sim: BattleSimulation, traits: Set<RatTrait>, sh
 // MARK: Elite rats, stances, rat generals, boss slam
 do {
     check(RatTrait.chance(stage: 3) == 0 && RatTrait.pool(stage: 3).isEmpty, "no elite rats before stage 4")
-    check(RatTrait.pool(stage: 4) == [.swift] && RatTrait.pool(stage: 12).count == RatTrait.allCases.count, "elite traits unlock with stages")
+    check(RatTrait.pool(stage: 4) == [.swift] && RatTrait.pool(stage: 15).count == RatTrait.allCases.count, "elite traits unlock with stages")
     check(RatTrait.chance(stage: 40) <= 0.3, "elite share is capped")
     check(RatGeneral.forStage(1) == .gnawsworth && RatGeneral.forStage(5) == .ratKing && RatGeneral.forStage(10) == .ratKing,
           "first stages get the gentle general, boss stages the Rat King")
