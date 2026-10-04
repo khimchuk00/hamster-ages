@@ -33,8 +33,10 @@ struct HomeView: View {
                 // The player's army stands on the ground in the middle of the screen, led by their general.
                 HomeArmy(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), skin: p.skin,
                          general: p.equipped.flatMap { p.generalLevel($0) > 0 ? $0 : nil }, bob: bob)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                    .offset(x: -geo.size.width * 0.2, y: -46)
+                    // Stands in the gap between the farm widget and the stage panel.
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(.trailing, 290)
+                    .offset(y: -46)
                     .allowsHitTesting(false)
 
                 HStack(alignment: .center, spacing: 20) {
@@ -529,17 +531,17 @@ private struct HomeArmy: View {
     let bob: Bool
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: -10) {
-            ForEach(Array([UnitRole.heavy, .ranged, .melee, .melee].enumerated()), id: \.offset) { i, role in
+        HStack(alignment: .bottom, spacing: -12) {
+            ForEach(Array([UnitRole.ranged, .melee].enumerated()), id: \.offset) { i, role in
                 Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin))
                     .resizable().scaledToFit()
-                    .frame(height: role == .heavy ? 92 : 66)
-                    .offset(y: bob == (i % 2 == 0) ? -5 : 0)
+                    .frame(height: 50)
+                    .offset(y: bob == (i % 2 == 0) ? -4 : 0)
             }
             if let general {
                 Image(uiImage: ArtFactory.shared.general(general))
                     .resizable().scaledToFit()
-                    .frame(height: 96)
+                    .frame(height: 74)
                     .offset(y: bob ? -3 : 2)
                     .shadow(color: Theme.gold.opacity(0.6), radius: 8)
             }
