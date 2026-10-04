@@ -30,6 +30,13 @@ struct HomeView: View {
                     .resizable()
                     .ignoresSafeArea()
 
+                // The player's army stands on the ground in the middle of the screen, led by their general.
+                HomeArmy(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), skin: p.skin,
+                         general: p.equipped.flatMap { p.generalLevel($0) > 0 ? $0 : nil }, bob: bob)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .offset(x: -geo.size.width * 0.2, y: -46)
+                    .allowsHitTesting(false)
+
                 HStack(alignment: .center, spacing: 20) {
                     // Left: logo + army parade
                     VStack(alignment: .leading, spacing: 6) {
@@ -105,18 +112,9 @@ struct HomeView: View {
                             .padding(.top, 6)
                         }
                         Spacer()
-                        HStack(alignment: .bottom, spacing: 12) {
-                        HStack(alignment: .bottom, spacing: -6) {
-                            ForEach([0, 2, 4], id: \.self) { era in
-                                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: era == 4 ? .heavy : (era == 2 ? .ranged : .melee), skin: p.skin))
-                                    .resizable().scaledToFit()
-                                    .frame(height: era == 4 ? 70 : 52)
-                                    .offset(y: bob ? (era % 2 == 0 ? -4 : 0) : (era % 2 == 0 ? 0 : -4))
-                            }
+                        if p.battlesPlayed >= 4 {
+                            SeedFarmWidget(store: store, ads: ads).padding(.bottom, 8)
                         }
-                        if p.battlesPlayed >= 4 { SeedFarmWidget(store: store, ads: ads) }
-                        }
-                        .padding(.bottom, 8)
                     }
                     Spacer()
 
@@ -523,6 +521,32 @@ struct DailyRewardView: View {
 
 
 /// Compact Star Road progress: total stars → next milestone, tappable when ready.
+private struct HomeArmy: View {
+    let era: Int
+    let skin: FurSkin
+    let general: GeneralID?
+    let bob: Bool
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: -10) {
+            ForEach(Array([UnitRole.heavy, .ranged, .melee, .melee].enumerated()), id: \.offset) { i, role in
+                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin))
+                    .resizable().scaledToFit()
+                    .frame(height: role == .heavy ? 92 : 66)
+                    .offset(y: bob == (i % 2 == 0) ? -5 : 0)
+            }
+            if let general {
+                Image(uiImage: ArtFactory.shared.general(general))
+                    .resizable().scaledToFit()
+                    .frame(height: 96)
+                    .offset(y: bob ? -3 : 2)
+                    .shadow(color: Theme.gold.opacity(0.6), radius: 8)
+            }
+        }
+        .shadow(color: .black.opacity(0.3), radius: 3, y: 3)
+    }
+}
+
 private struct StarRoadPill: View {
     let progress: PlayerProgress
     let toast: String?
@@ -537,12 +561,15 @@ private struct StarRoadPill: View {
                 if let toast {
                     Text(toast).foregroundStyle(.white)
                 } else {
-                    Text("\(progress.totalStars)/\(next.stars)").foregroundStyle(.white).monospacedDigit()
+                    if ready {
+                        Text("CLAIM").foregroundStyle(Theme.gold)
+                    } else {
+                        Text("\(progress.totalStars)/\(next.stars)").foregroundStyle(.white).monospacedDigit()
+                    }
                     switch next.reward {
                     case .seeds(let n): Text("→ \(n) 🌻").foregroundStyle(.white.opacity(0.8))
                     case .crate: Text("→ 🎁 Crate").foregroundStyle(.white.opacity(0.8))
                     }
-                    if ready { Text("CLAIM").foregroundStyle(Theme.gold) }
                 }
             }
             .font(Theme.font(12))
