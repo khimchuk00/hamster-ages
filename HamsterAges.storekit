@@ -106,6 +106,21 @@
       "productID": "com.valkhim.hamsterages.seeds.huge",
       "referenceName": "Seed Silo",
       "type": "Consumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "6740000008",
+      "localizations": [
+        {
+          "description": "Break the Piggy Bank and keep every seed inside.",
+          "displayName": "Piggy Bank",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.piggy",
+      "referenceName": "Piggy Bank",
+      "type": "Consumable"
     }
   ],
   "settings": {},

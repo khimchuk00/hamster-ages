@@ -284,6 +284,37 @@ final class ArtFactory {
         }
     }
 
+    /// Pink piggy bank (shop offer).
+    func piggyBank() -> UIImage {
+        cached("piggy") {
+            render(CGSize(width: 64, height: 52)) { _ in
+                let ol = ArtFactory.outline
+                let pink = UIColor(hex: 0xF8A5C2), dark = UIColor(hex: 0xE06C9F)
+                for x in [16.0, 26.0, 38.0, 48.0] as [CGFloat] {
+                    self.fill(UIBezierPath(roundedRect: CGRect(x: x - 3.5, y: 38, width: 7, height: 11), cornerRadius: 2.5), dark, stroke: ol, width: 1.3)
+                }
+                let body = self.oval(6, 10, 52, 34)
+                self.gradient(body, pink.blend(.white, 0.35), pink)
+                self.stroke(body, ol, 2)
+                let ear = UIBezierPath()
+                ear.move(to: CGPoint(x: 40, y: 14)); ear.addLine(to: CGPoint(x: 46, y: 3)); ear.addLine(to: CGPoint(x: 50, y: 16)); ear.close()
+                self.fill(ear, dark, stroke: ol, width: 1.4)
+                let snout = self.oval(50, 21, 12, 13)
+                self.fill(snout, pink.blend(.white, 0.15), stroke: ol, width: 1.6)
+                self.fill(self.oval(53, 25.5, 2.4, 4), dark)
+                self.fill(self.oval(57, 25.5, 2.4, 4), dark)
+                self.fill(self.circle(45, 21, 2.2), ol)
+                self.fill(self.circle(45.6, 20.4, 0.7), .white)
+                self.fill(UIBezierPath(roundedRect: CGRect(x: 22, y: 11, width: 14, height: 3.2), cornerRadius: 1.6), ol)
+                let tail = UIBezierPath()
+                tail.move(to: CGPoint(x: 7, y: 24))
+                tail.addCurve(to: CGPoint(x: 2, y: 18), controlPoint1: CGPoint(x: 1, y: 27), controlPoint2: CGPoint(x: -1, y: 20))
+                tail.lineWidth = 2; ol.setStroke(); tail.stroke()
+                self.fill(self.oval(14, 16, 10, 6), UIColor(white: 1, alpha: 0.45))
+            }
+        }
+    }
+
     func crown() -> UIImage {
         cached("crown") {
             render(CGSize(width: 30, height: 20)) { _ in

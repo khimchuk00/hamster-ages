@@ -148,3 +148,5 @@ T("Map", "Мапа", "Karte", "Mapa", "Carte", "Mappa", "Mapa", "マップ", "�
 T("Can your hamsters do better?", "А твої хом'яки зможуть краще?", "Schaffen deine Hamster das besser?", "¿Tus hámsteres pueden hacerlo mejor?", "Tes hamsters feront-ils mieux ?", "I tuoi criceti sanno fare di meglio?", "Seus hamsters conseguem fazer melhor?", "君のハムスターはもっとやれる？", "네 햄스터들은 더 잘할 수 있을까?", "你的仓鼠能做得更好吗？", "你的倉鼠能做得更好嗎？", "Senin hamsterların daha iyisini yapabilir mi?")
 T("Share", "Поділитися", "Teilen", "Compartir", "Partager", "Condividi", "Compartilhar", "シェア", "공유", "分享", "分享", "Paylaş")
 VERBATIM += ["HAMSTER AGES"]
+T("Piggy Bank", "Скарбничка", "Sparschwein", "Hucha", "Tirelire", "Salvadanaio", "Cofrinho", "ブタの貯金箱", "돼지 저금통", "存钱罐", "撲滿", "Kumbara")
+T("FULL", "ПОВНА", "VOLL", "LLENA", "PLEINE", "PIENO", "CHEIO", "満タン", "가득", "已满", "已滿", "DOLU")

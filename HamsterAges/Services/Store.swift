@@ -15,11 +15,13 @@ final class Store {
         case seedsHuge = "com.valkhim.hamsterages.seeds.huge"
         /// Gold Hamster Pass for the current season (consumable: bought again each season).
         case pass = "com.valkhim.hamsterages.pass"
+        /// Breaks the Piggy Bank (consumable; amount depends on how full it is).
+        case piggy = "com.valkhim.hamsterages.piggy"
 
         /// Seeds granted by the product (0 for none).
         var seeds: Int {
             switch self {
-            case .removeAds, .pass: return 0
+            case .removeAds, .pass, .piggy: return 0
             case .starterPack: return 3000
             case .seedsSmall: return 1200
             case .seedsLarge: return 8000
@@ -104,6 +106,7 @@ final class Store {
             if id.removesAds { progress.setRemoveAds() }
             if id == .starterPack { progress.markStarterBought() }
             if id == .pass { progress.unlockPremiumPass() }
+            if id == .piggy { progress.breakPiggy() }
             Analytics.log(.purchase(productID: id.rawValue))
             Haptics.success()
         }

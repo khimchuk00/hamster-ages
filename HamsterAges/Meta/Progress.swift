@@ -94,6 +94,8 @@ struct PlayerProgress: Codable {
     var firstPurchaseDone: Bool?
     var freeSeedsDay: Int?
     var freeSeedsCount: Int?
+    /// Piggy Bank: a share of every battle's seeds piles up here; breaking it is an IAP.
+    var piggySeeds: Int?
 
     var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
     func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
@@ -199,6 +201,7 @@ final class ProgressStore {
     /// Survival never advances the campaign; it pays per wave and keeps a personal best.
     func recordSurvival(seconds: Double, seeds: Int, stats: BattleStats) {
         progress.seeds += seeds
+        fillPiggy(from: seeds)
         progress.battlesPlayed += 1
         progress.bestSurvival = max(progress.bestSurvival ?? 0, seconds)
         addPassXP(HamsterPass.xp(survivalWave: Int(seconds / GameConfig.survivalRampInterval) + 1))
@@ -217,6 +220,7 @@ final class ProgressStore {
     /// Daily challenge never advances the campaign; a win marks today's challenge cleared.
     func recordChallenge(won: Bool, seeds: Int, stats: BattleStats, now: Date = .now) {
         progress.seeds += seeds
+        fillPiggy(from: seeds)
         progress.battlesPlayed += 1
         addPassXP(HamsterPass.xp(challengeWon: won), now: now)
         refreshDailyState(now: now)
@@ -234,6 +238,7 @@ final class ProgressStore {
 
     func recordBattle(stage: Int, won: Bool, seeds: Int, stars: Int, stats: BattleStats = BattleStats()) {
         progress.seeds += seeds
+        fillPiggy(from: seeds)
         addPassXP(HamsterPass.xp(battleWon: won, stars: stars))
         refreshDailyState()
         if won { advanceQuest(.winBattles, by: 1) }
@@ -498,6 +503,32 @@ final class ProgressStore {
 
     var firstPurchaseBonusAvailable: Bool { progress.firstPurchaseDone != true }
 
+    // MARK: Piggy Bank
+
+    static let piggyCap = 6000
+    static let piggyMinBreak = 1500
+    /// Bonus seeds that drop into the piggy on top of each battle's reward.
+    static let piggyShare = 0.35
+
+    var piggy: Int { progress.piggySeeds ?? 0 }
+    var piggyBreakable: Bool { piggy >= ProgressStore.piggyMinBreak }
+
+    func fillPiggy(from seeds: Int) {
+        guard seeds > 0 else { return }
+        progress.piggySeeds = min(ProgressStore.piggyCap, piggy + Int((Double(seeds) * ProgressStore.piggyShare).rounded()))
+    }
+
+    /// Purchase delivered: pour the piggy into the wallet.
+    @discardableResult
+    func breakPiggy() -> Int {
+        let n = piggy
+        progress.seeds += n
+        progress.piggySeeds = 0
+        progress.firstPurchaseDone = true
+        save()
+        return n
+    }
+
     // MARK: Free seeds (rewarded ad in the shop)
 
     func freeSeedsLeft(now: Date = .now, perDay: Int = RemoteConfig.values.freeSeeds) -> Int {
@@ -568,6 +599,7 @@ final class ProgressStore {
     func debugDemoState() {
         var p = PlayerProgress()
         p.seeds = 2_340
+        p.piggySeeds = 4_200
         p.stage = 12
         p.highestStage = 12
         p.wins = 14

@@ -273,6 +273,14 @@ MainActor.assumeIsolated {
     store.setRemoveAds()
     store.resetAll()
     check(store.progress.removeAds == true && store.progress.seeds == 0, "reset wipes progress but keeps purchases")
+    store.recordBattle(stage: 3, won: true, seeds: 1000, stars: 3)
+    check(store.piggy == 350, "35% of battle seeds drop into the piggy")
+    check(!store.piggyBreakable, "piggy needs 1,500 before it can be broken")
+    for _ in 0..<40 { store.recordBattle(stage: 3, won: true, seeds: 1000, stars: 3) }
+    check(store.piggy == ProgressStore.piggyCap, "piggy is capped")
+    let seedsBeforePiggy = store.progress.seeds
+    check(store.breakPiggy() == ProgressStore.piggyCap && store.progress.seeds == seedsBeforePiggy + ProgressStore.piggyCap && store.piggy == 0,
+          "breaking the piggy pours it into the wallet")
     UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
 }
 

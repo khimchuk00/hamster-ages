@@ -35,8 +35,8 @@ struct HomeView: View {
                          general: p.equipped.flatMap { p.generalLevel($0) > 0 ? $0 : nil }, bob: bob)
                     // Stands in the gap between the farm widget and the stage panel.
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(.trailing, 290)
-                    .offset(y: -46)
+                    .padding(.trailing, 305)
+                    .offset(y: -52)
                     .allowsHitTesting(false)
 
                 HStack(alignment: .center, spacing: 20) {
@@ -91,6 +91,19 @@ struct HomeView: View {
                                 }
                             }
                             .buttonStyle(PressScale())
+                        }
+                        if store.piggy >= ProgressStore.piggyCap {
+                            Button { showShop = true } label: {
+                                Image(uiImage: ArtFactory.shared.piggyBank()).resizable().scaledToFit().frame(width: 34, height: 28)
+                                    .padding(.horizontal, 6).padding(.vertical, 1)
+                                    .background(Capsule().fill(Theme.panel))
+                                    .overlay(Capsule().stroke(Color(hex: 0xF8A5C2), lineWidth: 1.5))
+                                    .overlay(alignment: .topTrailing) {
+                                        Circle().fill(Theme.red).frame(width: 12, height: 12).offset(x: 3, y: -3)
+                                    }
+                            }
+                            .buttonStyle(PressScale())
+                            .accessibilityLabel(Text("Piggy Bank"))
                         }
                         }
                         if let left = store.starterOfferRemaining() {
