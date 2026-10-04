@@ -66,6 +66,8 @@ jobs:
           shot 7-upgrades 6 -demo -screen upgrades
           shot 8-quests 6 -demo -screen quests
           shot 9-shop 6 -demo -screen shop
+          shot 15-art-hamsters 6 -demo -screen art
+          shot 16-art-rats 6 -demo -screen artrat
           shot 11-home-uk 8 -demo -AppleLanguages "(uk)" -AppleLocale uk_UA
           shot 12-card-pick-ja 6 -demo -screen battle -AppleLanguages "(ja)" -AppleLocale ja_JP
           shot 13-heroes-de 6 -demo -screen heroes -AppleLanguages "(de)" -AppleLocale de_DE

@@ -11,7 +11,8 @@ final class BattleScene: SKScene {
         didSet { if oldValue != safeInsets { layout() } }
     }
 
-    private let world = SKNode()
+    private let panNode = SKNode()      // camera pan (world scrolls under the fixed HUD)
+    private let world = SKNode()        // shakes inside panNode
     private let bgLayer = SKNode()
     private let baseLayer = SKNode()
     private let unitLayer = SKNode()
@@ -37,7 +38,22 @@ final class BattleScene: SKScene {
     private let font = "ArialRoundedMTBold"
     private var groundY: CGFloat { max(78, size.height * 0.22) }
     private var hScale: CGFloat { min(1.35, max(0.8, size.height / 390)) }
-    private var unitScale: CGFloat { 0.72 * hScale }
+    private var unitScale: CGFloat { 0.84 * hScale }
+
+    /// The battlefield is wider than the screen; the camera follows the front line and can be dragged.
+    private let mapScale: CGFloat = 1.6
+    private var worldWidth: CGFloat { size.width * mapScale }
+    private var cameraX: CGFloat = 0
+    private var manualCameraUntil: TimeInterval = 0
+    private var dragLastX: CGFloat?
+    private var now: TimeInterval = 0
+    private var endingFocusX: CGFloat?
+
+    private let minimap = SKNode()
+    private var minimapBG: SKShapeNode?
+    private var minimapView: SKShapeNode?
+    private var minimapDots: [SKSpriteNode] = []
+    private var minimapWidth: CGFloat { min(170, size.width * 0.2) }
     private var baseScale: CGFloat { 0.78 * hScale }
 
     init(controller: BattleController) {
@@ -55,7 +71,10 @@ final class BattleScene: SKScene {
     override func didMove(to view: SKView) {
         if !didSetup {
             didSetup = true
-            addChild(world)
+            addChild(panNode)
+            panNode.addChild(world)
+            minimap.zPosition = 200
+            addChild(minimap)
             bgLayer.zPosition = -100
             baseLayer.zPosition = 10
             unitLayer.zPosition = 20
@@ -78,9 +97,10 @@ final class BattleScene: SKScene {
 
     private func layout() {
         guard didSetup, size.width > 10 else { return }
-        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: bgEra, size: size, groundHeight: groundY)))
+        let bgSize = CGSize(width: worldWidth, height: size.height)
+        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: bgEra, size: bgSize, groundHeight: groundY)))
         bg.anchorPoint = .zero
-        bg.size = size
+        bg.size = bgSize
         bgNode?.removeFromParent()
         bgLayer.addChild(bg)
         bgNode = bg
@@ -95,6 +115,9 @@ final class BattleScene: SKScene {
         }
         turretSignature = ""
         refreshTurrets()
+        layoutMinimap()
+        cameraX = clampCamera(cameraX)
+        panNode.position.x = -cameraX
     }
 
     private func species(_ side: Side) -> Species { side == .player ? .hamster : .rat }
@@ -112,7 +135,7 @@ final class BattleScene: SKScene {
 
     private func laneToScreen(_ x: Double) -> CGFloat {
         let left = safeInsets.left + 40
-        let right = size.width - safeInsets.right - 40
+        let right = worldWidth - safeInsets.right - 40
         return left + CGFloat(x / GameConfig.laneLength) * (right - left)
     }
 
@@ -123,6 +146,7 @@ final class BattleScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         let dt = lastTime.map { currentTime - $0 } ?? 0
         lastTime = currentTime
+        now = currentTime
         guard let controller else { return }
         controller.tick(dt)
         let frozen = controller.isFrozen
@@ -131,6 +155,114 @@ final class BattleScene: SKScene {
         unitLayer.speed = CGFloat(controller.speed)
         fxLayer.speed = CGFloat(controller.speed)
         sync()
+        updateCamera(dt)
+        updateMinimap()
+    }
+
+    // MARK: Camera
+
+    private func clampCamera(_ x: CGFloat) -> CGFloat { min(max(0, x), max(0, worldWidth - size.width)) }
+
+    /// Midpoint between the two front lines (own base when the field is empty).
+    private func followTarget() -> CGFloat {
+        if let x = endingFocusX { return x - size.width / 2 }
+        guard let sim else { return 0 }
+        let mine = sim.units.filter { $0.side == .player }.map(\.x)
+        let theirs = sim.units.filter { $0.side == .enemy }.map(\.x)
+        if mine.isEmpty && theirs.isEmpty { return 0 }
+        let pFront = mine.max() ?? BattleSimulation.baseFront(.player)
+        let eFront = theirs.min() ?? BattleSimulation.baseFront(.enemy)
+        return laneToScreen((pFront + eFront) / 2) - size.width / 2
+    }
+
+    private func updateCamera(_ dt: TimeInterval) {
+        if dragLastX == nil && (now > manualCameraUntil || endingFocusX != nil) {
+            let target = clampCamera(followTarget())
+            cameraX += (target - cameraX) * CGFloat(min(1, dt * 1.8))
+        }
+        cameraX = clampCamera(cameraX)
+        panNode.position.x = -cameraX.rounded()
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let t = touches.first else { return }
+        let p = t.location(in: self)
+        if let bg = minimapBG, bg.contains(t.location(in: minimap)) {
+            jumpCamera(toMinimapX: t.location(in: minimap).x)
+        }
+        dragLastX = p.x
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let t = touches.first, let last = dragLastX else { return }
+        let x = t.location(in: self).x
+        if let bg = minimapBG, bg.contains(t.location(in: minimap)) {
+            jumpCamera(toMinimapX: t.location(in: minimap).x)
+        } else {
+            cameraX = clampCamera(cameraX - (x - last))
+        }
+        dragLastX = x
+        manualCameraUntil = now + 3.5
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        dragLastX = nil
+        manualCameraUntil = max(manualCameraUntil, now + 3.5)
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { dragLastX = nil }
+
+    private func jumpCamera(toMinimapX x: CGFloat) {
+        let w = minimapWidth
+        let f = (x + w / 2) / w
+        cameraX = clampCamera(f * worldWidth - size.width / 2)
+        manualCameraUntil = now + 3.5
+    }
+
+    // MARK: Minimap
+
+    private func layoutMinimap() {
+        minimap.removeAllChildren()
+        minimapDots.removeAll()
+        let w = minimapWidth, h: CGFloat = 12
+        minimap.position = CGPoint(x: size.width * 0.52, y: max(18, safeInsets.bottom + 10))
+        let bg = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: h / 2)
+        bg.fillColor = UIColor(white: 0, alpha: 0.45)
+        bg.strokeColor = UIColor(white: 1, alpha: 0.35)
+        bg.lineWidth = 1
+        minimap.addChild(bg)
+        minimapBG = bg
+        for (side, x) in [(Side.player, -w / 2 + 4), (Side.enemy, w / 2 - 4)] {
+            let b = SKSpriteNode(color: ArtFactory.palette(species(side)).team, size: CGSize(width: 5, height: h - 2))
+            b.position = CGPoint(x: x, y: 0)
+            minimap.addChild(b)
+        }
+        let view = SKShapeNode(rectOf: CGSize(width: w * size.width / worldWidth, height: h + 4), cornerRadius: 3)
+        view.strokeColor = .white
+        view.lineWidth = 1.5
+        view.fillColor = UIColor(white: 1, alpha: 0.12)
+        minimap.addChild(view)
+        minimapView = view
+    }
+
+    private func updateMinimap() {
+        guard let sim, let view = minimapView else { return }
+        let w = minimapWidth
+        view.position.x = (cameraX + size.width / 2) / worldWidth * w - w / 2
+        let units = sim.units
+        while minimapDots.count < units.count {
+            let d = SKSpriteNode(color: .white, size: CGSize(width: 3, height: 3))
+            minimap.addChild(d)
+            minimapDots.append(d)
+        }
+        for (i, d) in minimapDots.enumerated() {
+            guard i < units.count else { d.isHidden = true; continue }
+            let u = units[i]
+            d.isHidden = false
+            d.color = u.side == .player ? UIColor(hex: 0x7FE3FF) : UIColor(hex: 0xFF8A8A)
+            d.size = u.isBoss ? CGSize(width: 5, height: 5) : CGSize(width: 3, height: 3)
+            d.position = CGPoint(x: laneToScreen(u.x) / worldWidth * w - w / 2, y: u.side == .player ? 1.5 : -1.5)
+        }
     }
 
     private func sync() {
@@ -200,6 +332,12 @@ final class BattleScene: SKScene {
             body.colorBlendFactor = 0.25
         }
         if u.side == .enemy { body.xScale = -abs(body.xScale) }
+        let shadow = SKSpriteNode(texture: tex(ArtFactory.shared.groundShadow()))
+        let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * (u.isBoss ? 1.4 : 1)
+        shadow.size = CGSize(width: shadowW, height: shadowW * 0.3)
+        shadow.position = CGPoint(x: 0, y: 2)
+        shadow.zPosition = -0.4
+        container.addChild(shadow)
         container.addChild(body)
         if u.isBoss {
             let crown = SKSpriteNode(texture: tex(ArtFactory.shared.crown()))
@@ -556,9 +694,10 @@ final class BattleScene: SKScene {
 
     private func crossfadeBackground(to era: Int) {
         bgEra = era
-        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: era, size: size, groundHeight: groundY)))
+        let bgSize = CGSize(width: worldWidth, height: size.height)
+        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: era, size: bgSize, groundHeight: groundY)))
         bg.anchorPoint = .zero
-        bg.size = size
+        bg.size = bgSize
         bg.alpha = 0
         bgLayer.addChild(bg)
         let old = bgNode
@@ -569,6 +708,7 @@ final class BattleScene: SKScene {
     func playEnding(won: Bool) {
         let loser: Side = won ? .enemy : .player
         guard let base = baseNodes[loser] else { return }
+        endingFocusX = base.position.x
         shake(intensity: 10)
         for i in 0..<5 {
             run(.wait(forDuration: Double(i) * 0.15)) { [weak self] in

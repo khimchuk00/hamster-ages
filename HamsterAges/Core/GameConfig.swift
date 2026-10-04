@@ -70,7 +70,7 @@ public struct EraDef {
 // MARK: - Tunables
 
 public enum GameConfig {
-    public static let laneLength: Double = 1000
+    public static let laneLength: Double = 1250
     public static let baseWidth: Double = 70
     public static let maxQueue = 5
     public static let startFood: Double = 140
@@ -122,13 +122,13 @@ public enum GameConfig {
         let p = costScale[i] * powerBonus[i]
         let n = unitNames[i]
         let melee = UnitStats(name: n[0], cost: (15 * c).rounded(), hp: 60 * p, damage: 14 * p,
-                              attackInterval: 1.0, range: 8, speed: 44, trainTime: 1.0,
+                              attackInterval: 1.0, range: 8, speed: 51, trainTime: 1.0,
                               width: 30, isRanged: false, projectileSpeed: 0)
         let ranged = UnitStats(name: n[1], cost: (25 * c).rounded(), hp: 40 * p, damage: 10 * p,
-                               attackInterval: 1.25, range: 150, speed: 40, trainTime: 1.3,
+                               attackInterval: 1.25, range: 150, speed: 46, trainTime: 1.3,
                                width: 30, isRanged: true, projectileSpeed: 420)
         let heavy = UnitStats(name: n[2], cost: (90 * c).rounded(), hp: 330 * p, damage: 36 * p,
-                              attackInterval: 1.6, range: i >= 2 ? 120 : 10, speed: 30, trainTime: 2.6,
+                              attackInterval: 1.6, range: i >= 2 ? 120 : 10, speed: 35, trainTime: 2.6,
                               width: 46, isRanged: i >= 2, projectileSpeed: 360)
         let turret = TurretStats(name: turretNames[i], cost: (80 * c).rounded(), damage: 7 * p,
                                  interval: [1.3, 1.1, 1.2, 0.45, 0.8][i],

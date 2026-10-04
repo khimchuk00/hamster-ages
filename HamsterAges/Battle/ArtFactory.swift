@@ -226,65 +226,195 @@ final class ArtFactory {
         let c = ctx.cgContext
         let p = ArtFactory.palette(s)
         let ol = ArtFactory.outline
+        let light = p.fur.blend(.white, 0.32)
         c.saveGState()
         c.translateBy(x: origin.x, y: origin.y)
         c.scaleBy(x: scale, y: scale)
 
-        // Feet
-        fill(oval(19, 54, 11, 7), p.furDark)
-        fill(oval(35, 54, 11, 7), p.furDark)
+        // Feet (back foot darker for depth)
+        fill(oval(17, 53, 12, 8), p.furDark.blend(.black, 0.15), stroke: ol, width: 1.2)
+        fill(oval(34, 53.5, 13, 8), p.furDark, stroke: ol, width: 1.2)
 
+        let body: UIBezierPath
         if s == .rat {
+            // Segmented tail
             let tail = UIBezierPath()
             tail.move(to: CGPoint(x: 13, y: 48))
-            tail.addCurve(to: CGPoint(x: 2, y: 26), controlPoint1: CGPoint(x: -2, y: 50), controlPoint2: CGPoint(x: 8, y: 34))
+            tail.addCurve(to: CGPoint(x: 1, y: 22), controlPoint1: CGPoint(x: -3, y: 50), controlPoint2: CGPoint(x: 9, y: 32))
+            tail.lineWidth = 4.2; tail.lineCapStyle = .round
+            ol.setStroke(); tail.stroke()
             tail.lineWidth = 2.6
-            tail.lineCapStyle = .round
-            p.innerEar.blend(p.furDark, 0.3).setStroke()
-            tail.stroke()
+            p.innerEar.blend(p.furDark, 0.25).setStroke(); tail.stroke()
             // Big ears behind the head
-            fill(circle(23, 24, 9), p.fur, stroke: ol)
-            fill(circle(23, 24, 5), p.innerEar)
-            fill(circle(35, 22, 8), p.fur, stroke: ol)
-            fill(circle(35, 22, 4.5), p.innerEar)
-            // Body + snout
-            fill(oval(9, 27, 40, 31), p.fur, stroke: ol)
-            fill(oval(36, 32, 24, 15), p.fur, stroke: ol)
-            fill(oval(11, 28, 36, 29), p.fur)            // hides the snout seam
-            fill(oval(37, 33, 20, 13), p.fur)
-            fill(oval(25, 41, 19, 15), p.belly)
-            // Face
-            fill(circle(44, 34, 2.9), UIColor(hex: 0x1D1A22))
-            fill(circle(44.9, 33.1, 0.9), .white)
-            line(CGPoint(x: 40, y: 29), CGPoint(x: 47.5, y: 31.2), ol, width: 2)   // grumpy brow
-            fill(circle(59, 39, 2.5), UIColor(hex: 0xC2185B))
-            line(CGPoint(x: 55, y: 41), CGPoint(x: 63, y: 39), UIColor(white: 0.35, alpha: 0.8), width: 0.8)
-            line(CGPoint(x: 55, y: 42.5), CGPoint(x: 63, y: 44), UIColor(white: 0.35, alpha: 0.8), width: 0.8)
+            for (cx, cy, r) in [(22.0, 23.0, 9.5), (35.0, 20.5, 8.5)] as [(CGFloat, CGFloat, CGFloat)] {
+                let ear = circle(cx, cy, r)
+                gradient(ear, light, p.fur)
+                stroke(ear, ol, 1.8)
+                fill(circle(cx + 0.5, cy + 0.5, r * 0.55), p.innerEar)
+            }
+            // Body with a pointy snout merged in
+            body = UIBezierPath()
+            body.move(to: CGPoint(x: 9, y: 46))
+            body.addCurve(to: CGPoint(x: 30, y: 25), controlPoint1: CGPoint(x: 8, y: 33), controlPoint2: CGPoint(x: 18, y: 25))
+            body.addCurve(to: CGPoint(x: 61, y: 39), controlPoint1: CGPoint(x: 42, y: 25), controlPoint2: CGPoint(x: 52, y: 32))
+            body.addCurve(to: CGPoint(x: 46, y: 47), controlPoint1: CGPoint(x: 62, y: 44), controlPoint2: CGPoint(x: 52, y: 46))
+            body.addCurve(to: CGPoint(x: 29, y: 59), controlPoint1: CGPoint(x: 47, y: 55), controlPoint2: CGPoint(x: 39, y: 59))
+            body.addCurve(to: CGPoint(x: 9, y: 46), controlPoint1: CGPoint(x: 17, y: 59), controlPoint2: CGPoint(x: 10, y: 54))
+            body.close()
         } else {
-            fill(circle(20, 26, 6.5), p.fur, stroke: ol)
-            fill(circle(20, 26, 3.3), p.innerEar)
-            fill(circle(37, 23, 6.5), p.fur, stroke: ol)
-            fill(circle(37, 23, 3.3), p.innerEar)
-            fill(oval(9, 24, 44, 36), p.fur, stroke: ol)
-            fill(oval(25, 38, 23, 20), p.belly)
-            // Face
-            fill(circle(42, 35, 3.4), UIColor(hex: 0x1D1A22))
-            fill(circle(43.1, 33.9, 1.1), .white)
-            fill(oval(38, 40, 10, 5.5), UIColor(hex: 0xFF8A80, alpha: 0.55))
-            fill(circle(51.5, 38.5, 2.3), UIColor(hex: 0xE5737A))
-            let smile = UIBezierPath()
-            smile.move(to: CGPoint(x: 47, y: 42.5))
-            smile.addQuadCurve(to: CGPoint(x: 51, y: 42.5), controlPoint: CGPoint(x: 49, y: 45))
-            smile.lineWidth = 1.1
-            ol.setStroke()
-            smile.stroke()
+            for (cx, cy) in [(19.5, 26.0), (37.0, 23.0)] as [(CGFloat, CGFloat)] {
+                let ear = circle(cx, cy, 6.8)
+                gradient(ear, light, p.fur)
+                stroke(ear, ol, 1.8)
+                fill(circle(cx, cy + 0.4, 3.6), p.innerEar)
+            }
+            body = oval(8, 23, 46, 37)
+        }
+
+        // Body: soft top-left light, darker underside, then a rim shadow on the back.
+        gradient(body, light, p.fur, from: CGPoint(x: 20, y: 24), to: CGPoint(x: 30, y: 52))
+        c.saveGState()
+        body.addClip()
+        fill(oval(-6, 40, 30, 30), p.furDark.withAlphaComponent(0.35))
+        fill(oval(22, 40, 26, 21), p.belly)
+        drawOutfit(era: era, palette: p, hasHat: hat)
+        c.restoreGState()
+        stroke(body, ol, 2)
+
+        // Fur tuft
+        let tuft = UIBezierPath()
+        tuft.move(to: CGPoint(x: 25, y: 25)); tuft.addLine(to: CGPoint(x: 27, y: 18.5))
+        tuft.addLine(to: CGPoint(x: 29.5, y: 24)); tuft.addLine(to: CGPoint(x: 32, y: 18))
+        tuft.addLine(to: CGPoint(x: 34, y: 24.5))
+        if !hat { fill(tuft, light, stroke: ol, width: 1.2) }
+
+        if s == .rat {
+            // Squinting, angry eye with a red iris
+            fill(oval(39, 29.5, 10, 8), .white, stroke: ol, width: 1.2)
+            fill(circle(45, 33.5, 2.8), UIColor(hex: 0xC62828))
+            fill(circle(45.4, 33.6, 1.4), UIColor(hex: 0x1D1A22))
+            fill(circle(46.2, 32.6, 0.7), .white)
+            line(CGPoint(x: 37.5, y: 27.5), CGPoint(x: 49, y: 31), ol, width: 2.6)          // heavy brow
+            fill(circle(60.5, 39, 2.6), UIColor(hex: 0xC2185B), stroke: ol, width: 0.8)       // nose
+            fill(UIBezierPath(roundedRect: CGRect(x: 52.5, y: 42.5, width: 2.6, height: 3.6), cornerRadius: 0.6), .white, stroke: ol, width: 0.7)
+            fill(UIBezierPath(roundedRect: CGRect(x: 55.2, y: 42.2, width: 2.6, height: 3.4), cornerRadius: 0.6), .white, stroke: ol, width: 0.7)
+            let wc = UIColor(white: 0.3, alpha: 0.8)
+            line(CGPoint(x: 56, y: 39), CGPoint(x: 64, y: 36), wc, width: 0.7)
+            line(CGPoint(x: 56, y: 40.5), CGPoint(x: 64, y: 41.5), wc, width: 0.7)
+        } else {
+            // Puffy cheek pouch + blush
+            let cheek = oval(39, 38.5, 15, 12)
+            gradient(cheek, light, p.fur.blend(.white, 0.1))
+            stroke(cheek, ol, 1.2)
+            fill(oval(42, 43, 8, 4.5), UIColor(hex: 0xFF8A80, alpha: 0.55))
+            // Big shiny eye
+            fill(oval(38.5, 29, 10, 11), .white, stroke: ol, width: 1.3)
+            fill(circle(44.2, 35, 3.4), UIColor(hex: 0x2A1E1A))
+            fill(circle(45.4, 33.4, 1.3), .white)
+            fill(circle(43, 36.8, 0.6), UIColor(white: 1, alpha: 0.8))
+            // Nose, mouth, whiskers
+            fill(circle(53.5, 38.5, 2.1), UIColor(hex: 0xE5737A), stroke: ol, width: 0.8)
+            let mouth = UIBezierPath()
+            mouth.move(to: CGPoint(x: 50.5, y: 41.5))
+            mouth.addQuadCurve(to: CGPoint(x: 53, y: 42), controlPoint: CGPoint(x: 51.6, y: 43.4))
+            mouth.addQuadCurve(to: CGPoint(x: 55.5, y: 41.2), controlPoint: CGPoint(x: 54.5, y: 43.2))
+            mouth.lineWidth = 1; mouth.lineCapStyle = .round
+            ol.setStroke(); mouth.stroke()
+            let wc = UIColor(white: 0.35, alpha: 0.65)
+            line(CGPoint(x: 55, y: 38.5), CGPoint(x: 62, y: 36.5), wc, width: 0.7)
+            line(CGPoint(x: 55, y: 40), CGPoint(x: 62, y: 40.5), wc, width: 0.7)
         }
 
         if hat { drawHat(ctx, era: era, palette: p) }
         if let w = weapon { drawWeapon(ctx, era: era, role: w, palette: p) }
         // Arm in front of the weapon handle
-        fill(oval(41, 44, 10, 8), p.fur, stroke: ol, width: 1.2)
+        let arm = oval(40.5, 44, 11, 9)
+        gradient(arm, light, p.fur)
+        stroke(arm, ol, 1.4)
         c.restoreGState()
+    }
+
+    /// Era clothing, drawn clipped to the body so it follows the silhouette. Team colour sits on the belt
+    /// so both armies stay readable at a glance.
+    private func drawOutfit(era: Int, palette p: Palette, hasHat: Bool) {
+        let ol = ArtFactory.outline
+        switch era {
+        case 0: // fur pelt over one shoulder
+            let pelt = UIBezierPath()
+            pelt.move(to: CGPoint(x: 14, y: 36)); pelt.addLine(to: CGPoint(x: 24, y: 32))
+            pelt.addLine(to: CGPoint(x: 48, y: 58)); pelt.addLine(to: CGPoint(x: 36, y: 62)); pelt.close()
+            fill(pelt, UIColor(hex: 0x9C6A3F), stroke: ol, width: 1)
+            for i in 0..<3 { fill(circle(25 + CGFloat(i) * 7, 42 + CGFloat(i) * 6, 1.6), UIColor(hex: 0x6E4523)) }
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 50, width: 64, height: 3.5)), p.team)
+        case 1: // chainmail + tabard
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 47, width: 64, height: 20)), UIColor(hex: 0xA7B0BA))
+            for row in 0..<3 { for col in 0..<9 {
+                fill(circle(4 + CGFloat(col) * 7 + CGFloat(row % 2) * 3.5, 50 + CGFloat(row) * 4, 1.3), UIColor(hex: 0x7F8A96))
+            } }
+            fill(UIBezierPath(rect: CGRect(x: 21, y: 34, width: 20, height: 30)), p.team, stroke: p.teamDark, width: 1.2)
+            fill(UIBezierPath(rect: CGRect(x: 29.5, y: 36, width: 3, height: 26)), UIColor(hex: 0xF2C14E))
+            fill(UIBezierPath(rect: CGRect(x: 23, y: 43, width: 16, height: 3)), UIColor(hex: 0xF2C14E))
+        case 2: // coat with cross belts
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 40, width: 64, height: 30)), p.team.blend(.black, 0.12))
+            line(CGPoint(x: 16, y: 38), CGPoint(x: 44, y: 62), UIColor(hex: 0xF4F1E8), width: 3)
+            line(CGPoint(x: 44, y: 38), CGPoint(x: 18, y: 62), UIColor(hex: 0xF4F1E8), width: 3)
+            fill(circle(30, 50, 2.4), UIColor(hex: 0xF2C14E), stroke: ol, width: 0.7)
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 40, width: 64, height: 2)), p.teamDark)
+        case 3: // camo vest + team armband
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 39, width: 64, height: 30)), UIColor(hex: 0x6B7B3A))
+            for (x, y, w) in [(14.0, 44.0, 9.0), (30.0, 50.0, 11.0), (20.0, 56.0, 8.0), (40.0, 44.0, 7.0)] as [(CGFloat, CGFloat, CGFloat)] {
+                fill(oval(x, y, w, w * 0.6), UIColor(hex: 0x4E5A28))
+            }
+            fill(UIBezierPath(roundedRect: CGRect(x: 32, y: 46, width: 9, height: 7), cornerRadius: 1.5), UIColor(hex: 0x56632C), stroke: ol, width: 0.8)
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 39, width: 64, height: 3)), p.team)
+        default: // sleek suit with a glowing team stripe
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 38, width: 64, height: 30)), UIColor(hex: 0xE3E8F0))
+            fill(UIBezierPath(rect: CGRect(x: 0, y: 52, width: 64, height: 10)), UIColor(hex: 0xC5CCD8))
+            if let c = UIGraphicsGetCurrentContext() {
+                c.saveGState()
+                c.setShadow(offset: .zero, blur: 4, color: p.team.cgColor)
+                fill(UIBezierPath(rect: CGRect(x: 0, y: 46, width: 64, height: 3)), p.team)
+                c.restoreGState()
+            }
+            fill(circle(30, 42.5, 2.2), p.team.blend(.white, 0.4))
+        }
+    }
+
+    private func gradient(_ path: UIBezierPath, _ top: UIColor, _ bottom: UIColor, from: CGPoint? = nil, to: CGPoint? = nil) {
+        guard let c = UIGraphicsGetCurrentContext() else { return }
+        let b = path.bounds
+        c.saveGState()
+        path.addClip()
+        if let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                              colors: [top.cgColor, bottom.cgColor] as CFArray, locations: [0, 1]) {
+            c.drawLinearGradient(g, start: from ?? CGPoint(x: b.minX + b.width * 0.3, y: b.minY),
+                                 end: to ?? CGPoint(x: b.midX, y: b.maxY), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+        }
+        c.restoreGState()
+    }
+
+    private func stroke(_ path: UIBezierPath, _ color: UIColor, _ width: CGFloat) {
+        color.setStroke()
+        path.lineWidth = width
+        path.lineJoinStyle = .round
+        path.stroke()
+    }
+
+    /// Soft ground shadow drawn under every unit by the battle scene.
+    func groundShadow() -> UIImage {
+        cached("shadow") {
+            render(CGSize(width: 40, height: 12)) { ctx in
+                let c = ctx.cgContext
+                let colors = [UIColor(white: 0, alpha: 0.32).cgColor, UIColor(white: 0, alpha: 0).cgColor] as CFArray
+                if let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: colors, locations: [0, 1]) {
+                    c.saveGState()
+                    c.translateBy(x: 20, y: 6)
+                    c.scaleBy(x: 1, y: 0.3)
+                    c.drawRadialGradient(g, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 20, options: [])
+                    c.restoreGState()
+                }
+            }
+        }
     }
 
     private func drawHat(_ ctx: UIGraphicsImageRendererContext, era: Int, palette p: Palette) {
