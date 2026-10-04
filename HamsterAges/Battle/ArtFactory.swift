@@ -423,7 +423,6 @@ final class ArtFactory {
     }
 
     private func drawHat(_ ctx: UIGraphicsImageRendererContext, era: Int, palette p: Palette) {
-        let ol = ArtFactory.outline
         let gold = UIColor(hex: 0xF2C14E)
         switch era {
         case 0: // headband with trailing tails + a feather
@@ -490,10 +489,10 @@ final class ArtFactory {
     // MARK: Weapons (critter frame; the hand sits at ~(46, 48))
 
     /// Shaded fill + outline in one go.
-    private func shade(_ path: UIBezierPath, _ base: UIColor, outline: UIColor = ArtFactory.outline, width: CGFloat = 1.1,
+    private func shade(_ path: UIBezierPath, _ base: UIColor, outline: UIColor? = nil, width: CGFloat = 1.1,
                        light: CGFloat = 0.45, dark: CGFloat = 0.18) {
         gradient(path, base.blend(.white, light), base.blend(.black, dark))
-        stroke(path, outline, width)
+        stroke(path, outline ?? ArtFactory.outline, width)
     }
 
     /// Straight blade along +x from `from` to `to` (local coords), with a fuller and a bright edge.
