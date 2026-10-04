@@ -17,7 +17,8 @@ final class Sound {
 
     private let engine = AVAudioEngine()
     private var players: [AVAudioPlayerNode] = []
-    private var buffers: [Effect: AVAudioPCMBuffer] = [:]
+    /// A few pitch-shifted takes of each effect so repeated hits don't sound like a machine gun of clones.
+    private var buffers: [Effect: [AVAudioPCMBuffer]] = [:]
     private var lastPlayed: [Effect: TimeInterval] = [:]
     private var next = 0
     private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
@@ -32,11 +33,15 @@ final class Sound {
             players.append(p)
         }
         engine.mainMixerNode.outputVolume = 0.55
-        for e in Effect.allCases { buffers[e] = synth(e) }
+        for e in Effect.allCases {
+            let base = synth(e)
+            let varied: Set<Effect> = [.hit, .pop, .coin, .tap, .squeak]
+            buffers[e] = varied.contains(e) ? [0.92, 1.0, 1.08].map { resample(base, rate: $0) } : [base]
+        }
     }
 
     func play(_ e: Effect, minInterval: TimeInterval = 0.05) {
-        guard isEnabled, let buffer = buffers[e] else { return }
+        guard isEnabled, let takes = buffers[e], let buffer = takes.randomElement() else { return }
         let now = CACurrentMediaTime()
         if let last = lastPlayed[e], now - last < minInterval { return }
         lastPlayed[e] = now
@@ -79,6 +84,21 @@ final class Sound {
         let ch = b.floatChannelData![0]
         for (i, s) in samples.enumerated() { ch[i] = s }
         return b
+    }
+
+    /// Plays the buffer faster (> 1, higher pitch) or slower (< 1) by linear interpolation.
+    private func resample(_ src: AVAudioPCMBuffer, rate: Double) -> AVAudioPCMBuffer {
+        guard rate != 1, let input = src.floatChannelData?[0] else { return src }
+        let n = Int(src.frameLength)
+        let m = max(1, Int(Double(n) / rate))
+        var out = [Float](repeating: 0, count: m)
+        for i in 0..<m {
+            let x = Double(i) * rate
+            let j = Int(x), f = Float(x - Double(j))
+            let a = input[min(j, n - 1)], b = input[min(j + 1, n - 1)]
+            out[i] = a + (b - a) * f
+        }
+        return buffer(out)
     }
 
     private func osc(_ wave: Wave, phase: Double) -> Float {
