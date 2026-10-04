@@ -144,7 +144,7 @@ private struct BattleHUD: View {
                 }
                 .animation(.spring(response: 0.3), value: c.bossHP == nil)
                 Spacer(minLength: 4)
-                BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : "\(c.ratGeneral.name) · \(GameConfig.eraNames[c.enemyEra])",
+                BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : (c.difficulty.isHard ? "☠︎ " + L10n.t("Hard") + " · " : "") + "\(c.ratGeneral.name) · \(GameConfig.eraNames[c.enemyEra])",
                         fraction: c.enemyHP, color: Theme.red, text: c.mode == .survival ? "∞" : nil, mirrored: true)
                 RatGeneralBadge(general: c.ratGeneral, size: 40)
                 RoundIconButton(icon: c.speed > 1 ? "forward.fill" : "play.fill", label: c.speed > 1 ? "×2" : "×1") { c.toggleSpeed() }
