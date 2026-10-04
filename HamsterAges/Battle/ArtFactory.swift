@@ -988,70 +988,199 @@ final class ArtFactory {
 
     private func drawBackground(_ ctx: UIGraphicsImageRendererContext, era: Int, size: CGSize, groundHeight: CGFloat) {
         let c = ctx.cgContext
-        let skies: [(UInt32, UInt32)] = [(0x7EC8EE, 0xE4F6FF), (0x9DBEE3, 0xF6F0DC), (0xF2A65A, 0xFBE3C4),
-                                         (0x8FA6B4, 0xDDE3E6), (0x1C1B3A, 0x5B3F82)]
-        let hills: [(UInt32, UInt32)] = [(0x9CCB8F, 0x6FAF63), (0x8DAA87, 0x638A5F), (0xA38E77, 0x7E6B57),
-                                         (0x7C8A8F, 0x58656B), (0x3B3666, 0x2A2550)]
-        let grounds: [(UInt32, UInt32)] = [(0x7CB342, 0x8B5E34), (0x6A994E, 0x6F4E37), (0xB5A16A, 0x8A6A45),
+        let skies: [(UInt32, UInt32)] = [(0x6EC3F0, 0xE4F6FF), (0x8FB6E6, 0xF6F0DC), (0xF09A4E, 0xFDE6C4),
+                                         (0x8FA6B4, 0xE2E6E4), (0x16153A, 0x5B3F82)]
+        let hills: [(UInt32, UInt32, UInt32)] = [(0xB3D9A6, 0x8DC27F, 0x6AAA5E), (0xA9BFA2, 0x86A57F, 0x5F865A),
+                                                 (0xD9A877, 0xB98B5E, 0x8C6A48), (0xA5B0B5, 0x86939A, 0x5F6B72),
+                                                 (0x4A3F7E, 0x3A3368, 0x2A2550)]
+        let grounds: [(UInt32, UInt32)] = [(0x7CB342, 0x8B5E34), (0x6A994E, 0x6F4E37), (0xC9A56A, 0x8A6A45),
                                            (0x6B705C, 0x4F4A3E), (0x3D3B66, 0x26244A)]
         let (top, bottom) = skies[era]
-        let colors = [UIColor(hex: top).cgColor, UIColor(hex: bottom).cgColor] as CFArray
-        if let g = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
-            c.drawLinearGradient(g, start: .zero, end: CGPoint(x: 0, y: size.height - groundHeight), options: [])
-        }
         let w = size.width, h = size.height, gy = h - groundHeight
+        let space = CGColorSpace(name: CGColorSpace.sRGB)
+        if let g = CGGradient(colorsSpace: space, colors: [UIColor(hex: top).cgColor, UIColor(hex: bottom).cgColor] as CFArray, locations: [0, 1]) {
+            c.drawLinearGradient(g, start: .zero, end: CGPoint(x: 0, y: gy), options: [.drawsAfterEndLocation])
+        }
+        var r = SeededRandom(seed: UInt64(7 + era))
+        func rnd(_ a: CGFloat, _ b: CGFloat) -> CGFloat { CGFloat.random(in: a...max(a + 0.001, b), using: &r) }
 
-        // Sun / moon / stars
-        if era == 4 {
-            var r = SeededRandom(seed: 42)
-            for _ in 0..<60 {
-                let x = CGFloat.random(in: 0...w, using: &r), y = CGFloat.random(in: 0...max(1, gy * 0.8), using: &r)
-                fill(circle(x, y, CGFloat.random(in: 0.6...1.6, using: &r)), UIColor(white: 1, alpha: 0.8))
+        // Sun / moon with a soft glow, stars at night
+        let sunCenter = CGPoint(x: w * 0.82, y: h * 0.2)
+        func glow(_ p: CGPoint, _ radius: CGFloat, _ color: UIColor) {
+            if let g = CGGradient(colorsSpace: space, colors: [color.withAlphaComponent(0.55).cgColor, color.withAlphaComponent(0).cgColor] as CFArray, locations: [0, 1]) {
+                c.drawRadialGradient(g, startCenter: p, startRadius: 0, endCenter: p, endRadius: radius, options: [])
             }
-            fill(circle(w * 0.78, h * 0.18, 22), UIColor(hex: 0xF4F1FF))
-            fill(circle(w * 0.78 + 8, h * 0.18 - 6, 20), UIColor(hex: top))
+        }
+        if era == 4 {
+            for _ in 0..<Int(w / 10) { fill(circle(rnd(0, w), rnd(0, gy * 0.75), rnd(0.5, 1.7)), UIColor(white: 1, alpha: rnd(0.4, 0.95))) }
+            glow(CGPoint(x: w * 0.22, y: h * 0.24), 90, UIColor(hex: 0xB78CFF))
+            let planet = circle(w * 0.22, h * 0.24, 34)
+            gradient(planet, UIColor(hex: 0xE7C6FF), UIColor(hex: 0x7A4FC2))
+            let ring = UIBezierPath(ovalIn: CGRect(x: w * 0.22 - 58, y: h * 0.24 - 9, width: 116, height: 18))
+            ring.lineWidth = 3; UIColor(hex: 0xF4E1FF, alpha: 0.8).setStroke(); ring.stroke()
+            fill(circle(sunCenter.x, sunCenter.y, 20), UIColor(hex: 0xF4F1FF))
+            fill(circle(sunCenter.x + 8, sunCenter.y - 6, 18), UIColor(hex: top))
         } else {
-            let sun = era == 2 ? UIColor(hex: 0xFFE08A) : UIColor(hex: 0xFFF3B0)
-            fill(circle(w * 0.8, h * 0.2, 24), sun.withAlphaComponent(0.9))
-            var r = SeededRandom(seed: UInt64(7 + era))
-            for _ in 0..<4 {
-                let x = CGFloat.random(in: 0...w, using: &r), y = CGFloat.random(in: h * 0.08...h * 0.35, using: &r)
-                let cloud = UIColor(white: 1, alpha: era == 3 ? 0.55 : 0.85)
-                fill(oval(x, y, 60, 18), cloud)
-                fill(oval(x + 14, y - 10, 34, 22), cloud)
+            let sun = era == 2 ? UIColor(hex: 0xFFD27A) : UIColor(hex: 0xFFF3B0)
+            glow(sunCenter, 110, sun)
+            fill(circle(sunCenter.x, sunCenter.y, 26), sun)
+            for _ in 0..<Int(w / 220) + 2 {
+                let x = rnd(0, w), y = rnd(h * 0.06, h * 0.32), s = rnd(0.7, 1.3)
+                let a: CGFloat = era == 3 ? 0.6 : 0.92
+                let shadeCol = UIColor(white: era == 3 ? 0.78 : 0.88, alpha: a)
+                fill(oval(x, y + 6 * s, 76 * s, 18 * s), shadeCol)
+                fill(oval(x + 10 * s, y - 8 * s, 34 * s, 26 * s), UIColor(white: 1, alpha: a))
+                fill(oval(x + 32 * s, y - 14 * s, 30 * s, 30 * s), UIColor(white: 1, alpha: a))
+                fill(oval(x + 4 * s, y + 2 * s, 66 * s, 16 * s), UIColor(white: 1, alpha: a))
             }
         }
 
-        func hillLayer(_ color: UIColor, base: CGFloat, amp: CGFloat, freq: CGFloat, phase: CGFloat) {
+        func ridge(_ color: UIColor, base: CGFloat, amp: CGFloat, freq: CGFloat, phase: CGFloat, jag: Bool = false) {
             let path = UIBezierPath()
             path.move(to: CGPoint(x: 0, y: gy))
             var x: CGFloat = 0
-            while x <= w {
-                let y = base - amp * (0.5 + 0.5 * sin(x / w * .pi * freq + phase))
+            while x <= w + 6 {
+                var y = base - amp * (0.5 + 0.5 * sin(x / w * .pi * freq + phase))
+                if jag { y -= amp * 0.18 * abs(sin(x / 23 + phase * 3)) }
                 path.addLine(to: CGPoint(x: x, y: y))
                 x += 6
             }
-            path.addLine(to: CGPoint(x: w, y: gy))
-            path.close()
+            path.addLine(to: CGPoint(x: w, y: gy)); path.close()
             fill(path, color)
         }
-        hillLayer(UIColor(hex: hills[era].0), base: gy - 10, amp: h * 0.22, freq: 3.2, phase: 0.8)
-        hillLayer(UIColor(hex: hills[era].1), base: gy + 2, amp: h * 0.12, freq: 5.1, phase: 2.1)
+        let (far, mid, near) = hills[era]
+        // Far layer: mountains / mesas / skyline
+        switch era {
+        case 2: // mesas
+            for _ in 0..<Int(w / 260) + 2 {
+                let x = rnd(-40, w), mw = rnd(90, 180), mh = rnd(h * 0.14, h * 0.26)
+                let mesa = UIBezierPath()
+                mesa.move(to: CGPoint(x: x, y: gy)); mesa.addLine(to: CGPoint(x: x + 18, y: gy - mh))
+                mesa.addLine(to: CGPoint(x: x + mw - 18, y: gy - mh)); mesa.addLine(to: CGPoint(x: x + mw, y: gy)); mesa.close()
+                fill(mesa, UIColor(hex: far))
+                fill(UIBezierPath(rect: CGRect(x: x + 18, y: gy - mh, width: mw - 36, height: 5)), UIColor(hex: far).blend(.white, 0.2))
+            }
+        case 3: // city skyline
+            var x: CGFloat = -10
+            while x < w {
+                let bw = rnd(26, 60), bh = rnd(h * 0.12, h * 0.36)
+                fill(UIBezierPath(rect: CGRect(x: x, y: gy - bh, width: bw, height: bh)), UIColor(hex: far))
+                for wy in stride(from: gy - bh + 8, to: gy - 10, by: 12) {
+                    for wx in stride(from: x + 5, to: x + bw - 6, by: 10) where rnd(0, 1) > 0.55 {
+                        fill(UIBezierPath(rect: CGRect(x: wx, y: wy, width: 4, height: 5)), UIColor(hex: 0xFFE7A0, alpha: 0.55))
+                    }
+                }
+                x += bw + rnd(2, 14)
+            }
+        case 4: // neon spires
+            for _ in 0..<Int(w / 120) + 2 {
+                let x = rnd(0, w), sh = rnd(h * 0.18, h * 0.45), sw = rnd(10, 22)
+                let spire = UIBezierPath()
+                spire.move(to: CGPoint(x: x - sw, y: gy)); spire.addLine(to: CGPoint(x: x, y: gy - sh)); spire.addLine(to: CGPoint(x: x + sw, y: gy)); spire.close()
+                fill(spire, UIColor(hex: far))
+                c.saveGState()
+                c.setShadow(offset: .zero, blur: 6, color: UIColor(hex: 0x5EF2FF).cgColor)
+                fill(circle(x, gy - sh + 4, 2.4), UIColor(hex: 0x9FF7FF))
+                c.restoreGState()
+            }
+        default:
+            ridge(UIColor(hex: far), base: gy - 30, amp: h * 0.24, freq: 2.4, phase: 0.3, jag: true)
+            if era == 0 { // smoking volcano
+                let vx = w * 0.62
+                let v = UIBezierPath()
+                v.move(to: CGPoint(x: vx - 120, y: gy - 20)); v.addLine(to: CGPoint(x: vx - 24, y: gy - h * 0.42))
+                v.addLine(to: CGPoint(x: vx + 24, y: gy - h * 0.42)); v.addLine(to: CGPoint(x: vx + 120, y: gy - 20)); v.close()
+                fill(v, UIColor(hex: 0x9C8E86))
+                fill(UIBezierPath(rect: CGRect(x: vx - 24, y: gy - h * 0.42, width: 48, height: 6)), UIColor(hex: 0xFF8A3D))
+                for i in 0..<4 { fill(circle(vx - 6 + CGFloat(i) * 9, gy - h * 0.46 - CGFloat(i) * 14, 10 + CGFloat(i) * 3), UIColor(white: 0.85, alpha: 0.55)) }
+            }
+        }
+        ridge(UIColor(hex: mid), base: gy - 6, amp: h * 0.17, freq: 3.6, phase: 1.4)
 
-        // Ground
-        fill(UIBezierPath(rect: CGRect(x: 0, y: gy, width: w, height: groundHeight)), UIColor(hex: grounds[era].1))
-        fill(UIBezierPath(rect: CGRect(x: 0, y: gy, width: w, height: 10)), UIColor(hex: grounds[era].0))
-        var r = SeededRandom(seed: UInt64(99 + era))
-        for _ in 0..<40 {
-            let x = CGFloat.random(in: 0...max(1, w), using: &r), y = CGFloat.random(in: (gy + 16)...max(gy + 17, h), using: &r)
-            fill(oval(x, y, 6, 3), UIColor(hex: grounds[era].1).blend(.black, 0.18))
+        // Mid props
+        func tree(_ x: CGFloat, _ s: CGFloat, _ col: UIColor) {
+            fill(UIBezierPath(rect: CGRect(x: x - 2 * s, y: gy - 14 * s, width: 4 * s, height: 14 * s)), UIColor(hex: 0x6B4A2B))
+            for i in 0..<3 {
+                let t = UIBezierPath()
+                let y0 = gy - 10 * s - CGFloat(i) * 9 * s
+                t.move(to: CGPoint(x: x - (14 - CGFloat(i) * 3) * s, y: y0)); t.addLine(to: CGPoint(x: x, y: y0 - 16 * s))
+                t.addLine(to: CGPoint(x: x + (14 - CGFloat(i) * 3) * s, y: y0)); t.close()
+                fill(t, col)
+            }
+        }
+        switch era {
+        case 0, 1:
+            for _ in 0..<Int(w / 70) { tree(rnd(0, w), rnd(0.8, 1.4), UIColor(hex: mid).blend(.black, 0.18)) }
+            if era == 1 { // distant castle on a hill
+                for k in 0..<Int(w / 700) + 1 {
+                    let cx = w * 0.3 + CGFloat(k) * 640, cy = gy - h * 0.2
+                    let col = UIColor(hex: far).blend(.black, 0.1)
+                    fill(UIBezierPath(rect: CGRect(x: cx, y: cy, width: 70, height: 50)), col)
+                    for i in 0..<4 { fill(UIBezierPath(rect: CGRect(x: cx + 4 + CGFloat(i) * 18, y: cy - 8, width: 10, height: 8)), col) }
+                    fill(UIBezierPath(rect: CGRect(x: cx + 26, y: cy - 34, width: 18, height: 34)), col)
+                    let roof = UIBezierPath(); roof.move(to: CGPoint(x: cx + 22, y: cy - 34)); roof.addLine(to: CGPoint(x: cx + 35, y: cy - 52)); roof.addLine(to: CGPoint(x: cx + 48, y: cy - 34)); roof.close()
+                    fill(roof, UIColor(hex: 0xB0605A).blend(UIColor(hex: far), 0.5))
+                }
+            }
+        case 2:
+            for _ in 0..<Int(w / 120) {
+                let x = rnd(0, w), s = rnd(0.8, 1.3), col = UIColor(hex: 0x5E8F4A)
+                fill(UIBezierPath(roundedRect: CGRect(x: x - 4 * s, y: gy - 30 * s, width: 8 * s, height: 30 * s), cornerRadius: 4 * s), col)
+                fill(UIBezierPath(roundedRect: CGRect(x: x - 13 * s, y: gy - 22 * s, width: 6 * s, height: 12 * s), cornerRadius: 3 * s), col)
+                fill(UIBezierPath(roundedRect: CGRect(x: x + 7 * s, y: gy - 26 * s, width: 6 * s, height: 14 * s), cornerRadius: 3 * s), col)
+            }
+        case 3:
+            var x: CGFloat = 40
+            while x < w { // power line poles
+                fill(UIBezierPath(rect: CGRect(x: x, y: gy - 60, width: 3, height: 60)), UIColor(hex: 0x4F4A3E))
+                fill(UIBezierPath(rect: CGRect(x: x - 9, y: gy - 56, width: 21, height: 2.5)), UIColor(hex: 0x4F4A3E))
+                let wire = UIBezierPath(); wire.move(to: CGPoint(x: x, y: gy - 55)); wire.addQuadCurve(to: CGPoint(x: x + 180, y: gy - 55), controlPoint: CGPoint(x: x + 90, y: gy - 40))
+                wire.lineWidth = 0.8; UIColor(white: 0.2, alpha: 0.6).setStroke(); wire.stroke()
+                x += 180
+            }
+        default:
+            break
+        }
+        ridge(UIColor(hex: near), base: gy + 4, amp: h * 0.08, freq: 6.3, phase: 2.6)
+
+        // Ground with a grassy lip, stones and tufts
+        let (lip, dirt) = grounds[era]
+        if let g = CGGradient(colorsSpace: space, colors: [UIColor(hex: dirt).cgColor, UIColor(hex: dirt).blend(.black, 0.25).cgColor] as CFArray, locations: [0, 1]) {
+            c.saveGState()
+            c.clip(to: CGRect(x: 0, y: gy, width: w, height: groundHeight))
+            c.drawLinearGradient(g, start: CGPoint(x: 0, y: gy), end: CGPoint(x: 0, y: h), options: [])
+            c.restoreGState()
+        }
+        let lipPath = UIBezierPath()
+        lipPath.move(to: CGPoint(x: 0, y: gy))
+        var lx: CGFloat = 0
+        while lx <= w + 8 {
+            lipPath.addLine(to: CGPoint(x: lx, y: gy + 9 + 3 * sin(lx / 9)))
+            lx += 8
+        }
+        lipPath.addLine(to: CGPoint(x: w, y: gy)); lipPath.close()
+        fill(lipPath, UIColor(hex: lip))
+        fill(UIBezierPath(rect: CGRect(x: 0, y: gy, width: w, height: 2.5)), UIColor(hex: lip).blend(.white, 0.25))
+        for _ in 0..<Int(w / 18) {
+            let x = rnd(0, w), y = rnd(gy + 16, h - 4), s = rnd(0.6, 1.4)
+            fill(oval(x, y, 8 * s, 4 * s), UIColor(hex: dirt).blend(.black, 0.22))
+            fill(oval(x + 1.5 * s, y + 0.5 * s, 4 * s, 1.6 * s), UIColor(hex: dirt).blend(.white, 0.18))
+        }
+        if era < 3 {
+            for _ in 0..<Int(w / 26) {
+                let x = rnd(0, w), col = UIColor(hex: lip).blend(.black, 0.15)
+                for k in 0..<3 { line(CGPoint(x: x + CGFloat(k) * 2, y: gy + 3), CGPoint(x: x + CGFloat(k) * 2 + (CGFloat(k) - 1) * 2, y: gy - 3), col, width: 1.2) }
+            }
         }
         if era == 4 {
+            c.saveGState()
             c.setShadow(offset: .zero, blur: 6, color: UIColor(hex: 0x5EF2FF).cgColor)
             fill(UIBezierPath(rect: CGRect(x: 0, y: gy, width: w, height: 2)), UIColor(hex: 0x5EF2FF))
+            c.restoreGState()
         }
     }
 }
+
 
 extension UIColor {
     func blend(_ other: UIColor, _ t: CGFloat) -> UIColor {

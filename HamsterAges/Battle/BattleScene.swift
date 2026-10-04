@@ -451,6 +451,7 @@ final class BattleScene: SKScene {
                 let d: CGFloat = u.side == .player ? 1 : -1
                 if u.isRanged {
                     body.run(.sequence([.moveBy(x: -3 * d, y: 0, duration: 0.05), .moveBy(x: 3 * d, y: 0, duration: 0.1)]), withKey: "atk")
+                    if u.era >= 2, let node = unitNodes[id] { muzzleFlash(at: CGPoint(x: node.position.x + d * 30 * unitScale, y: node.position.y + 18 * unitScale), era: u.era, side: u.side) }
                 } else {
                     body.run(.sequence([.group([.moveBy(x: 7 * d, y: 0, duration: 0.07), .rotate(byAngle: -0.15 * d, duration: 0.07)]),
                                         .group([.moveBy(x: -7 * d, y: 0, duration: 0.12), .rotate(byAngle: 0.15 * d, duration: 0.12)])]), withKey: "atk")
@@ -632,6 +633,18 @@ final class BattleScene: SKScene {
                                      .fadeOut(withDuration: 0.4), .scale(to: 0.1, duration: 0.4)]),
                              .removeFromParent()]))
         }
+    }
+
+    private func muzzleFlash(at pos: CGPoint, era: Int, side: Side) {
+        let f = SKSpriteNode(texture: tex(ArtFactory.shared.dot(.white, radius: 6)))
+        f.color = era >= 4 ? ArtFactory.palette(species(side)).team.blend(.white, 0.4) : UIColor(hex: 0xFFE082)
+        f.colorBlendFactor = 1
+        f.blendMode = .add
+        f.position = pos
+        f.zPosition = 56
+        f.setScale(0.5 * hScale)
+        fxLayer.addChild(f)
+        f.run(.sequence([.group([.scale(to: 1.1 * hScale, duration: 0.06), .fadeOut(withDuration: 0.12)]), .removeFromParent()]))
     }
 
     private func spark(at pos: CGPoint) {
