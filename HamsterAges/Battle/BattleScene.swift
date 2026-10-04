@@ -38,7 +38,7 @@ final class BattleScene: SKScene {
     private let font = "ArialRoundedMTBold"
     private var groundY: CGFloat { max(78, size.height * 0.22) }
     private var hScale: CGFloat { min(1.9, max(0.8, size.height / 390)) }
-    private var unitScale: CGFloat { 0.84 * hScale }
+    private var unitScale: CGFloat { 0.95 * hScale }
 
     /// The battlefield is wider than the screen; the camera follows the front line and can be dragged.
     private let mapScale: CGFloat = 1.6
@@ -48,13 +48,21 @@ final class BattleScene: SKScene {
     private var dragLastX: CGFloat?
     private var now: TimeInterval = 0
     private var endingFocusX: CGFloat?
+    private var cinematicFocus: (x: CGFloat, until: TimeInterval)?
+    /// Never paused: effects that must play while the battle is frozen (evolution set piece).
+    private let cinemaLayer = SKNode()
+    /// Screen-space effects above the world (flash, bounty tokens, confetti) — unaffected by camera pan.
+    private let screenFX = SKNode()
+    private var activeTokens = 0
+    private var smokeTimer: TimeInterval = 0
+    private var lastBaseHaptic: TimeInterval = 0
 
     private let minimap = SKNode()
     private var minimapBG: SKShapeNode?
     private var minimapView: SKShapeNode?
     private var minimapDots: [SKSpriteNode] = []
     private var minimapWidth: CGFloat { min(170, size.width * 0.2) }
-    private var baseScale: CGFloat { 0.78 * hScale }
+    private var baseScale: CGFloat { 0.84 * hScale }
 
     init(controller: BattleController) {
         self.controller = controller
@@ -73,6 +81,10 @@ final class BattleScene: SKScene {
             didSetup = true
             addChild(panNode)
             panNode.addChild(world)
+            cinemaLayer.zPosition = 60
+            world.addChild(cinemaLayer)
+            screenFX.zPosition = 300
+            addChild(screenFX)
             minimap.zPosition = 200
             addChild(minimap)
             bgLayer.zPosition = -100
@@ -161,6 +173,7 @@ final class BattleScene: SKScene {
         sync()
         updateCamera(dt)
         updateMinimap()
+        updateBaseDamage(currentTime, frozen: frozen)
     }
 
     // MARK: Camera
@@ -170,6 +183,7 @@ final class BattleScene: SKScene {
     /// Midpoint between the two front lines (own base when the field is empty).
     private func followTarget() -> CGFloat {
         if let x = endingFocusX { return x - size.width / 2 }
+        if let c = cinematicFocus, now < c.until { return c.x - size.width / 2 }
         guard let sim else { return 0 }
         let mine = sim.units.filter { $0.side == .player }.map(\.x)
         let theirs = sim.units.filter { $0.side == .enemy }.map(\.x)
@@ -180,9 +194,10 @@ final class BattleScene: SKScene {
     }
 
     private func updateCamera(_ dt: TimeInterval) {
-        if dragLastX == nil && (now > manualCameraUntil || endingFocusX != nil) {
+        let cinematic = endingFocusX != nil || (cinematicFocus.map { now < $0.until } ?? false)
+        if dragLastX == nil && (now > manualCameraUntil || cinematic) {
             let target = clampCamera(followTarget())
-            cameraX += (target - cameraX) * CGFloat(min(1, dt * 1.8))
+            cameraX += (target - cameraX) * CGFloat(min(1, dt * (cinematic ? 5 : 1.8)))
         }
         cameraX = clampCamera(cameraX)
         panNode.position.x = -cameraX.rounded()
@@ -357,7 +372,8 @@ final class BattleScene: SKScene {
         barBG.position = CGPoint(x: 0, y: body.size.height + (u.isBoss ? 16 : 3))
         barBG.isHidden = true
         if u.isBoss { barBG.xScale = 2.2; barBG.yScale = 1.6 }
-        let bar = SKSpriteNode(color: u.side == .player ? UIColor(hex: 0x6EE07A) : UIColor(hex: 0xFF6B6B),
+        // Team-coloured bars (blue vs orange is colour-blind safe).
+        let bar = SKSpriteNode(color: u.side == .player ? UIColor(hex: 0x4FC3F7) : UIColor(hex: 0xFF8A3D),
                                size: CGSize(width: 24 * hScale, height: 3.5))
         bar.anchorPoint = CGPoint(x: 0, y: 0.5)
         bar.position = CGPoint(x: -12 * hScale, y: 0)
@@ -465,6 +481,11 @@ final class BattleScene: SKScene {
                 let restore = isBoss ? SKAction.colorize(with: UIColor(hex: 0xB0306A), colorBlendFactor: 0.25, duration: 0.14)
                                      : SKAction.colorize(withColorBlendFactor: 0, duration: 0.14)
                 body.run(.sequence([.colorize(with: .white, colorBlendFactor: 0.75, duration: 0), restore]), withKey: "flash")
+                if body.action(forKey: "kb") == nil, let u = sim.units.first(where: { $0.id == id }), !u.isBoss {
+                    let d: CGFloat = u.side == .player ? -1 : 1
+                    body.run(.sequence([.moveBy(x: 3 * d * hScale, y: 0, duration: 0.04),
+                                        .moveBy(x: -3 * d * hScale, y: 0, duration: 0.1)]), withKey: "kb")
+                }
                 if damageLabels < 14 {
                     floatText("\(Int(dmg.rounded()))", at: CGPoint(x: node.position.x, y: node.position.y + body.size.height),
                               color: .white, size: 11 * hScale, rise: 22)
@@ -487,8 +508,12 @@ final class BattleScene: SKScene {
             case .reward(let side, let food, let x):
                 if side == .player {
                     Sound.shared.play(.coin, minInterval: 0.1)
-                    floatText("+\(Int(food))", at: CGPoint(x: laneToScreen(x), y: groundY + 52 * hScale),
-                              color: UIColor(hex: 0xFFD54A), size: 13 * hScale, rise: 30)
+                    let p = CGPoint(x: laneToScreen(x), y: groundY + 40 * hScale)
+                    if activeTokens < 6 {
+                        bountyToken(Int(food), from: CGPoint(x: p.x - cameraX, y: p.y))
+                    } else {
+                        floatText("+\(Int(food))", at: p, color: UIColor(hex: 0xFFD54A), size: 13 * hScale, rise: 30)
+                    }
                 }
 
             case .projectileFired(let id):
@@ -506,6 +531,10 @@ final class BattleScene: SKScene {
                 }
 
             case .baseHit(let side, _):
+                if side == .player && now - lastBaseHaptic > 1.5 {
+                    lastBaseHaptic = now
+                    Haptics.tap()
+                }
                 guard let base = baseNodes[side], base.action(forKey: "hit") == nil else { break }
                 base.run(.sequence([.colorize(with: UIColor(hex: 0xFF5A5A), colorBlendFactor: 0.35, duration: 0),
                                     .moveBy(x: 2, y: 0, duration: 0.04), .moveBy(x: -4, y: 0, duration: 0.06),
@@ -663,6 +692,7 @@ final class BattleScene: SKScene {
     }
 
     private func shake(intensity: CGFloat) {
+        guard Juice.shakeEnabled else { return }
         world.removeAction(forKey: "shake")
         world.position = .zero
         var seq: [SKAction] = []
@@ -741,5 +771,157 @@ final class BattleScene: SKScene {
             }
         }
         base.run(.sequence([.wait(forDuration: 0.4), .group([.moveBy(x: 0, y: -30, duration: 0.6), .fadeAlpha(to: 0.3, duration: 0.6)])]))
+        guard won, let sim else { return }
+        // Victory: the army cheers (hops), confetti rains.
+        for u in sim.units where u.side == .player {
+            guard let body = bodies[u.id] else { continue }
+            body.removeAllActions()
+            let delay = Double.random(in: 0...0.25)
+            let hop = SKAction.sequence([.moveBy(x: 0, y: 14 * hScale, duration: 0.18), .moveBy(x: 0, y: -14 * hScale, duration: 0.16)])
+            hop.timingMode = .easeOut
+            body.run(.sequence([.wait(forDuration: 0.5 + delay), .repeat(hop, count: 4)]))
+        }
+        unitLayer.isPaused = false
+        confetti()
+    }
+
+    // MARK: Moments
+
+    /// Evolution set piece. Runs while the battle is frozen, so everything here lives in never-paused layers.
+    func playEvolution(era: Int) {
+        guard let base = baseNodes[.player] else { return }
+        cinematicFocus = (base.position.x + size.width * 0.25, now + 1.3)
+        // White flash over the whole screen.
+        let flash = SKSpriteNode(color: .white, size: CGSize(width: size.width * 2, height: size.height * 2))
+        flash.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        flash.alpha = 0
+        screenFX.addChild(flash)
+        flash.run(.sequence([.wait(forDuration: 0.25), .fadeAlpha(to: 0.85, duration: 0.06),
+                             .fadeOut(withDuration: 0.45), .removeFromParent()]))
+        // Base swells, rings of sparkles burst around it.
+        let s = baseScale
+        base.run(.sequence([.wait(forDuration: 0.25),
+                            .group([.scaleX(to: s * 1.18, duration: 0.15), .scaleY(to: s * 1.25, duration: 0.15)]),
+                            .group([.scaleX(to: s, duration: 0.3), .scaleY(to: s, duration: 0.3)])]))
+        let center = CGPoint(x: base.position.x, y: base.position.y + 70 * hScale)
+        let texture = tex(ArtFactory.shared.dot(.white, radius: 6))
+        for i in 0..<28 {
+            let d = SKSpriteNode(texture: texture)
+            d.color = i % 2 == 0 ? UIColor(hex: 0xFFE082) : ArtFactory.palette(.hamster).team.blend(.white, 0.4)
+            d.colorBlendFactor = 1
+            d.blendMode = .add
+            d.position = center
+            d.setScale(0.1)
+            cinemaLayer.addChild(d)
+            let a = CGFloat(i) / 28 * 2 * .pi
+            let r = (90 + CGFloat.random(in: 0...30)) * hScale
+            d.run(.sequence([.wait(forDuration: 0.28),
+                             .group([.move(by: CGVector(dx: cos(a) * r, dy: sin(a) * r * 0.7), duration: 0.6),
+                                     .scale(to: CGFloat.random(in: 0.6...1.2) * hScale, duration: 0.2),
+                                     .sequence([.wait(forDuration: 0.3), .fadeOut(withDuration: 0.3)])]),
+                             .removeFromParent()]))
+        }
+        // Every hamster on the field "puffs" into its new gear.
+        if let sim {
+            for u in sim.units where u.side == .player {
+                guard let node = unitNodes[u.id] else { continue }
+                let p = CGPoint(x: node.position.x, y: node.position.y + 20 * hScale)
+                run(.wait(forDuration: 0.3)) { [weak self] in
+                    self?.cinemaPuff(at: p)
+                }
+            }
+        }
+        run(.wait(forDuration: 0.3)) { [weak self] in self?.shake(intensity: 6) }
+    }
+
+    private func cinemaPuff(at pos: CGPoint) {
+        let texture = tex(ArtFactory.shared.dot(.white, radius: 6))
+        for _ in 0..<8 {
+            let d = SKSpriteNode(texture: texture)
+            d.color = UIColor(hex: 0xFFF3B0)
+            d.colorBlendFactor = 1
+            d.position = pos
+            d.setScale(0.8 * hScale)
+            cinemaLayer.addChild(d)
+            let a = CGFloat.random(in: 0...(2 * .pi)), r = CGFloat.random(in: 10...26) * hScale
+            d.run(.sequence([.group([.moveBy(x: cos(a) * r, y: abs(sin(a)) * r, duration: 0.35),
+                                     .fadeOut(withDuration: 0.35), .scale(to: 0.1, duration: 0.35)]), .removeFromParent()]))
+        }
+    }
+
+    /// Food bounty flies from the kill to the food counter at the top of the HUD.
+    private func bountyToken(_ amount: Int, from p: CGPoint) {
+        activeTokens += 1
+        let token = SKNode()
+        token.position = p
+        let label = SKLabelNode(fontNamed: font)
+        label.text = "+\(amount) 🌽"
+        label.fontSize = 13 * hScale
+        label.fontColor = UIColor(hex: 0xFFD54A)
+        label.verticalAlignmentMode = .center
+        let shadow = SKLabelNode(fontNamed: font)
+        shadow.text = label.text
+        shadow.fontSize = label.fontSize
+        shadow.fontColor = UIColor(white: 0, alpha: 0.5)
+        shadow.verticalAlignmentMode = .center
+        shadow.position = CGPoint(x: 1, y: -1.5)
+        token.addChild(shadow)
+        token.addChild(label)
+        screenFX.addChild(token)
+        let target = CGPoint(x: size.width / 2 - 24, y: size.height - safeInsets.top - 26)
+        let rise = SKAction.moveBy(x: 0, y: 26, duration: 0.25)
+        rise.timingMode = .easeOut
+        let fly = SKAction.move(to: target, duration: 0.5)
+        fly.timingMode = .easeIn
+        token.run(.sequence([rise, .group([fly, .scale(to: 0.6, duration: 0.5), .sequence([.wait(forDuration: 0.35), .fadeOut(withDuration: 0.15)])]),
+                             .removeFromParent()])) { [weak self] in self?.activeTokens -= 1 }
+    }
+
+    private func confetti() {
+        let colors: [UInt32] = [0xFFD54A, 0x4FC3F7, 0xFF8A65, 0x81C784, 0xBA68C8, 0xFFFFFF]
+        for i in 0..<70 {
+            let c = SKSpriteNode(color: UIColor(hex: colors[i % colors.count]), size: CGSize(width: 6 * hScale, height: 10 * hScale))
+            c.position = CGPoint(x: CGFloat.random(in: 0...size.width), y: size.height + CGFloat.random(in: 10...160))
+            c.zRotation = CGFloat.random(in: 0...(2 * .pi))
+            screenFX.addChild(c)
+            let fall = SKAction.moveBy(x: CGFloat.random(in: -60...60), y: -(size.height + 200), duration: Double.random(in: 1.8...3.0))
+            let spin = SKAction.rotate(byAngle: CGFloat.random(in: -8...8), duration: 2.5)
+            c.run(.sequence([.wait(forDuration: 0.6 + Double.random(in: 0...0.6)), .group([fall, spin]), .removeFromParent()]))
+        }
+    }
+
+    /// Damaged bases smoke (below 50%) and smoulder (below 25%).
+    private func updateBaseDamage(_ t: TimeInterval, frozen: Bool) {
+        guard let sim, !frozen, t - smokeTimer > 0.35 else { return }
+        smokeTimer = t
+        let texture = tex(ArtFactory.shared.dot(.white, radius: 8))
+        for side in Side.allCases {
+            guard let base = baseNodes[side] else { continue }
+            let st = sim.state(side)
+            let f = st.baseHP / max(1, st.baseMaxHP)
+            guard f < 0.5, f > 0 else { continue }
+            let p = CGPoint(x: base.position.x + CGFloat.random(in: -30...30) * hScale, y: base.position.y + CGFloat.random(in: 60...110) * hScale)
+            let smoke = SKSpriteNode(texture: texture)
+            smoke.color = UIColor(white: f < 0.25 ? 0.25 : 0.45, alpha: 1)
+            smoke.colorBlendFactor = 1
+            smoke.alpha = 0.6
+            smoke.position = p
+            smoke.setScale(0.5 * hScale)
+            smoke.zPosition = 54
+            fxLayer.addChild(smoke)
+            smoke.run(.sequence([.group([.moveBy(x: CGFloat.random(in: -10...10), y: 50 * hScale, duration: 1.4),
+                                         .scale(to: 1.4 * hScale, duration: 1.4), .fadeOut(withDuration: 1.4)]), .removeFromParent()]))
+            if f < 0.25 {
+                let ember = SKSpriteNode(texture: texture)
+                ember.color = UIColor(hex: 0xFF8A3D)
+                ember.colorBlendFactor = 1
+                ember.blendMode = .add
+                ember.position = CGPoint(x: p.x, y: p.y - 14 * hScale)
+                ember.setScale(0.35 * hScale)
+                ember.zPosition = 55
+                fxLayer.addChild(ember)
+                ember.run(.sequence([.group([.moveBy(x: 0, y: 24 * hScale, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
+            }
+        }
     }
 }

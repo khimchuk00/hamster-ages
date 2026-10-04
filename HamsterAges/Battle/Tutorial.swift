@@ -31,10 +31,11 @@ enum TutorialStep: Int, CaseIterable {
         }
     }
 
-    var isBlocking: Bool { target != nil }
+    /// Only the very first action and the first evolution freeze the battle; other hints just point.
+    var isBlocking: Bool { target == .unit || target == .evolve }
 
     /// Seconds a non-blocking hint stays on screen.
-    var duration: Double { 5 }
+    var duration: Double { target == nil ? 5 : 7 }
 
     var analyticsName: String { String(describing: self) }
 }

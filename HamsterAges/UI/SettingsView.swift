@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var music = Music.shared.isEnabled
     @State private var haptics = Haptics.isEnabled
     @State private var reminders = Reminders.isEnabled
+    @State private var shake = Juice.shakeSetting
     @State private var confirmReset = false
     @State private var restoring = false
 
@@ -40,6 +41,8 @@ struct SettingsView: View {
                             }
                         SettingToggle(title: "Vibration", icon: "iphone.radiowaves.left.and.right", isOn: $haptics)
                             .onChange(of: haptics) { _, v in Haptics.isEnabled = v; Haptics.tap() }
+                        SettingToggle(title: "Screen shake", icon: "waveform.path", isOn: $shake)
+                            .onChange(of: shake) { _, v in Juice.shakeSetting = v }
                         SettingToggle(title: "Reminders", icon: "bell.fill", isOn: $reminders)
                             .onChange(of: reminders) { _, v in
                                 Reminders.isEnabled = v

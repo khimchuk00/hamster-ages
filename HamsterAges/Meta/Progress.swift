@@ -89,6 +89,11 @@ struct PlayerProgress: Codable {
     var passPremiumSeason: Int?
     var skins: [String]?
     var equippedSkin: String?
+    // Offers & free rewards
+    var starterOfferStart: Date?
+    var firstPurchaseDone: Bool?
+    var freeSeedsDay: Int?
+    var freeSeedsCount: Int?
 
     var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
     func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
@@ -127,18 +132,45 @@ final class ProgressStore {
     static let dailyRewards = [50, 80, 120, 160, 220, 300, 600]
 
     init() {
-        if let data = UserDefaults.standard.data(forKey: key),
-           let p = try? JSONDecoder().decode(PlayerProgress.self, from: data) {
-            progress = p
-        } else {
-            progress = PlayerProgress()
-        }
+        let local = UserDefaults.standard.data(forKey: key).flatMap { try? JSONDecoder().decode(PlayerProgress.self, from: $0) }
+        progress = ProgressStore.mostAdvanced(local, ProgressStore.cloudCopy()) ?? PlayerProgress()
     }
 
     private func save() {
         if let data = try? JSONEncoder().encode(progress) {
             UserDefaults.standard.set(data, forKey: key)
+            #if os(iOS)
+            // iCloud key-value backup: progress and the Gold Pass survive a reinstall or a new device.
+            NSUbiquitousKeyValueStore.default.set(data, forKey: key)
+            #endif
         }
+    }
+
+    /// Picks whichever save got further (stage first, then battles played). Nil-safe.
+    static func mostAdvanced(_ a: PlayerProgress?, _ b: PlayerProgress?) -> PlayerProgress? {
+        guard let a else { return b }
+        guard let b else { return a }
+        if a.highestStage != b.highestStage { return a.highestStage > b.highestStage ? a : b }
+        return a.battlesPlayed >= b.battlesPlayed ? a : b
+    }
+
+    private static func cloudCopy() -> PlayerProgress? {
+        #if os(iOS)
+        let kv = NSUbiquitousKeyValueStore.default
+        kv.synchronize()
+        return kv.data(forKey: "hamsterages.progress.v1").flatMap { try? JSONDecoder().decode(PlayerProgress.self, from: $0) }
+        #else
+        return nil
+        #endif
+    }
+
+    /// Call when the app becomes active: adopts the iCloud copy if another device got further.
+    func syncFromCloud() {
+        guard let cloud = ProgressStore.cloudCopy(),
+              cloud.highestStage > progress.highestStage
+                || (cloud.highestStage == progress.highestStage && cloud.battlesPlayed > progress.battlesPlayed) else { return }
+        progress = cloud
+        if let data = try? JSONEncoder().encode(progress) { UserDefaults.standard.set(data, forKey: key) }
     }
 
     // Upgrades
@@ -210,6 +242,10 @@ final class ProgressStore {
         advanceQuest(.useSpecial, by: stats.specialsUsed)
         advanceQuest(.evolve, by: stats.evolutions)
         progress.battlesPlayed += 1
+        // Starter offer opens after the first loss or the 3rd battle, whichever comes first.
+        if progress.starterOfferStart == nil && progress.starterBought != true && (!won || progress.battlesPlayed >= 3) {
+            progress.starterOfferStart = .now
+        }
         if won {
             progress.wins += 1
             progress.stars[stage] = max(progress.stars[stage] ?? 0, stars)
@@ -442,6 +478,47 @@ final class ProgressStore {
         save()
     }
 
+    // MARK: Offers
+
+    /// Seconds left on the one-time Starter Pack offer, or nil when it isn't available.
+    func starterOfferRemaining(now: Date = .now, hours: Double = RemoteConfig.values.starterHours) -> TimeInterval? {
+        guard progress.starterBought != true, let start = progress.starterOfferStart else { return nil }
+        let left = start.addingTimeInterval(hours * 3600).timeIntervalSince(now)
+        return left > 0 ? left : nil
+    }
+
+    /// Seeds granted for a purchased seed pack; the very first purchase in the game is doubled.
+    func grantPurchasedSeeds(_ n: Int) -> Int {
+        let amount = progress.firstPurchaseDone == true ? n : n * 2
+        progress.firstPurchaseDone = true
+        progress.seeds += amount
+        save()
+        return amount
+    }
+
+    var firstPurchaseBonusAvailable: Bool { progress.firstPurchaseDone != true }
+
+    // MARK: Free seeds (rewarded ad in the shop)
+
+    func freeSeedsLeft(now: Date = .now, perDay: Int = RemoteConfig.values.freeSeeds) -> Int {
+        let used = progress.freeSeedsDay == QuestBoard.dayKey(now) ? (progress.freeSeedsCount ?? 0) : 0
+        return max(0, perDay - used)
+    }
+
+    var freeSeedsAmount: Int { 50 + 15 * progress.highestStage }
+
+    @discardableResult
+    func claimFreeSeeds(now: Date = .now) -> Int {
+        guard freeSeedsLeft(now: now) > 0 else { return 0 }
+        let day = QuestBoard.dayKey(now)
+        if progress.freeSeedsDay != day { progress.freeSeedsDay = day; progress.freeSeedsCount = 0 }
+        progress.freeSeedsCount = (progress.freeSeedsCount ?? 0) + 1
+        let n = freeSeedsAmount
+        progress.seeds += n
+        save()
+        return n
+    }
+
     // Daily reward (7-day streak; missing a day resets)
     func dailyStatus(now: Date = .now) -> (available: Bool, dayIndex: Int) {
         let cal = Calendar.current
@@ -479,6 +556,9 @@ final class ProgressStore {
         fresh.passPremiumSeason = progress.passPremiumSeason
         fresh.skins = progress.skins
         fresh.equippedSkin = progress.equippedSkin
+        fresh.firstPurchaseDone = progress.firstPurchaseDone
+        fresh.freeSeedsDay = progress.freeSeedsDay
+        fresh.freeSeedsCount = progress.freeSeedsCount
         progress = fresh
         save()
     }

@@ -240,3 +240,8 @@ T("Snowball", "Сніжок", "Schneeball", "Bola de nieve", "Boule de neige", "
 T("Midnight", "Опівнічний", "Mitternacht", "Medianoche", "Minuit", "Mezzanotte", "Meia-noite", "ミッドナイト", "미드나잇", "午夜", "午夜", "Gece Yarısı")
 T("New skin: %@", "Новий образ: %@", "Neuer Skin: %@", "Nuevo aspecto: %@", "Nouveau look : %@", "Nuovo aspetto: %@", "Novo visual: %@", "新スキン：%@", "새 스킨: %@", "新皮肤：%@", "新造型：%@", "Yeni görünüm: %@")
 T("Crate", "Скриня", "Kiste", "Cofre", "Caisse", "Cassa", "Baú", "箱", "상자", "宝箱", "寶箱", "Sandık")
+
+# Offers
+T("3,000 🌻 + 2 Hero Crates", "3 000 🌻 + 2 скрині героїв", "3.000 🌻 + 2 Heldenkisten", "3000 🌻 + 2 cofres de héroe", "3 000 🌻 + 2 caisses de héros", "3000 🌻 + 2 casse eroe", "3.000 🌻 + 2 baús de herói", "3,000 🌻 + ヒーロー箱×2", "3,000 🌻 + 영웅 상자 2개", "3000 🌻 + 2个英雄宝箱", "3000 🌻 + 2個英雄寶箱", "3.000 🌻 + 2 Kahraman Sandığı")
+T("Watch", "Дивитись", "Ansehen", "Ver", "Regarder", "Guarda", "Assistir", "視聴", "시청", "观看", "觀看", "İzle")
+T("Tomorrow", "Завтра", "Morgen", "Mañana", "Demain", "Domani", "Amanhã", "明日", "내일", "明天", "明天", "Yarın")

@@ -37,13 +37,15 @@ struct HomeView: View {
                             .font(Theme.font(13))
                             .foregroundStyle(.white)
                             .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
-                        if let event = LiveEvents.activeTitle() {
+                        if p.tutorialDone == true, let event = LiveEvents.activeTitle() {
                             Label(event, systemImage: "party.popper.fill")
                                 .font(Theme.font(12)).foregroundStyle(Theme.ink)
                                 .padding(.horizontal, 10).padding(.vertical, 4)
                                 .background(Capsule().fill(Theme.gold))
                         }
                         HStack(spacing: 8) {
+                        // Features unlock one by one so a new player isn't greeted by a wall of widgets.
+                        if p.wins >= 1 {
                         StarRoadPill(progress: p, toast: starToast) {
                             guard let r = store.claimStarReward() else { return }
                             Haptics.success()
@@ -57,7 +59,8 @@ struct HomeView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { withAnimation { starToast = nil } }
                         }
                         .fixedSize()
-                        if p.tutorialDone == true {
+                        }
+                        if p.highestStage >= 5 {
                             Button { showPass = true } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "crown.fill").foregroundStyle(Theme.gold)
@@ -78,13 +81,16 @@ struct HomeView: View {
                             .buttonStyle(PressScale())
                         }
                         }
-                        if p.battlesPlayed >= 3 && p.starterBought != true {
+                        if let left = store.starterOfferRemaining() {
                             Button { showShop = true } label: {
                                 HStack(spacing: 8) {
                                     Image(systemName: "gift.fill").font(.system(size: 20)).foregroundStyle(Theme.gold)
                                     VStack(alignment: .leading, spacing: 0) {
-                                        Text("STARTER PACK").font(Theme.font(13)).foregroundStyle(Theme.gold)
-                                        Text(L10n.t("3,000 🌻 + No Ads") + (shop.product(.starterPack).map { " · \($0.displayPrice)" } ?? ""))
+                                        HStack(spacing: 6) {
+                                            Text("STARTER PACK").font(Theme.font(13)).foregroundStyle(Theme.gold)
+                                            Label(OfferTimer.text(left), systemImage: "timer").font(Theme.font(10)).foregroundStyle(.white.opacity(0.85))
+                                        }
+                                        Text(L10n.t("3,000 🌻 + 2 Hero Crates") + (shop.product(.starterPack).map { " · \($0.displayPrice)" } ?? ""))
                                             .font(Theme.font(11)).foregroundStyle(.white)
                                     }
                                 }
@@ -105,7 +111,7 @@ struct HomeView: View {
                                     .offset(y: bob ? (era % 2 == 0 ? -4 : 0) : (era % 2 == 0 ? 0 : -4))
                             }
                         }
-                        SeedFarmWidget(store: store, ads: ads)
+                        if p.battlesPlayed >= 4 { SeedFarmWidget(store: store, ads: ads) }
                         }
                         .padding(.bottom, 8)
                     }
@@ -114,6 +120,7 @@ struct HomeView: View {
                     // Right: stage panel
                     VStack(spacing: 8) {
                         HStack(spacing: 4) {
+                            if p.tutorialDone == true {
                             Button { showDaily = true } label: {
                                 Image(systemName: "gift.fill")
                                     .font(.system(size: 18, weight: .bold))
@@ -127,6 +134,8 @@ struct HomeView: View {
                                     }
                             }
                             .buttonStyle(PressScale())
+                            }
+                            if p.battlesPlayed >= 3 {
                             Button { showQuests = true } label: {
                                 Image(systemName: "list.bullet.clipboard.fill")
                                     .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
@@ -138,6 +147,7 @@ struct HomeView: View {
                                     }
                             }
                             .buttonStyle(PressScale())
+                            }
                             Button { showShop = true } label: {
                                 Image(systemName: "cart.fill")
                                     .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
@@ -162,8 +172,10 @@ struct HomeView: View {
                                     .background(Capsule().fill(Theme.red))
                             }
                             OutlinedText(text: "Stage \(p.stage)", size: 30)
-                            Text("Rat army strength \(Int(difficulty.aiStats * 100))%")
-                                .font(Theme.font(12)).foregroundStyle(.white.opacity(0.8))
+                            if p.stage >= 3 {
+                                Text("Rat army strength \(Int(difficulty.aiStats * 100))%")
+                                    .font(Theme.font(12)).foregroundStyle(.white.opacity(0.8))
+                            }
                             if difficulty.modifier != .none {
                                 Label(difficulty.modifier.title, systemImage: difficulty.modifier.icon)
                                     .font(Theme.font(12)).foregroundStyle(Theme.gold)
@@ -181,6 +193,7 @@ struct HomeView: View {
                         .buttonStyle(ChunkyButtonStyle(color: Theme.green, cornerRadius: 18, depth: 6))
 
                         HStack(spacing: 8) {
+                            if p.wins >= 1 {
                             Button { showUpgrades = true } label: {
                                 Text("Upgrades").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
                             }
@@ -196,6 +209,8 @@ struct HomeView: View {
                                     CoachBubble(text: "Spend seeds here!").offset(y: -44)
                                 }
                             }
+                            }
+                            if p.battlesPlayed >= 2 {
                             Button { showGenerals = true } label: {
                                 Text("Heroes").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
                             }
@@ -210,6 +225,7 @@ struct HomeView: View {
                                 if store.freeCrateAvailable() || p.seeds >= Generals.crateCost {
                                     Circle().fill(Theme.red).frame(width: 14, height: 14).offset(x: 4, y: -4)
                                 }
+                            }
                             }
                         }
 
@@ -240,7 +256,7 @@ struct HomeView: View {
                                     if isOpen { Circle().fill(Theme.red).frame(width: 12, height: 12).offset(x: 4, y: -4) }
                                 }
                             }
-                            if !store.survivalUnlocked && !store.challengeUnlocked {
+                            if !store.survivalUnlocked && !store.challengeUnlocked && p.wins >= 1 {
                                 Text("Daily Challenge unlocks after Stage \(DailyChallenge.unlockStage - 1)")
                                     .font(Theme.font(11)).foregroundStyle(.white.opacity(0.7))
                             }
@@ -288,7 +304,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showUpgrades) { UpgradesView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showDaily) { DailyRewardView(store: store).presentationSizing(.page) }
-        .sheet(isPresented: $showShop) { ShopView(store: shop, progress: store).presentationSizing(.page) }
+        .sheet(isPresented: $showShop) { ShopView(store: shop, progress: store, ads: ads).presentationSizing(.page) }
         .sheet(isPresented: $showGenerals) { GeneralsView(store: store, ads: ads).presentationSizing(.page) }
         .sheet(isPresented: $showQuests) { QuestsView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showSettings) { SettingsView(store: store, shop: shop).presentationSizing(.page) }

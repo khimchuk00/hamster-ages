@@ -996,12 +996,12 @@ final class ArtFactory {
     private func drawBackground(_ ctx: UIGraphicsImageRendererContext, era: Int, size: CGSize, groundHeight: CGFloat) {
         let c = ctx.cgContext
         let skies: [(UInt32, UInt32)] = [(0x6EC3F0, 0xE4F6FF), (0x8FB6E6, 0xF6F0DC), (0xF09A4E, 0xFDE6C4),
-                                         (0x8FA6B4, 0xE2E6E4), (0x16153A, 0x5B3F82)]
+                                         (0x6F9FCB, 0xE6EEF4), (0x16153A, 0x5B3F82)]
         let hills: [(UInt32, UInt32, UInt32)] = [(0xB3D9A6, 0x8DC27F, 0x6AAA5E), (0xA9BFA2, 0x86A57F, 0x5F865A),
-                                                 (0xD9A877, 0xB98B5E, 0x8C6A48), (0xA5B0B5, 0x86939A, 0x5F6B72),
+                                                 (0xD9A877, 0xB98B5E, 0x8C6A48), (0xA9BCCB, 0x8499AB, 0x5E7286),
                                                  (0x4A3F7E, 0x3A3368, 0x2A2550)]
         let grounds: [(UInt32, UInt32)] = [(0x7CB342, 0x8B5E34), (0x6A994E, 0x6F4E37), (0xC9A56A, 0x8A6A45),
-                                           (0x6B705C, 0x4F4A3E), (0x3D3B66, 0x26244A)]
+                                           (0x8A8F6A, 0x56503F), (0x3D3B66, 0x26244A)]
         let (top, bottom) = skies[era]
         let w = size.width, h = size.height, gy = h - groundHeight
         let space = CGColorSpace(name: CGColorSpace.sRGB)

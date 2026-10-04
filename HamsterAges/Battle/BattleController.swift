@@ -66,6 +66,11 @@ final class BattleController {
     var heroReady = false
     var wave = 1
     var isOvertime = false
+    /// Rat King health while one is on the field (boss bar).
+    var bossHP: Double?
+    /// Short scripted moment (evolution set piece) — the battle is frozen while it plays.
+    var cinematic = false
+    @ObservationIgnored private var hitStop = 0.0
 
     // Tutorial (first battle only)
     let isTutorial: Bool
@@ -76,7 +81,7 @@ final class BattleController {
 
     /// Battle time is frozen while paused, picking a card, or showing a blocking tutorial hint.
     var isFrozen: Bool {
-        isPaused || cardOffer != nil || reviveOffer || (tutorialVisible && tutorialStep?.isBlocking == true)
+        isPaused || cinematic || cardOffer != nil || reviveOffer || (tutorialVisible && tutorialStep?.isBlocking == true)
     }
     var reviveOffer = false
 
@@ -93,7 +98,11 @@ final class BattleController {
         general = progress.equipped.flatMap { progress.generalLevel($0) > 0 ? $0 : nil }
         generalLevel = general.map { progress.generalLevel($0) } ?? 0
         skin = progress.skin
-        sim = BattleSimulation(difficulty: difficulty, playerMods: progress.battleModifiers,
+        let tutorial = progress.tutorialDone != true && stage == 1 && mode == .campaign
+        var mods = progress.battleModifiers
+        // First battle: faster XP so every new player sees an evolution within ~1:00–1:30.
+        if tutorial { mods.xpGain *= 1.5 }
+        sim = BattleSimulation(difficulty: difficulty, playerMods: mods,
                                seed: mode == .challenge ? DailyChallenge.seed(for: today) : UInt64.random(in: 1...UInt64.max),
                                mode: mode)
         if mode == .challenge {
@@ -101,7 +110,7 @@ final class BattleController {
         }
         sim.setHeroAbility(general?.ability, for: .player)
         rerollsLeft = progress.level(.charm)
-        isTutorial = progress.tutorialDone != true && stage == 1 && mode == .campaign
+        isTutorial = tutorial
         tutorialStep = isTutorial ? .train : nil
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
@@ -126,6 +135,10 @@ final class BattleController {
 
     func tick(_ rawDT: Double) {
         guard !isFrozen, result == nil, sim.winner == nil else { return }
+        if hitStop > 0 {           // brief impact freeze for big moments; rendering keeps going
+            hitStop -= rawDT
+            return
+        }
         accumulator += min(rawDT, 0.1) * speed
         while accumulator >= fixedStep {
             sim.step(fixedStep)
@@ -136,16 +149,20 @@ final class BattleController {
             for e in events {
                 switch e {
                 case .evolved(side: .player, era: let newEra):
-                    Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
-                    flashBanner(GameConfig.eraNames[newEra].localizedUppercase + "!")
-                    offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
+                    playEvolution(newEra)
                 case .lastStand(side: .player):
                     flashBanner(L10n.t("LAST STAND!"))
+                    impact(0.09)
+                case .specialImpact:
+                    impact(0.07)
+                case .died(_, _, _, _, let role) where role == .heavy:
+                    impact(0.035)
                 case .waveUp(level: let w):
                     flashBanner(L10n.f("WAVE %lld! RATS GROW STRONGER", w))
                 case .bossSpawned:
                     flashBanner(L10n.t("THE RAT KING APPROACHES!"))
                     Haptics.boom()
+                    impact(0.1)
                 case .suddenDeathStarted:
                     flashBanner(L10n.t("SUDDEN DEATH! BASES CRUMBLE"))
                     Haptics.boom()
@@ -161,7 +178,7 @@ final class BattleController {
                 Haptics.boom()
                 break
             }
-            if cardOffer != nil { break }
+            if cardOffer != nil || cinematic || hitStop > 0 { break }
         }
         hudTimer += rawDT
         if hudTimer >= 0.1 {
@@ -194,6 +211,11 @@ final class BattleController {
         set(\.isOvertime, sim.isOvertime)
         set(\.wave, sim.survivalWave)
         set(\.heroReady, p.heroReady)
+        if let boss = sim.units.first(where: { $0.isBoss }) {
+            set(\.bossHP, (max(0, boss.hp / boss.maxHP) * 100).rounded() / 100)
+        } else {
+            set(\.bossHP, nil)
+        }
         updateTutorial()
     }
 
@@ -268,11 +290,7 @@ final class BattleController {
         sim.events.removeAll()
         scene.handle(events)
         for e in events {
-            if case .evolved(side: .player, era: let newEra) = e {
-                Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
-                flashBanner(GameConfig.eraNames[newEra].localizedUppercase + "!")
-                offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
-            }
+            if case .evolved(side: .player, era: let newEra) = e { playEvolution(newEra) }
         }
         refreshHUD()
     }
@@ -422,6 +440,29 @@ final class BattleController {
             self.result = r
             self.onFinish?(r)
         }
+    }
+
+    // MARK: Moments
+
+    /// Evolution set piece: freeze, camera on the base, flash + morph, era banner — then the card pick.
+    private func playEvolution(_ newEra: Int) {
+        Analytics.log(.evolve(era: newEra, seconds: Int(sim.time)))
+        cinematic = true
+        scene.playEvolution(era: newEra)
+        Haptics.success()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.flashBanner(GameConfig.eraNames[newEra].localizedUppercase + "!")
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { [weak self] in
+            guard let self else { return }
+            self.cinematic = false
+            self.offerCards(title: L10n.f("Evolved to %@", GameConfig.eraNames[newEra]))
+        }
+    }
+
+    /// Hit-stop: the whole battle pauses for a few frames so big impacts land.
+    private func impact(_ seconds: Double) {
+        hitStop = max(hitStop, seconds)
     }
 
     private func flashBanner(_ text: String) {

@@ -58,11 +58,13 @@ struct RootView: View {
         ZStack {
             if let battle {
                 BattleView(controller: battle, store: store, ads: ads) {
+                    let r = battle.result
                     withAnimation(.easeInOut(duration: 0.3)) { self.battle = nil }
                     AppServices.startAdsIfReady()
                     let p = store.progress
                     if p.wins >= 1 { Reminders.requestPermissionIfNeeded() }
-                    if AdPolicy.shouldShowInterstitial(battlesPlayed: p.battlesPlayed, removeAds: p.removeAds == true) {
+                    if AdPolicy.shouldShowInterstitial(battlesPlayed: p.battlesPlayed, removeAds: p.removeAds == true,
+                                                       lastBattleWon: r?.won ?? true, stage: r?.stage ?? p.stage) {
                         ads.showInterstitial(placement: "battle_exit")
                     }
                 }
@@ -85,7 +87,13 @@ struct RootView: View {
             #endif
         }
         .onAppear {
+            RemoteConfig.refresh()
             AppServices.startAdsIfReady()
+            // Brand-new players go straight into their first battle — no menus, no popups.
+            if store.progress.tutorialDone != true && store.progress.battlesPlayed == 0
+                && !ProcessInfo.processInfo.arguments.contains("-demo") {
+                battle = BattleController(stage: 1, progress: store.progress)
+            }
             #if DEBUG
             // CI screenshots: `-screen battle` jumps straight into a battle.
             let args = ProcessInfo.processInfo.arguments
@@ -98,7 +106,7 @@ struct RootView: View {
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { store.refreshDailyState() }
+            if phase == .active { store.syncFromCloud(); store.refreshDailyState() }
             if phase == .background { Reminders.reschedule(progress: store.progress) }
         }
         .statusBarHidden()

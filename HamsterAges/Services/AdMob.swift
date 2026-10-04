@@ -112,6 +112,7 @@ final class AdMobService: NSObject, AdService, FullScreenContentDelegate {
         }
         rewardCompletion = completion
         earnedReward = false
+        AdPolicy.noteRewardedShown()
         Analytics.log(.adShown(placement: placement, rewarded: true))
         ad.present(from: vc) { [weak self] in
             MainActor.assumeIsolated { self?.earnedReward = true }

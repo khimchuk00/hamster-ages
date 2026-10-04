@@ -1,15 +1,26 @@
 import StoreKit
 import SwiftUI
 
+/// Formats an offer countdown ("47:12:05" / "12:05").
+enum OfferTimer {
+    static func text(_ seconds: TimeInterval) -> String {
+        let s = max(0, Int(seconds))
+        return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60) : String(format: "%d:%02d", s / 60, s % 60)
+    }
+}
+
 struct ShopView: View {
     let store: Store
     let progress: ProgressStore
+    let ads: AdService
     @Environment(\.dismiss) private var dismiss
+    @State private var toast: String?
+    @State private var loadingAd = false
 
     var body: some View {
         ZStack {
             Color(hex: 0x241B36).ignoresSafeArea()
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 HStack {
                     OutlinedText(text: "Shop", size: 26, color: Theme.gold)
                     Spacer()
@@ -19,20 +30,33 @@ struct ShopView: View {
                             .frame(width: 36, height: 36).background(Circle().fill(Color.white.opacity(0.15)))
                     }
                 }
-                HStack(spacing: 12) {
-                    if progress.progress.starterBought != true {
-                        ShopCard(title: "Starter Pack", subtitle: "3,000 🌻 + No Ads", icon: "gift.fill",
-                                 color: Theme.gold, badge: "BEST VALUE",
-                                 product: store.product(.starterPack)) { Task { await store.buy(.starterPack) } }
+                if progress.firstPurchaseBonusAvailable {
+                    Label("First purchase bonus: double seeds on any seed pack!", systemImage: "sparkles")
+                        .font(Theme.font(12)).foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 5)
+                        .background(Capsule().fill(Theme.gold))
+                }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                            if let left = progress.starterOfferRemaining(now: ctx.date) {
+                                ShopCard(title: "Starter Pack", subtitle: "3,000 🌻 + 2 Hero Crates", icon: "gift.fill",
+                                         color: Theme.gold, badge: "×5 VALUE", timer: OfferTimer.text(left),
+                                         price: store.product(.starterPack)?.displayPrice) { Task { await store.buy(.starterPack) } }
+                            }
+                        }
+                        freeSeedsCard
+                        seedCard(.seedsSmall, title: "Seed Bag", icon: "leaf.fill", color: Theme.green, badge: nil)
+                        seedCard(.seedsLarge, title: "Seed Barrel", icon: "shippingbox.fill", color: Theme.teal, badge: "+33%")
+                        seedCard(.seedsMedium, title: "Seed Cart", icon: "cart.fill", color: Theme.orange, badge: "POPULAR")
+                        seedCard(.seedsHuge, title: "Seed Silo", icon: "building.2.fill", color: Theme.purple, badge: "BEST VALUE")
+                        if progress.progress.removeAds != true {
+                            ShopCard(title: "No Ads", subtitle: "Removes interstitials forever", icon: "nosign", color: Theme.red, badge: nil,
+                                     price: store.product(.removeAds)?.displayPrice) { Task { await store.buy(.removeAds) } }
+                        }
                     }
-                    ShopCard(title: "Seed Bag", subtitle: "1,200 🌻", icon: "leaf.fill", color: Theme.green, badge: nil,
-                             product: store.product(.seedsSmall)) { Task { await store.buy(.seedsSmall) } }
-                    ShopCard(title: "Seed Barrel", subtitle: "8,000 🌻", icon: "shippingbox.fill", color: Theme.teal, badge: "+33%",
-                             product: store.product(.seedsLarge)) { Task { await store.buy(.seedsLarge) } }
-                    if progress.progress.removeAds != true {
-                        ShopCard(title: "No Ads", subtitle: "Removes interstitials forever", icon: "nosign", color: Theme.purple, badge: nil,
-                                 product: store.product(.removeAds)) { Task { await store.buy(.removeAds) } }
-                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 2)
                 }
                 HStack {
                     Button("Restore Purchases") { Task { await store.restore() } }
@@ -46,6 +70,42 @@ struct ShopView: View {
             .padding(16)
             .disabled(store.isPurchasing)
             .overlay { if store.isPurchasing { ProgressView().tint(.white).scaleEffect(1.5) } }
+
+            if let toast {
+                Text(toast)
+                    .font(Theme.font(20)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 20).padding(.vertical, 10)
+                    .background(Capsule().fill(Theme.gold))
+                    .transition(.scale.combined(with: .opacity))
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private func seedCard(_ id: Store.ProductID, title: LocalizedStringKey, icon: String, color: Color, badge: LocalizedStringKey?) -> some View {
+        let amount = id.seeds * (progress.firstPurchaseBonusAvailable ? 2 : 1)
+        return ShopCard(title: title, subtitle: "\(amount.formatted()) 🌻", icon: icon, color: color, badge: badge,
+                        price: store.product(id)?.displayPrice) { Task { await store.buy(id) } }
+    }
+
+    private var freeSeedsCard: some View {
+        let left = progress.freeSeedsLeft()
+        return ShopCard(title: "Free Seeds", subtitle: "\(progress.freeSeedsAmount) 🌻 · \(left)/\(RemoteConfig.values.freeSeeds)",
+                        icon: "play.rectangle.fill", color: Theme.green, badge: "FREE",
+                        price: left > 0 ? (loadingAd ? L10n.t("Loading…") : L10n.t("Watch")) : L10n.t("Tomorrow")) {
+            guard left > 0, !loadingAd else { return }
+            loadingAd = true
+            ads.showRewarded(placement: "shop_free_seeds") { ok in
+                loadingAd = false
+                guard ok else { return }
+                let n = progress.claimFreeSeeds()
+                guard n > 0 else { return }
+                Analytics.log(.adRewarded(placement: "shop_free_seeds"))
+                Haptics.success()
+                Sound.shared.play(.coin)
+                withAnimation(.spring) { toast = "+\(n) 🌻" }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { withAnimation { toast = nil } }
+            }
         }
     }
 }
@@ -56,25 +116,34 @@ private struct ShopCard: View {
     let icon: String
     let color: Color
     let badge: LocalizedStringKey?
-    let product: Product?
+    var timer: String? = nil
+    /// Button text: the localized App Store price, or a label for free cards. Nil while products load.
+    let price: String?
     let action: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: icon).font(.system(size: 34, weight: .bold)).foregroundStyle(color)
-                .frame(width: 64, height: 64).background(Circle().fill(color.opacity(0.18)))
-            Text(title).font(Theme.font(16)).foregroundStyle(.white)
+            Image(systemName: icon).font(.system(size: 30, weight: .bold)).foregroundStyle(color)
+                .frame(width: 58, height: 58).background(Circle().fill(color.opacity(0.18)))
+            Text(title).font(Theme.font(16)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
             Text(subtitle).font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.8)).multilineTextAlignment(.center)
+                .foregroundStyle(.white.opacity(0.85)).multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.8)
+            if let timer {
+                Label(timer, systemImage: "timer").font(Theme.font(11)).foregroundStyle(Theme.gold).monospacedDigit()
+            }
             Spacer(minLength: 0)
             Button(action: action) {
-                Text(product?.displayPrice ?? "…").font(Theme.font(15)).frame(minWidth: 70)
+                Group {
+                    if let price { Text(price) } else { ProgressView().tint(.white) }
+                }
+                .font(Theme.font(15)).frame(minWidth: 70)
             }
-            .buttonStyle(ChunkyButtonStyle(color: product == nil ? Theme.disabled : Theme.green, cornerRadius: 12, depth: 3))
-            .disabled(product == nil)
+            .buttonStyle(ChunkyButtonStyle(color: price == nil ? Theme.disabled : Theme.green, cornerRadius: 12, depth: 3))
+            .disabled(price == nil)
         }
         .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 200)
+        .frame(width: 150, height: 210)
         .background(RoundedRectangle(cornerRadius: 18).fill(Color.white.opacity(0.07)))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(color.opacity(0.6), lineWidth: 2))
         .overlay(alignment: .top) {

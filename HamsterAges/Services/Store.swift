@@ -11,6 +11,8 @@ final class Store {
         case starterPack = "com.valkhim.hamsterages.starterpack"
         case seedsSmall = "com.valkhim.hamsterages.seeds.small"
         case seedsLarge = "com.valkhim.hamsterages.seeds.large"
+        case seedsMedium = "com.valkhim.hamsterages.seeds.medium"
+        case seedsHuge = "com.valkhim.hamsterages.seeds.huge"
         /// Gold Hamster Pass for the current season (consumable: bought again each season).
         case pass = "com.valkhim.hamsterages.pass"
 
@@ -21,10 +23,14 @@ final class Store {
             case .starterPack: return 3000
             case .seedsSmall: return 1200
             case .seedsLarge: return 8000
+            case .seedsMedium: return 20000
+            case .seedsHuge: return 45000
             }
         }
 
-        var removesAds: Bool { self == .removeAds || self == .starterPack }
+        var removesAds: Bool { self == .removeAds }
+        /// Starter Pack also opens two hero crates.
+        var crates: Int { self == .starterPack ? 2 : 0 }
     }
 
     private(set) var products: [String: Product] = [:]
@@ -91,7 +97,10 @@ final class Store {
         if let id = ProductID(rawValue: transaction.productID), transaction.revocationDate == nil {
             // Non-consumables can be redelivered (restore, new device): grant their seeds only once.
             let alreadyOwned = id == .starterPack && progress.progress.starterBought == true
-            if id.seeds > 0 && !alreadyOwned { progress.addSeeds(id.seeds) }
+            if id.seeds > 0 && !alreadyOwned {
+                if id == .starterPack { progress.addSeeds(id.seeds) } else { _ = progress.grantPurchasedSeeds(id.seeds) }
+            }
+            if !alreadyOwned { for _ in 0..<id.crates { _ = progress.openCrate(free: false, questBonus: true) } }
             if id.removesAds { progress.setRemoveAds() }
             if id == .starterPack { progress.markStarterBought() }
             if id == .pass { progress.unlockPremiumPass() }

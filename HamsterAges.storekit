@@ -23,7 +23,7 @@
       "internalID": "6740000002",
       "localizations": [
         {
-          "description": "3,000 seeds and no interstitial ads.",
+          "description": "3,000 seeds and two Hamster Crates.",
           "displayName": "Starter Pack",
           "locale": "en_US"
         }
@@ -75,6 +75,36 @@
       ],
       "productID": "com.valkhim.hamsterages.pass",
       "referenceName": "Gold Hamster Pass",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6740000006",
+      "localizations": [
+        {
+          "description": "20,000 sunflower seeds.",
+          "displayName": "Seed Cart",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.seeds.medium",
+      "referenceName": "Seed Cart",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "19.99",
+      "familyShareable": false,
+      "internalID": "6740000007",
+      "localizations": [
+        {
+          "description": "45,000 sunflower seeds.",
+          "displayName": "Seed Silo",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.valkhim.hamsterages.seeds.huge",
+      "referenceName": "Seed Silo",
       "type": "Consumable"
     }
   ],

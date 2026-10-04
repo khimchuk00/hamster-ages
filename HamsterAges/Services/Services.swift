@@ -13,6 +13,7 @@ final class StubAdService: AdService {
     var isRewardedReady: Bool { true }
 
     func showRewarded(placement: String, completion: @escaping (Bool) -> Void) {
+        AdPolicy.noteRewardedShown()
         // Simulates a short ad, then grants the reward.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { completion(true) }
     }
@@ -24,11 +25,19 @@ final class StubAdService: AdService {
     }
 }
 
-/// GDD rule: no interstitials before the 3rd battle, then at most one every 2 battles; never with Remove Ads.
+/// Session state for interstitial pacing; the rules themselves live in `AdRules` (remote-configurable).
 @MainActor
 enum AdPolicy {
-    static func shouldShowInterstitial(battlesPlayed: Int, removeAds: Bool) -> Bool {
-        !removeAds && battlesPlayed >= 3 && battlesPlayed % 2 == 1
+    private static var lastInterstitial: Date?
+    private static var lastRewarded: Date?
+
+    static func noteRewardedShown() { lastRewarded = .now }
+
+    static func shouldShowInterstitial(battlesPlayed: Int, removeAds: Bool, lastBattleWon: Bool, stage: Int) -> Bool {
+        let ok = AdRules.shouldShowInterstitial(battlesPlayed: battlesPlayed, removeAds: removeAds, lastBattleWon: lastBattleWon,
+                                                stage: stage, now: .now, lastInterstitial: lastInterstitial, lastRewarded: lastRewarded)
+        if ok { lastInterstitial = .now }
+        return ok
     }
 }
 
@@ -46,4 +55,14 @@ enum Haptics {
     static func boom() { if isEnabled { heavy.impactOccurred() } }
     static func success() { if isEnabled { notify.notificationOccurred(.success) } }
     static func fail() { if isEnabled { notify.notificationOccurred(.error) } }
+}
+
+/// Game-feel switches (Settings). Screen shake also honours the system Reduce Motion setting.
+@MainActor
+enum Juice {
+    static var shakeSetting: Bool = !UserDefaults.standard.bool(forKey: "hamsterages.shakeOff") {
+        didSet { UserDefaults.standard.set(!shakeSetting, forKey: "hamsterages.shakeOff") }
+    }
+
+    static var shakeEnabled: Bool { shakeSetting && !UIAccessibility.isReduceMotionEnabled }
 }

@@ -314,6 +314,43 @@ MainActor.assumeIsolated {
     UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
 }
 
+// MARK: Ads pacing, offers, free seeds, cloud merge
+MainActor.assumeIsolated {
+    let cfg = RemoteValues()
+    let t0 = Date(timeIntervalSince1970: 2_000_000_000)
+    func ok(_ b: Int, won: Bool = true, stage: Int = 10, last: Date? = nil, rew: Date? = nil, removeAds: Bool = false) -> Bool {
+        AdRules.shouldShowInterstitial(battlesPlayed: b, removeAds: removeAds, lastBattleWon: won, stage: stage, now: t0,
+                                       lastInterstitial: last, lastRewarded: rew, config: cfg)
+    }
+    check(!ok(1) && !ok(2) && ok(3) && !ok(4) && ok(5), "interstitials from battle 3, every 2nd battle")
+    check(!ok(5, removeAds: true), "No Ads disables interstitials")
+    check(!ok(5, won: false, stage: 4) && ok(5, won: false, stage: 9), "no interstitial after an early loss")
+    check(!ok(5, last: t0.addingTimeInterval(-60)) && ok(5, last: t0.addingTimeInterval(-200)), "minimum time between interstitials")
+    check(!ok(5, rew: t0.addingTimeInterval(-30)), "no interstitial right after a rewarded ad")
+
+    UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+    let store = ProgressStore()
+    check(store.starterOfferRemaining() == nil, "starter offer closed for new players")
+    store.recordBattle(stage: 1, won: false, seeds: 10, stars: 0)
+    let left = store.starterOfferRemaining() ?? 0
+    check(left > 71 * 3600 && left <= 72 * 3600, "starter offer opens for 72h after the first loss")
+    check(store.starterOfferRemaining(now: .now.addingTimeInterval(73 * 3600)) == nil, "starter offer expires")
+    let s0 = store.progress.seeds
+    check(store.grantPurchasedSeeds(1200) == 2400 && store.grantPurchasedSeeds(1200) == 1200 && store.progress.seeds == s0 + 3600,
+          "first seed purchase is doubled once")
+    let day = Date()
+    check(store.freeSeedsLeft(now: day) == 3, "3 free seed ads per day")
+    for _ in 0..<3 { store.claimFreeSeeds(now: day) }
+    check(store.freeSeedsLeft(now: day) == 0 && store.claimFreeSeeds(now: day) == 0, "free seeds capped per day")
+    check(store.freeSeedsLeft(now: day.addingTimeInterval(86_400)) == 3, "free seeds reset next day")
+
+    var a = PlayerProgress(); a.highestStage = 5; a.battlesPlayed = 9
+    var b = PlayerProgress(); b.highestStage = 7; b.battlesPlayed = 3
+    check(ProgressStore.mostAdvanced(a, b)?.highestStage == 7 && ProgressStore.mostAdvanced(a, nil)?.highestStage == 5,
+          "cloud merge keeps the most advanced save")
+    UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+}
+
 // Showcase jump + localization fallbacks
 do {
     let s = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 9)

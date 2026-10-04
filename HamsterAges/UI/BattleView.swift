@@ -118,7 +118,12 @@ private struct BattleHUD: View {
                     }
                     EvolveBar(c: c)
                         .tutorialAnchor(.evolve)
+                    if let hp = c.bossHP {
+                        BossBar(fraction: hp)
+                            .transition(.scale.combined(with: .opacity))
+                    }
                 }
+                .animation(.spring(response: 0.3), value: c.bossHP == nil)
                 Spacer(minLength: 4)
                 BaseBar(title: c.mode == .survival ? L10n.f("Rat Fortress · Wave %lld", c.wave) : L10n.f("Rats · %@", GameConfig.eraNames[c.enemyEra]),
                         fraction: c.enemyHP, color: Theme.red, text: c.mode == .survival ? "∞" : nil, mirrored: true)
@@ -274,6 +279,25 @@ private struct BaseBar: View {
     }
 }
 
+private struct BossBar: View {
+    let fraction: Double
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(uiImage: ArtFactory.shared.crown()).resizable().scaledToFit().frame(width: 18, height: 12)
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.black.opacity(0.5))
+                Capsule().fill(LinearGradient(colors: [Color(hex: 0xB0306A), Theme.red], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: 150 * fraction)
+                Text("RAT KING").font(Theme.font(9)).foregroundStyle(.white).frame(maxWidth: .infinity)
+            }
+            .frame(width: 150, height: 12)
+            .overlay(Capsule().stroke(.white.opacity(0.5), lineWidth: 1))
+            .animation(.easeOut(duration: 0.2), value: fraction)
+        }
+    }
+}
+
 private struct EvolveBar: View {
     let c: BattleController
     @State private var pulse = false
@@ -291,11 +315,12 @@ private struct EvolveBar: View {
             } else if c.era < GameConfig.eras.count - 1 {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.black.opacity(0.45))
-                    Capsule().fill(Theme.purple.gradient).frame(width: 130 * c.xpProgress)
-                    Text("XP → \(GameConfig.eraNames[c.era + 1])")
-                        .font(Theme.font(9)).foregroundStyle(.white).frame(maxWidth: .infinity)
+                    Capsule().fill(Theme.purple.gradient).frame(width: 160 * c.xpProgress)
+                    Text("XP \(Int(c.xpProgress * 100))% → \(GameConfig.eraNames[c.era + 1])")
+                        .font(Theme.font(10)).foregroundStyle(.white).frame(maxWidth: .infinity)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                 }
-                .frame(width: 130, height: 12)
+                .frame(width: 160, height: 16)
                 .overlay(Capsule().stroke(.white.opacity(0.4), lineWidth: 1))
                 .animation(.easeOut(duration: 0.2), value: c.xpProgress)
             } else {
@@ -415,7 +440,7 @@ private struct SpecialButton: View {
             .frame(width: 62, height: 62)
             .overlay(alignment: .bottom) {
                 Text(GameConfig.eras[era].special.name.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.55)
+                    .font(Theme.font(9)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.5)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)
@@ -444,7 +469,7 @@ private struct HeroButton: View {
             .frame(width: 56, height: 56)
             .overlay(alignment: .bottom) {
                 Text(general.ability.title.localizedUppercase)
-                    .font(Theme.font(7)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.55)
+                    .font(Theme.font(9)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.5)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Capsule().fill(Color.black.opacity(0.6)))
                     .offset(y: 6)
@@ -634,6 +659,7 @@ private struct ResultView: View {
     @State private var doubled = false
     @State private var loadingAd = false
     @State private var shownStars = 0
+    @State private var showButtons = false
 
     private func clock(_ t: Double) -> String { String(format: "%d:%02d", Int(t) / 60, Int(t) % 60) }
 
@@ -685,7 +711,8 @@ private struct ResultView: View {
                     .scaleEffect(1.3)
                     .padding(.vertical, 4)
                 HStack(spacing: 14) {
-                    if !doubled {
+                    // No ad offer after the very first (tutorial) battle.
+                    if !doubled && store.progress.battlesPlayed > 1 {
                         Button {
                             loadingAd = true
                             ads.showRewarded(placement: "double_reward") { ok in
@@ -697,7 +724,11 @@ private struct ResultView: View {
                                 }
                             }
                         } label: {
-                            Label(loadingAd ? "Loading…" : "×2 Seeds", systemImage: "play.rectangle.fill")
+                            HStack(spacing: 6) {
+                                Image(systemName: "play.rectangle.fill")
+                                Text(loadingAd ? "Loading…" : "×2 Seeds")
+                                if !loadingAd { Text("+\(result.seeds) 🌻").font(Theme.font(12)).opacity(0.85) }
+                            }
                         }
                         .buttonStyle(ChunkyButtonStyle(color: Theme.purple))
                         .disabled(loadingAd)
@@ -705,16 +736,23 @@ private struct ResultView: View {
                     Button(result.won ? "Next" : "Continue", action: onContinue)
                         .buttonStyle(ChunkyButtonStyle(color: Theme.green))
                 }
+                .opacity(showButtons ? 1 : 0)
+                .allowsHitTesting(showButtons)
             }
             .padding(28)
             .background(RoundedRectangle(cornerRadius: 28).fill(Theme.panel))
         }
         .onAppear {
             for i in 0..<result.stars {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25 + Double(i) * 0.25) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { shownStars = i + 1 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3 + Double(i) * 0.3) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.45)) { shownStars = i + 1 }
                     Haptics.tap()
+                    Sound.shared.play(i == 2 ? .evolve : .coin)
                 }
+            }
+            // Buttons appear after the celebration so nobody taps an ad by accident.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4 + Double(result.stars) * 0.3) {
+                withAnimation(.easeOut(duration: 0.25)) { showButtons = true }
             }
         }
     }

@@ -1,0 +1,9 @@
+{
+  "interstitialFirstBattle": 3,
+  "interstitialEvery": 2,
+  "interstitialMinSeconds": 180,
+  "interstitialAfterRewardedSeconds": 120,
+  "noInterstitialAfterLossBelowStage": 8,
+  "freeSeedsPerDay": 3,
+  "starterOfferHours": 72
+}
