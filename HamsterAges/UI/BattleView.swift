@@ -954,6 +954,12 @@ private struct ResultView: View {
                 } else {
                     Text("Upgrade your hamsters and try again!")
                         .font(Theme.font(14)).foregroundStyle(.white.opacity(0.85))
+                    // Point at the cheapest upgrade the player can already afford (after this battle's seeds).
+                    if let u = MetaUpgrade.allCases.filter({ store.canBuy($0) })
+                        .min(by: { $0.cost(level: store.progress.level($0)) < $1.cost(level: store.progress.level($1)) }) {
+                        Label(L10n.f("Tip: %@ for %lld 🌻", u.title, u.cost(level: store.progress.level(u))), systemImage: u.icon)
+                            .font(Theme.font(12)).foregroundStyle(Theme.gold)
+                    }
                 }
                 HStack(spacing: 16) {
                     Label(modeTitle, systemImage: "flag.fill")

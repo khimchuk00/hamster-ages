@@ -24062,6 +24062,77 @@
         }
       }
     },
+    "Tip: %@ for %lld 🌻" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порада: %1$@ за %2$lld 🌻"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipp: %1$@ für %2$lld 🌻"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consejo: %1$@ por %2$lld 🌻"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Astuce : %1$@ pour %2$lld 🌻"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consiglio: %1$@ per %2$lld 🌻"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dica: %1$@ por %2$lld 🌻"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヒント：%1$@（%2$lld 🌻）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팁: %1$@ (%2$lld 🌻)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示：%1$@（%2$lld 🌻）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示：%1$@（%2$lld 🌻）"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İpucu: %2$lld 🌻 ile %1$@"
+          }
+        }
+      }
+    },
     "Titans" : {
       "extractionState" : "manual",
       "localizations" : {
