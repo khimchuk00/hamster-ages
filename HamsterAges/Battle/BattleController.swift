@@ -498,7 +498,8 @@ final class BattleController {
         }
         let seeds = Int((Double(baseSeeds) * LiveEvents.seedMultiplier()).rounded())
         let stats = BattleStats(won: won, unitsTrained: p.unitsTrained, kills: p.kills, specialsUsed: p.specialsUsed,
-                                evolutions: p.era, bossesKilled: p.bossesKilled)
+                                evolutions: p.era, bossesKilled: p.bossesKilled, hard: difficulty.isHard,
+                                setBonuses: p.setBonuses.count)
         var r = BattleResult(won: won, stage: stage, seeds: seeds, stars: stars, kills: p.kills, duration: sim.time, stats: stats)
         r.mode = mode
         r.wave = sim.survivalWave

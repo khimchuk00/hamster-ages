@@ -6,6 +6,16 @@ import UIKit
 enum GameCenter {
     static let leaderboardID = "com.valkhim.hamsterages.highest_stage"
     static let survivalLeaderboardID = "com.valkhim.hamsterages.survival_seconds"
+    /// Recurring (daily reset) leaderboard, sorted low → high: fastest Daily Challenge win.
+    static let dailyLeaderboardID = "com.valkhim.hamsterages.daily_fastest"
+
+    static func submitDailyTime(seconds: Int) {
+        guard isAuthenticated else { return }
+        Task {
+            try? await GKLeaderboard.submitScore(seconds, context: 0, player: GKLocalPlayer.local,
+                                                 leaderboardIDs: [dailyLeaderboardID])
+        }
+    }
 
     static func submitSurvival(seconds: Int) {
         guard isAuthenticated else { return }
@@ -24,6 +34,8 @@ enum GameCenter {
         case stage25 = "com.valkhim.hamsterages.stage_25"
         case legendary = "com.valkhim.hamsterages.legendary_general"
         case fullRoster = "com.valkhim.hamsterages.all_generals"
+        case hardWin = "com.valkhim.hamsterages.hard_win"
+        case cardSet = "com.valkhim.hamsterages.card_set"
     }
 
     private(set) static var isAuthenticated = false
@@ -68,6 +80,8 @@ enum GameCenter {
             if b.evolutions >= 1 { earned.append(.medieval) }
             if b.evolutions >= 4 { earned.append(.futureAge) }
             if b.bossesKilled >= 1 { earned.append(.kingslayer) }
+            if b.won && b.hard { earned.append(.hardWin) }
+            if b.setBonuses >= 1 { earned.append(.cardSet) }
         }
         let owned = GeneralID.allCases.filter { p.generalLevel($0) > 0 }
         if owned.contains(where: { $0.rarity == .legendary }) { earned.append(.legendary) }

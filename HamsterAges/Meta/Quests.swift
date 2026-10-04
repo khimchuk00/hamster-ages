@@ -8,6 +8,8 @@ struct BattleStats: Equatable {
     var specialsUsed = 0
     var evolutions = 0
     var bossesKilled = 0
+    var hard = false
+    var setBonuses = 0
 }
 
 enum QuestKind: String, Codable, CaseIterable {

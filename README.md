@@ -75,7 +75,9 @@ swiftc -O HamsterAges/Core/*.swift Tools/SimHarness/main.swift -o /tmp/hamster-s
 - IAP: 4 продукти (вище).
 - Game Center: лідерборди `com.valkhim.hamsterages.highest_stage`, `…survival_seconds`;
   досягнення `first_win, reach_medieval, reach_future, kingslayer, stage_10, stage_25, legendary_general, all_generals`
-  (префікс `com.valkhim.hamsterages.`).
+  (префікс `com.valkhim.hamsterages.`); нові: `hard_win`, `card_set`;
+  щоденний recurring-лідерборд `com.valkhim.hamsterages.daily_fastest` (Low→High, секунди).
+- IAP: також `seeds.medium`, `seeds.huge`, `pass`, `piggy` (consumable, $2.99).
 - `AppLinks.privacyPolicy` у `UI/SettingsView.swift` — вставити URL політики конфіденційності.
 - `PrivacyInfo.xcprivacy`, чернетка сторінки App Store — `AppStore.md`.
 

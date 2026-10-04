@@ -87,6 +87,7 @@ struct BattleView: View {
                     GameCenter.submitSurvival(seconds: Int(r.duration))
                 } else if r.mode == .challenge {
                     store.recordChallenge(won: r.won, seeds: r.seeds, stats: r.stats)
+                    if r.won { GameCenter.submitDailyTime(seconds: Int(r.duration)) }
                 } else {
                     store.recordBattle(stage: r.stage, won: r.won, seeds: r.seeds, stars: r.stars, stats: r.stats, hard: r.hard)
                 }
