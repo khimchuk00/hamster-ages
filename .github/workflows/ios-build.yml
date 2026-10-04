@@ -83,6 +83,12 @@ jobs:
             UDID=$IPAD
             xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
             xcrun simctl install "$UDID" "$APP"
+            # Try to rotate the iPad to landscape through the Simulator UI (needs GUI scripting; best effort).
+            open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+            sleep 8
+            osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
+              -e 'tell application "System Events" to key code 124 using command down' || echo "rotate failed"
+            sleep 3
             shot 20-ipad-home 8 -demo
             shot 21-ipad-battle 30 -demo -screen battle -autoplay -era 2
             shot 22-ipad-heroes 6 -demo -screen heroes

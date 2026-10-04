@@ -10,6 +10,9 @@ enum ReviewPrompt {
 
     static func maybeAsk(progress p: PlayerProgress, lastStars: Int) {
         guard lastStars == 3, p.wins >= 3 else { return }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-demo") { return }   // keeps CI / store screenshots clean
+        #endif
         let d = UserDefaults.standard
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1"
         if d.string(forKey: versionKey) == version { return }

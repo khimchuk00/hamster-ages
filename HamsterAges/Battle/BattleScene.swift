@@ -37,7 +37,7 @@ final class BattleScene: SKScene {
 
     private let font = "ArialRoundedMTBold"
     private var groundY: CGFloat { max(78, size.height * 0.22) }
-    private var hScale: CGFloat { min(1.35, max(0.8, size.height / 390)) }
+    private var hScale: CGFloat { min(1.9, max(0.8, size.height / 390)) }
     private var unitScale: CGFloat { 0.84 * hScale }
 
     /// The battlefield is wider than the screen; the camera follows the front line and can be dragged.
@@ -80,8 +80,12 @@ final class BattleScene: SKScene {
             unitLayer.zPosition = 20
             fxLayer.zPosition = 50
             [bgLayer, baseLayer, unitLayer, fxLayer].forEach(world.addChild)
+            // The sim may already be past era 0 (showcase `-era`), so start from its real state.
+            bgEra = sim?.state(.player).era ?? 0
             for side in Side.allCases {
-                let n = SKSpriteNode(texture: tex(ArtFactory.shared.base(species(side), era: 0)))
+                let era = sim?.state(side).era ?? 0
+                baseEra[side] = era
+                let n = SKSpriteNode(texture: tex(ArtFactory.shared.base(species(side), era: era)))
                 n.anchorPoint = CGPoint(x: 0.5, y: 0)
                 baseLayer.addChild(n)
                 baseNodes[side] = n
