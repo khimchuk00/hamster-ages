@@ -185,6 +185,55 @@ private struct BattleHUD: View {
     }
 }
 
+// MARK: - Share card
+
+/// 1200×630 image for sharing a win: army, rival, stars and a challenge line.
+struct ShareCard: View {
+    let result: BattleResult
+
+    var body: some View {
+        ZStack {
+            Image(uiImage: ArtFactory.shared.background(era: result.era, size: CGSize(width: 600, height: 315), groundHeight: 60))
+                .resizable()
+            LinearGradient(colors: [.black.opacity(0.0), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
+            HStack(alignment: .bottom, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    OutlinedText(text: "HAMSTER AGES", size: 34, color: Theme.gold)
+                    if result.mode == .survival {
+                        OutlinedText(text: L10n.f("SURVIVED %@", String(format: "%d:%02d", Int(result.duration) / 60, Int(result.duration) % 60)), size: 28)
+                        Text(L10n.f("Wave %lld", result.wave)).font(Theme.font(18)).foregroundStyle(.white)
+                    } else {
+                        OutlinedText(text: L10n.f("Stage %lld cleared!", result.stage), size: 28)
+                        HStack(spacing: 4) {
+                            ForEach(0..<3, id: \.self) { i in
+                                Image(systemName: "star.fill").font(.system(size: 26))
+                                    .foregroundStyle(i < result.stars ? Theme.gold : .white.opacity(0.3))
+                            }
+                        }
+                        Text(L10n.f("vs %@", result.ratGeneral.name)).font(Theme.font(16)).foregroundStyle(.white)
+                    }
+                    Spacer()
+                    Text("Can your hamsters do better?").font(Theme.font(15)).foregroundStyle(Theme.gold)
+                }
+                .padding(24)
+                Spacer()
+                HStack(alignment: .bottom, spacing: -14) {
+                    ForEach([UnitRole.heavy, .ranged, .melee], id: \.self) { role in
+                        Image(uiImage: ArtFactory.shared.unit(.hamster, era: result.era, role: role, skin: result.skin))
+                            .resizable().scaledToFit().frame(height: role == .heavy ? 110 : 80)
+                    }
+                    if let g = result.general {
+                        Image(uiImage: ArtFactory.shared.general(g)).resizable().scaledToFit().frame(height: 110)
+                    }
+                }
+                .padding(.trailing, 20).padding(.bottom, 26)
+            }
+        }
+        .frame(width: 600, height: 315)
+        .clipped()
+    }
+}
+
 // MARK: - Rats & orders
 
 /// Rat commander portrait (faces left, toward the hamsters).
@@ -793,6 +842,7 @@ private struct ResultView: View {
     @State private var loadingAd = false
     @State private var shownStars = 0
     @State private var showButtons = false
+    @State private var shareImage: UIImage?
 
     private func clock(_ t: Double) -> String { String(format: "%d:%02d", Int(t) / 60, Int(t) % 60) }
 
@@ -874,8 +924,25 @@ private struct ResultView: View {
             }
             .padding(28)
             .background(RoundedRectangle(cornerRadius: 28).fill(Theme.panel))
+            .overlay(alignment: .topTrailing) {
+                // Brag card for wins and survival runs — free word of mouth.
+                if let img = shareImage, showButtons {
+                    ShareLink(item: Image(uiImage: img), preview: SharePreview("Hamster Ages", image: Image(uiImage: img))) {
+                        Image(systemName: "square.and.arrow.up").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
+                            .frame(width: 40, height: 40).background(Circle().fill(Theme.teal))
+                    }
+                    .padding(12)
+                    .accessibilityLabel(Text("Share"))
+                    .simultaneousGesture(TapGesture().onEnded { Analytics.log(.shareTapped(mode: result.mode.rawValue)) })
+                }
+            }
         }
         .onAppear {
+            if result.won || result.mode == .survival {
+                let renderer = ImageRenderer(content: ShareCard(result: result))
+                renderer.scale = 2
+                shareImage = renderer.uiImage
+            }
             for i in 0..<result.stars {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3 + Double(i) * 0.3) {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.45)) { shownStars = i + 1 }

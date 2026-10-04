@@ -21,6 +21,7 @@ enum AnalyticsEvent {
     case questClaimed(kind: String)
     case farmCollected(amount: Int, doubled: Bool)
     case stance(Int)
+    case shareTapped(mode: String)
 
     var name: String {
         switch self {
@@ -41,6 +42,7 @@ enum AnalyticsEvent {
         case .questClaimed: return "quest_claimed"
         case .farmCollected: return "farm_collected"
         case .stance: return "stance"
+        case .shareTapped: return "share_tapped"
         }
     }
 
@@ -64,6 +66,7 @@ enum AnalyticsEvent {
         case let .questClaimed(kind): return ["quest": kind]
         case let .farmCollected(amount, doubled): return ["amount": "\(amount)", "doubled": "\(doubled)"]
         case let .stance(s): return ["stance": ["fall_back", "hold", "charge"][s]]
+        case let .shareTapped(mode): return ["mode": mode]
         }
     }
 }

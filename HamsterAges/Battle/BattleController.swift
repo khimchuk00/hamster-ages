@@ -11,6 +11,11 @@ struct BattleResult {
     let stats: BattleStats
     var mode: BattleMode = .campaign
     var wave = 0
+    /// For the share card.
+    var era = 0
+    var ratGeneral: RatGeneral = .gnawsworth
+    var skin: FurSkin = .classic
+    var general: GeneralID?
 }
 
 struct TurretSlotInfo: Equatable {
@@ -479,6 +484,10 @@ final class BattleController {
         var r = BattleResult(won: won, stage: stage, seeds: seeds, stars: stars, kills: p.kills, duration: sim.time, stats: stats)
         r.mode = mode
         r.wave = sim.survivalWave
+        r.era = p.era
+        r.ratGeneral = ratGeneral
+        r.skin = skin
+        r.general = general
         Analytics.log(.battleEnd(stage: stage, won: won, seconds: Int(sim.time), era: p.era, kills: p.kills, stars: stars))
         if isTutorial { Analytics.log(.tutorialComplete(won: won)) }
         tutorialStep = nil

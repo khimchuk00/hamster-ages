@@ -3,7 +3,7 @@ import SwiftUI
 
 /// CI-only contact sheets for reviewing the procedural art: `-screen art`, `artrat`, `artbase`.
 struct DebugArtSheet: View {
-    enum Kind { case units(Species), bases, backgrounds, ratGenerals }
+    enum Kind { case units(Species), bases, backgrounds, ratGenerals, shareCard }
     let kind: Kind
 
     var body: some View {
@@ -33,6 +33,13 @@ struct DebugArtSheet: View {
                     }
                 }
                 .padding(.horizontal, 60)
+            case .shareCard:
+                let sample: BattleResult = {
+                    var r = BattleResult(won: true, stage: 12, seeds: 290, stars: 3, kills: 41, duration: 214, stats: BattleStats())
+                    r.era = 3; r.ratGeneral = .squeak; r.general = .queenSqueak
+                    return r
+                }()
+                ShareCard(result: sample).scaleEffect(1.2)
             case .ratGenerals:
                 VStack(spacing: 14) {
                     HStack(spacing: 14) {

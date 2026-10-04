@@ -145,3 +145,6 @@ T("Seed Silo", "Силос насіння", "Samensilo", "Silo de semillas", "Si
 T("POPULAR", "ПОПУЛЯРНЕ", "BELIEBT", "POPULAR", "POPULAIRE", "POPOLARE", "POPULAR", "人気", "인기", "热门", "熱門", "POPÜLER")
 T("Free Seeds", "Безплатне насіння", "Gratis-Samen", "Semillas gratis", "Graines gratuites", "Semi gratis", "Sementes grátis", "無料の種", "무료 씨앗", "免费种子", "免費種子", "Bedava Tohum")
 T("Map", "Мапа", "Karte", "Mapa", "Carte", "Mappa", "Mapa", "マップ", "지도", "地图", "地圖", "Harita")
+T("Can your hamsters do better?", "А твої хом'яки зможуть краще?", "Schaffen deine Hamster das besser?", "¿Tus hámsteres pueden hacerlo mejor?", "Tes hamsters feront-ils mieux ?", "I tuoi criceti sanno fare di meglio?", "Seus hamsters conseguem fazer melhor?", "君のハムスターはもっとやれる？", "네 햄스터들은 더 잘할 수 있을까?", "你的仓鼠能做得更好吗？", "你的倉鼠能做得更好嗎？", "Senin hamsterların daha iyisini yapabilir mi?")
+T("Share", "Поділитися", "Teilen", "Compartir", "Partager", "Condividi", "Compartilhar", "シェア", "공유", "分享", "分享", "Paylaş")
+VERBATIM += ["HAMSTER AGES"]
