@@ -448,6 +448,87 @@ final class ArtFactory {
         }
     }
 
+    // MARK: Ambient scenery sprites (animated by the scene)
+
+    /// Puffy shaded cloud; `i` picks one of a few shapes.
+    func cloud(_ i: Int) -> UIImage {
+        cached("cloud-\(i % 3)") {
+            render(CGSize(width: 150, height: 64), scale: 2) { _ in
+                let blobs: [[(CGFloat, CGFloat, CGFloat)]] = [
+                    [(30, 40, 22), (58, 30, 28), (92, 34, 24), (118, 42, 18)],
+                    [(26, 42, 18), (50, 32, 24), (80, 26, 30), (112, 38, 22)],
+                    [(34, 38, 24), (70, 28, 26), (104, 36, 20)],
+                ]
+                let parts = blobs[i % 3]
+                // underside shadow, body, top highlight
+                for (x, y, r) in parts { self.fill(self.circle(x, y + 5, r), UIColor(hex: 0xC9D6E6)) }
+                self.fill(UIBezierPath(roundedRect: CGRect(x: 12, y: 40, width: 126, height: 16), cornerRadius: 8), UIColor(hex: 0xC9D6E6))
+                for (x, y, r) in parts { self.fill(self.circle(x, y, r), .white) }
+                self.fill(UIBezierPath(roundedRect: CGRect(x: 14, y: 36, width: 122, height: 14), cornerRadius: 7), .white)
+                for (x, y, r) in parts { self.fill(self.circle(x - r * 0.25, y - r * 0.3, r * 0.45), UIColor(white: 1, alpha: 0.9)) }
+            }
+        }
+    }
+
+    /// Foreground grass tuft / rock / crystal per era, drawn in front of the battle line.
+    func tuft(era: Int, _ i: Int) -> UIImage {
+        cached("tuft-\(era)-\(i % 3)") {
+            render(CGSize(width: 44, height: 26), scale: 2) { _ in
+                let ol = ArtFactory.outline
+                let greens: [UInt32] = [0x5E9F3A, 0x4F7F3A, 0x9C8A4A, 0x6B6E52, 0x5EF2FF]
+                let base = UIColor(hex: greens[era])
+                if i % 3 == 2 {
+                    // rock / scrap / crystal
+                    let rock = UIBezierPath()
+                    rock.move(to: CGPoint(x: 6, y: 25)); rock.addLine(to: CGPoint(x: 12, y: 12)); rock.addLine(to: CGPoint(x: 24, y: 8))
+                    rock.addLine(to: CGPoint(x: 36, y: 14)); rock.addLine(to: CGPoint(x: 40, y: 25)); rock.close()
+                    let col = era == 4 ? UIColor(hex: 0x6A4FC2) : UIColor(hex: era == 2 ? 0xB08A5A : 0x8E8E8E)
+                    self.gradient(rock, col.blend(.white, 0.3), col.blend(.black, 0.25))
+                    self.stroke(rock, ol, 1.4)
+                    if era == 4 { self.fill(self.circle(24, 14, 2.4), UIColor(hex: 0x9FF7FF)) }
+                } else {
+                    for k in 0..<7 {
+                        let x = 6 + CGFloat(k) * 5 + (i % 3 == 1 ? 2 : 0)
+                        let blade = UIBezierPath()
+                        blade.move(to: CGPoint(x: x - 2.5, y: 26)); blade.addQuadCurve(to: CGPoint(x: x + CGFloat(k % 3 - 1) * 5, y: CGFloat(4 + (k * 7) % 9)),
+                                                                                         controlPoint: CGPoint(x: x - 1, y: 14))
+                        blade.addQuadCurve(to: CGPoint(x: x + 2.5, y: 26), controlPoint: CGPoint(x: x + 1, y: 14))
+                        blade.close()
+                        self.fill(blade, base.blend(k % 2 == 0 ? .black : .white, 0.15), stroke: ol.withAlphaComponent(0.7), width: 0.8)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Dark radial edges; pulls the eye to the lane.
+    func vignette() -> UIImage {
+        cached("vignette") {
+            render(CGSize(width: 256, height: 128), scale: 1) { ctx in
+                let space = CGColorSpace(name: CGColorSpace.sRGB)
+                if let g = CGGradient(colorsSpace: space, colors: [UIColor(white: 0, alpha: 0).cgColor, UIColor(white: 0, alpha: 0.55).cgColor] as CFArray,
+                                      locations: [0.55, 1]) {
+                    ctx.cgContext.scaleBy(x: 2, y: 1)
+                    ctx.cgContext.drawRadialGradient(g, startCenter: CGPoint(x: 64, y: 64), startRadius: 0,
+                                                     endCenter: CGPoint(x: 64, y: 64), endRadius: 92, options: [.drawsAfterEndLocation])
+                }
+            }
+        }
+    }
+
+    /// Falling leaf for ambient particles.
+    func leaf(_ color: UIColor) -> UIImage {
+        cached("leaf-\(color.description)") {
+            render(CGSize(width: 12, height: 8)) { _ in
+                let p = UIBezierPath()
+                p.move(to: CGPoint(x: 1, y: 4)); p.addQuadCurve(to: CGPoint(x: 11, y: 4), controlPoint: CGPoint(x: 6, y: -2))
+                p.addQuadCurve(to: CGPoint(x: 1, y: 4), controlPoint: CGPoint(x: 6, y: 10))
+                self.fill(p, color)
+                self.line(CGPoint(x: 2, y: 4), CGPoint(x: 10, y: 4), color.blend(.black, 0.3), width: 0.6)
+            }
+        }
+    }
+
     func crown() -> UIImage {
         cached("crown") {
             render(CGSize(width: 30, height: 20)) { _ in
@@ -481,12 +562,24 @@ final class ArtFactory {
         }
     }
 
+    /// Backgrounds are big (a battlefield is 1.6 screens wide), so they get their own tiny LRU cache and a
+    /// pixel budget instead of living forever in `cache` (an iPad battlefield at 2× would be ~36 MB each).
+    private var backgrounds: [(key: String, image: UIImage)] = []
+    private static let backgroundPixelBudget: CGFloat = 5_000_000
+
     func background(era: Int, size rawSize: CGSize, groundHeight: CGFloat) -> UIImage {
         let size = CGSize(width: max(64, rawSize.width), height: max(groundHeight + 64, rawSize.height))
         let key = "bg-\(era)-\(Int(size.width))x\(Int(size.height))-\(Int(groundHeight))"
-        return cached(key) {
-            render(size, scale: 2) { ctx in self.drawBackground(ctx, era: era, size: size, groundHeight: groundHeight) }
+        if let i = backgrounds.firstIndex(where: { $0.key == key }) {
+            let hit = backgrounds.remove(at: i)
+            backgrounds.append(hit)
+            return hit.image
         }
+        let scale = min(2, max(1, (ArtFactory.backgroundPixelBudget / (size.width * size.height)).squareRoot()))
+        let image = render(size, scale: scale) { ctx in self.drawBackground(ctx, era: era, size: size, groundHeight: groundHeight) }
+        backgrounds.append((key, image))
+        if backgrounds.count > 4 { backgrounds.removeFirst() }
+        return image
     }
 
     // MARK: Helpers
@@ -1330,9 +1423,13 @@ final class ArtFactory {
         let (top, bottom) = skies[era]
         let w = size.width, h = size.height, gy = h - groundHeight
         let space = CGColorSpace(name: CGColorSpace.sRGB)
-        if let g = CGGradient(colorsSpace: space, colors: [UIColor(hex: top).cgColor, UIColor(hex: bottom).cgColor] as CFArray, locations: [0, 1]) {
+        let zenith = UIColor(hex: top).blend(.black, era == 4 ? 0.2 : 0.12)
+        let mid = UIColor(hex: top).blend(UIColor(hex: bottom), 0.45)
+        if let g = CGGradient(colorsSpace: space, colors: [zenith.cgColor, mid.cgColor, UIColor(hex: bottom).cgColor] as CFArray,
+                              locations: [0, 0.55, 1]) {
             c.drawLinearGradient(g, start: .zero, end: CGPoint(x: 0, y: gy), options: [.drawsAfterEndLocation])
         }
+        let horizon = UIColor(hex: bottom).blend(.white, era == 4 ? 0.05 : 0.35)
         var r = SeededRandom(seed: UInt64(7 + era))
         func rnd(_ a: CGFloat, _ b: CGFloat) -> CGFloat { CGFloat.random(in: a...max(a + 0.001, b), using: &r) }
 
@@ -1363,16 +1460,30 @@ final class ArtFactory {
             c.restoreGState()
         } else {
             let sun = era == 2 ? UIColor(hex: 0xFFD27A) : UIColor(hex: 0xFFF3B0)
-            glow(sunCenter, 110, sun)
+            // Soft god-rays fanning out from the sun (clouds are live sprites in the scene now).
+            if era < 3 {
+                c.saveGState()
+                for k in 0..<9 {
+                    let a = CGFloat(k) / 9 * .pi + 0.15
+                    let ray = UIBezierPath()
+                    ray.move(to: sunCenter)
+                    ray.addLine(to: CGPoint(x: sunCenter.x + cos(a - 0.06) * w, y: sunCenter.y + sin(a - 0.06) * w))
+                    ray.addLine(to: CGPoint(x: sunCenter.x + cos(a + 0.06) * w, y: sunCenter.y + sin(a + 0.06) * w))
+                    ray.close()
+                    fill(ray, UIColor(white: 1, alpha: 0.07))
+                }
+                c.restoreGState()
+            }
+            glow(sunCenter, 150, sun)
+            glow(sunCenter, 60, .white)
             fill(circle(sunCenter.x, sunCenter.y, 26), sun)
-            for _ in 0..<Int(w / 220) + 2 {
-                let x = rnd(0, w), y = rnd(h * 0.06, h * 0.32), s = rnd(0.7, 1.3)
-                let a: CGFloat = era == 3 ? 0.6 : 0.92
-                let shadeCol = UIColor(white: era == 3 ? 0.78 : 0.88, alpha: a)
-                fill(oval(x, y + 6 * s, 76 * s, 18 * s), shadeCol)
-                fill(oval(x + 10 * s, y - 8 * s, 34 * s, 26 * s), UIColor(white: 1, alpha: a))
-                fill(oval(x + 32 * s, y - 14 * s, 30 * s, 30 * s), UIColor(white: 1, alpha: a))
-                fill(oval(x + 4 * s, y + 2 * s, 66 * s, 16 * s), UIColor(white: 1, alpha: a))
+            fill(circle(sunCenter.x - 6, sunCenter.y - 7, 9), UIColor(white: 1, alpha: 0.45))
+            if era == 3 {
+                // Smog band over the city
+                if let g = CGGradient(colorsSpace: space, colors: [UIColor(white: 0.9, alpha: 0).cgColor, UIColor(hex: 0xC9C2B5, alpha: 0.45).cgColor] as CFArray,
+                                      locations: [0, 1]) {
+                    c.drawLinearGradient(g, start: CGPoint(x: 0, y: gy - h * 0.45), end: CGPoint(x: 0, y: gy - h * 0.1), options: [])
+                }
             }
         }
 
@@ -1387,8 +1498,14 @@ final class ArtFactory {
                 x += 6
             }
             path.addLine(to: CGPoint(x: w, y: gy)); path.close()
-            fill(path, color)
+            // Lit crest, darker toe: reads as rounded hills instead of flat cut-outs.
+            gradient(path, color.blend(.white, 0.14), color.blend(.black, 0.12), from: CGPoint(x: 0, y: base - amp), to: CGPoint(x: 0, y: gy))
+            path.lineWidth = 2
+            color.blend(.white, 0.3).withAlphaComponent(0.6).setStroke()
+            c.saveGState(); path.addClip(); path.stroke(); c.restoreGState()
         }
+        /// Atmospheric perspective: far layers fade toward the horizon colour.
+        func hazed(_ hex: UInt32, _ t: CGFloat) -> UIColor { UIColor(hex: hex).blend(horizon, t) }
         let (far, mid, near) = hills[era]
         // Far layer: mountains / mesas / skyline
         switch era {
@@ -1425,7 +1542,7 @@ final class ArtFactory {
                 c.restoreGState()
             }
         default:
-            ridge(UIColor(hex: far), base: gy - 30, amp: h * 0.24, freq: 2.4, phase: 0.3, jag: true)
+            ridge(hazed(far, 0.35), base: gy - 30, amp: h * 0.24, freq: 2.4, phase: 0.3, jag: true)
             if era == 0 { // smoking volcano
                 let vx = w * 0.62
                 let v = UIBezierPath()
@@ -1436,7 +1553,12 @@ final class ArtFactory {
                 for i in 0..<4 { fill(circle(vx - 6 + CGFloat(i) * 9, gy - h * 0.46 - CGFloat(i) * 14, 10 + CGFloat(i) * 3), UIColor(white: 0.85, alpha: 0.55)) }
             }
         }
-        ridge(UIColor(hex: mid), base: gy - 6, amp: h * 0.17, freq: 3.6, phase: 1.4)
+        // Haze band where the far layer meets the mid hills
+        if let g = CGGradient(colorsSpace: space, colors: [horizon.withAlphaComponent(0).cgColor, horizon.withAlphaComponent(era == 4 ? 0.15 : 0.45).cgColor] as CFArray,
+                              locations: [0, 1]) {
+            c.drawLinearGradient(g, start: CGPoint(x: 0, y: gy - h * 0.3), end: CGPoint(x: 0, y: gy - 6), options: [])
+        }
+        ridge(hazed(mid, 0.12), base: gy - 6, amp: h * 0.17, freq: 3.6, phase: 1.4)
 
         // Mid props
         func tree(_ x: CGFloat, _ s: CGFloat, _ col: UIColor) {
@@ -1502,10 +1624,36 @@ final class ArtFactory {
         lipPath.addLine(to: CGPoint(x: w, y: gy)); lipPath.close()
         fill(lipPath, UIColor(hex: lip))
         fill(UIBezierPath(rect: CGRect(x: 0, y: gy, width: w, height: 2.5)), UIColor(hex: lip).blend(.white, 0.25))
+        // Soil strata: a few wavy darker bands
+        for k in 0..<3 {
+            let band = UIBezierPath()
+            let y0 = gy + groundHeight * (0.35 + 0.22 * CGFloat(k))
+            band.move(to: CGPoint(x: 0, y: y0))
+            var bx: CGFloat = 0
+            while bx <= w + 10 {
+                band.addLine(to: CGPoint(x: bx, y: y0 + 3 * sin(bx / 37 + CGFloat(k) * 1.7)))
+                bx += 10
+            }
+            band.lineWidth = 3 + CGFloat(k)
+            UIColor(hex: dirt).blend(.black, 0.12 + 0.05 * CGFloat(k)).withAlphaComponent(0.5).setStroke()
+            band.stroke()
+        }
         for _ in 0..<Int(w / 18) {
             let x = rnd(0, w), y = rnd(gy + 16, h - 4), s = rnd(0.6, 1.4)
             fill(oval(x, y, 8 * s, 4 * s), UIColor(hex: dirt).blend(.black, 0.22))
             fill(oval(x + 1.5 * s, y + 0.5 * s, 4 * s, 1.6 * s), UIColor(hex: dirt).blend(.white, 0.18))
+        }
+        if era <= 1 {
+            // Little flowers along the grass lip
+            let petals: [UInt32] = [0xFFF176, 0xF48FB1, 0xFFFFFF, 0xCE93D8]
+            for _ in 0..<Int(w / 40) {
+                let x = rnd(0, w), y = gy + rnd(1, 7), col = UIColor(hex: petals[Int(rnd(0, 3.99))])
+                for k in 0..<4 {
+                    let a = CGFloat(k) * .pi / 2
+                    fill(circle(x + cos(a) * 1.8, y + sin(a) * 1.8, 1.5), col)
+                }
+                fill(circle(x, y, 1), UIColor(hex: 0xFFB300))
+            }
         }
         if era < 3 {
             for _ in 0..<Int(w / 26) {

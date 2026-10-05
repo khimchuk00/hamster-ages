@@ -18,6 +18,14 @@ final class BattleScene: SKScene {
     private let unitLayer = SKNode()
     private let fxLayer = SKNode()
     private var bgNode: SKSpriteNode?
+    /// Living scenery: drifting clouds (parallax), ambient particles, foreground grass, screen vignette.
+    private let cloudLayer = SKNode()
+    private let ambientLayer = SKNode()
+    private let fgLayer = SKNode()
+    private var clouds: [(node: SKSpriteNode, speed: CGFloat)] = []
+    private var vignetteNode: SKSpriteNode?
+    private var baseShadows: [Side: SKSpriteNode] = [:]
+    private var ambientTimer: TimeInterval = 0
 
     private var baseNodes: [Side: SKSpriteNode] = [:]
     private var turretNodes: [Side: [SKNode]] = [.player: [], .enemy: []]
@@ -93,10 +101,18 @@ final class BattleScene: SKScene {
             minimap.zPosition = 200
             addChild(minimap)
             bgLayer.zPosition = -100
+            cloudLayer.zPosition = -90
+            ambientLayer.zPosition = 15
             baseLayer.zPosition = 10
             unitLayer.zPosition = 20
+            fgLayer.zPosition = 40
             fxLayer.zPosition = 50
-            [bgLayer, baseLayer, unitLayer, fxLayer].forEach(world.addChild)
+            [bgLayer, cloudLayer, ambientLayer, baseLayer, unitLayer, fgLayer, fxLayer].forEach(world.addChild)
+            let v = SKSpriteNode(texture: tex(ArtFactory.shared.vignette()))
+            v.zPosition = 250
+            v.alpha = 0.32
+            addChild(v)
+            vignetteNode = v
             // The sim may already be past era 0 (showcase `-era`), so start from its real state.
             bgEra = sim?.state(.player).era ?? 0
             for side in Side.allCases {
@@ -119,7 +135,8 @@ final class BattleScene: SKScene {
     private func layout() {
         guard didSetup, size.width > 10 else { return }
         let bgSize = CGSize(width: worldWidth, height: size.height)
-        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: bgEra, size: bgSize, groundHeight: groundY)))
+        // Not through `tex()`: backgrounds are evicted from ArtFactory, and an ObjectIdentifier key could be reused.
+        let bg = SKSpriteNode(texture: SKTexture(image: ArtFactory.shared.background(era: bgEra, size: bgSize, groundHeight: groundY)))
         bg.anchorPoint = .zero
         bg.size = bgSize
         bgNode?.removeFromParent()
@@ -133,9 +150,21 @@ final class BattleScene: SKScene {
             let w = 130 * baseScale
             let frontX = laneToScreen(BattleSimulation.baseFront(side))
             n.position = CGPoint(x: side == .player ? frontX - w / 2 + 12 : frontX + w / 2 - 12, y: groundY - 8)
+            // Soft contact shadow grounds the base on the lane.
+            let shadow = baseShadows[side] ?? {
+                let s = SKSpriteNode(texture: tex(ArtFactory.shared.groundShadow()))
+                s.zPosition = -1
+                s.alpha = 0.9
+                baseLayer.addChild(s)
+                baseShadows[side] = s
+                return s
+            }()
+            shadow.size = CGSize(width: w * 1.25, height: w * 0.22)
+            shadow.position = CGPoint(x: n.position.x, y: groundY - 6)
         }
         turretSignature = ""
         refreshTurrets()
+        buildScenery()
         layoutMinimap()
         cameraX = clampCamera(cameraX)
         panNode.position.x = -cameraX
@@ -179,6 +208,102 @@ final class BattleScene: SKScene {
         updateCamera(dt)
         updateMinimap()
         updateBaseDamage(currentTime, frozen: frozen)
+        updateScenery(min(dt, 0.1), frozen: frozen)
+    }
+
+    // MARK: Scenery
+
+    /// Clouds and foreground tufts for the current age; rebuilt on layout and on evolution.
+    private func buildScenery() {
+        cloudLayer.removeAllChildren()
+        fgLayer.removeAllChildren()
+        clouds = []
+        vignetteNode?.size = CGSize(width: size.width * 1.08, height: size.height * 1.12)
+        vignetteNode?.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        var r = SeededRandom(seed: UInt64(31 + bgEra))
+        func rnd(_ a: CGFloat, _ b: CGFloat) -> CGFloat { CGFloat.random(in: a...b, using: &r) }
+        let night = bgEra == 4
+        for i in 0..<(Int(worldWidth / 280) + 3) {
+            let c = SKSpriteNode(texture: tex(ArtFactory.shared.cloud(i)))
+            let depth = rnd(0.55, 1.1)
+            c.setScale(hScale * depth * 0.9)
+            c.position = CGPoint(x: rnd(-100, worldWidth + 100), y: size.height * rnd(0.6, 0.86))
+            c.alpha = night ? 0.12 : (bgEra == 3 ? 0.7 : 0.95) * (0.75 + 0.25 * depth)
+            if night { c.color = UIColor(hex: 0xB78CFF); c.colorBlendFactor = 0.6 }
+            if bgEra == 2 { c.color = UIColor(hex: 0xFFE0B2); c.colorBlendFactor = 0.35 }
+            c.zPosition = depth
+            cloudLayer.addChild(c)
+            clouds.append((c, 4 + 9 * depth))
+        }
+        // Grass tufts along the front edge of the lane, slightly overlapping the troops' feet for depth.
+        var x: CGFloat = rnd(10, 60)
+        while x < worldWidth {
+            let t = SKSpriteNode(texture: tex(ArtFactory.shared.tuft(era: bgEra, Int(rnd(0, 2.99)))))
+            t.anchorPoint = CGPoint(x: 0.5, y: 0)
+            t.setScale(hScale * rnd(0.65, 0.95))
+            t.position = CGPoint(x: x, y: groundY - 15 * hScale - rnd(0, 4))
+            fgLayer.addChild(t)
+            x += rnd(55, 140) * hScale
+        }
+    }
+
+    private func updateScenery(_ dt: TimeInterval, frozen: Bool) {
+        // Clouds drift and sit "further away" than the lane (parallax against the camera).
+        cloudLayer.position.x = cameraX * 0.55
+        if !frozen {
+            for c in clouds {
+                c.node.position.x -= c.speed * CGFloat(dt)
+                if c.node.position.x < -160 { c.node.position.x = worldWidth + 160 }
+            }
+        }
+        ambientTimer -= dt
+        guard ambientTimer <= 0, ambientLayer.children.count < 28 else { return }
+        ambientTimer = 0.22
+        spawnAmbient()
+    }
+
+    /// One ambient particle in view: pollen, leaves, desert dust, city soot or neon sparkles.
+    private func spawnAmbient() {
+        let x = cameraX + CGFloat.random(in: 0...size.width)
+        let top = size.height * 0.9, ground = groundY + 6
+        let n: SKSpriteNode
+        let life = Double.random(in: 4...7)
+        switch bgEra {
+        case 1:
+            n = SKSpriteNode(texture: tex(ArtFactory.shared.leaf([UIColor(hex: 0xE67E22), UIColor(hex: 0xC0392B), UIColor(hex: 0xF1C40F)].randomElement()!)))
+            n.setScale(hScale * CGFloat.random(in: 0.7...1.1))
+            n.position = CGPoint(x: x, y: top)
+            n.run(.repeatForever(.rotate(byAngle: .pi, duration: Double.random(in: 1.2...2.2))))
+            n.run(.sequence([.group([.moveBy(x: -CGFloat.random(in: 40...120), y: ground - top, duration: life),
+                                     .sequence([.wait(forDuration: life - 0.8), .fadeOut(withDuration: 0.8)])]), .removeFromParent()]))
+        case 3:
+            n = SKSpriteNode(texture: tex(ArtFactory.shared.dot(UIColor(white: 0.35, alpha: 1), radius: 2)))
+            n.setScale(hScale * CGFloat.random(in: 0.5...1))
+            n.alpha = 0.5
+            n.position = CGPoint(x: x, y: top)
+            n.run(.sequence([.group([.moveBy(x: -CGFloat.random(in: 20...60), y: ground - top, duration: life),
+                                     .sequence([.wait(forDuration: life - 0.6), .fadeOut(withDuration: 0.6)])]), .removeFromParent()]))
+        case 4:
+            n = SKSpriteNode(texture: tex(ArtFactory.shared.dot(UIColor(hex: 0x9FF7FF), radius: 3)))
+            n.blendMode = .add
+            n.setScale(hScale * CGFloat.random(in: 0.4...0.9))
+            n.alpha = 0
+            n.position = CGPoint(x: x, y: CGFloat.random(in: ground + 20...top))
+            n.run(.sequence([.fadeAlpha(to: 0.9, duration: 0.6), .group([.moveBy(x: 0, y: 24, duration: 2), .fadeOut(withDuration: 2)]),
+                             .removeFromParent()]))
+        default:
+            // Pollen (Stone Age) / dust motes (Gunpowder) floating up and across.
+            let col = bgEra == 2 ? UIColor(hex: 0xE6C9A0) : UIColor(hex: 0xFFF6C2)
+            n = SKSpriteNode(texture: tex(ArtFactory.shared.dot(col, radius: 2.5)))
+            n.setScale(hScale * CGFloat.random(in: 0.5...1))
+            n.alpha = 0
+            n.position = CGPoint(x: x, y: CGFloat.random(in: ground...ground + size.height * 0.35))
+            n.run(.sequence([.fadeAlpha(to: 0.8, duration: 0.8),
+                             .group([.moveBy(x: CGFloat.random(in: -50...50), y: CGFloat.random(in: 20...60), duration: life),
+                                     .sequence([.wait(forDuration: life - 1), .fadeOut(withDuration: 1)])]),
+                             .removeFromParent()]))
+        }
+        ambientLayer.addChild(n)
     }
 
     // MARK: Camera
@@ -955,7 +1080,7 @@ final class BattleScene: SKScene {
     private func crossfadeBackground(to era: Int) {
         bgEra = era
         let bgSize = CGSize(width: worldWidth, height: size.height)
-        let bg = SKSpriteNode(texture: tex(ArtFactory.shared.background(era: era, size: bgSize, groundHeight: groundY)))
+        let bg = SKSpriteNode(texture: SKTexture(image: ArtFactory.shared.background(era: era, size: bgSize, groundHeight: groundY)))
         bg.anchorPoint = .zero
         bg.size = bgSize
         bg.alpha = 0
@@ -963,6 +1088,7 @@ final class BattleScene: SKScene {
         let old = bgNode
         bgNode = bg
         bg.run(.fadeIn(withDuration: 0.8)) { old?.removeFromParent() }
+        buildScenery()
     }
 
     func playEnding(won: Bool) {
