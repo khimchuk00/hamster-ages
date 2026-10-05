@@ -16,6 +16,8 @@ struct BattleView: View {
                 ScaledUI {
                 ZStack {
                 BattleHUD(c: controller)
+                    // Card picks get the whole stage; the HUD fades out behind them.
+                    .opacity(controller.cardOffer == nil ? 1 : 0)
 
                 if controller.tutorialVisible, let step = controller.tutorialStep, controller.cardOffer == nil, controller.result == nil {
                     TutorialBubble(step: step)
@@ -209,7 +211,7 @@ private struct Sunburst: View {
         ZStack {
             ForEach(0..<16, id: \.self) { i in
                 RayShape()
-                    .fill(LinearGradient(colors: [Theme.gold.opacity(0.45), Theme.gold.opacity(0)], startPoint: .center, endPoint: .top))
+                    .fill(LinearGradient(colors: [Theme.gold.opacity(0.3), Theme.gold.opacity(0)], startPoint: .center, endPoint: .top))
                     .rotationEffect(.degrees(Double(i) * 22.5))
             }
             Circle().fill(RadialGradient(colors: [Theme.gold.opacity(0.35), .clear], center: .center, startRadius: 0, endRadius: 260))
@@ -1022,7 +1024,7 @@ private struct ResultView: View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea()
             if result.won || result.mode == .survival {
-                Sunburst().frame(width: 900, height: 900).frame(width: 1, height: 1).allowsHitTesting(false)
+                Sunburst().frame(width: 760, height: 760).frame(width: 1, height: 1).allowsHitTesting(false)
             }
             VStack(spacing: 12) {
                 if result.mode == .survival {

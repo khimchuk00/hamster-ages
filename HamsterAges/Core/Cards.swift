@@ -149,7 +149,7 @@ public struct Card: Identifiable, Equatable {
         Card(id: .fastLearner, title: L10n.t("Fast Learner"), detail: L10n.f("XP gain +30%%"), icon: "graduationcap.fill", rarity: .common, stackable: true),
         Card(id: .fortify, title: L10n.t("Fortify"), detail: L10n.f("Base max HP +25%% and repair 25%%"), icon: "building.columns.fill", rarity: .common, stackable: true),
         Card(id: .turretGrease, title: L10n.t("Turret Grease"), detail: L10n.f("Turrets +30%% damage, +15%% fire rate"), icon: "gearshape.2.fill", rarity: .common, stackable: true),
-        Card(id: .seedStash, title: L10n.t("Seed Stash"), detail: L10n.t("Instantly gain a big pile of food"), icon: "sack.fill", rarity: .common, stackable: true),
+        Card(id: .seedStash, title: L10n.t("Seed Stash"), detail: L10n.t("Instantly gain a big pile of food"), icon: "bag.fill", rarity: .common, stackable: true),
         Card(id: .hamsterWheel, title: L10n.t("Hamster Wheel"), detail: L10n.f("Training 30%% faster"), icon: "arrow.triangle.2.circlepath", rarity: .rare, stackable: true),
         Card(id: .recruiter, title: L10n.t("Recruiter"), detail: L10n.t("A free melee unit every 10s"), icon: "person.badge.plus", rarity: .rare, stackable: true),
         Card(id: .vampireBite, title: L10n.t("Vampire Bite"), detail: L10n.f("Units heal 20%% HP on kill"), icon: "drop.fill", rarity: .rare, stackable: true),
