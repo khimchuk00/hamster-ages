@@ -33,12 +33,16 @@ jobs:
             -configuration Debug CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || (tail -50 build.log; exit 1)
 
       - name: Capture
+        timeout-minutes: 100
         env:
           LANGS: ${{ github.event.inputs.languages || 'en uk de es fr it pt-BR ja ko zh-Hans zh-Hant tr' }}
         run: |
+          exec > >(tee -a capture.log) 2>&1
           set -x
+          date
+          xcrun simctl list devices available | grep -E "iPhone|iPad" | head -30
           UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro Max \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
-          xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl boot "$UDID"; perl -e 'alarm 300; exec @ARGV' xcrun simctl bootstatus "$UDID" -b || echo "boot timeout"
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --cellularBars 4 || true
           APP=$(find build/Build/Products -name "HamsterAges.app" -maxdepth 3 | head -1)
           xcrun simctl install "$UDID" "$APP"
@@ -83,6 +87,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/out && cp -R raw raw-ipad /tmp/out/ 2>/dev/null || true
+          cp capture.log /tmp/out/ 2>/dev/null || true
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan appstore-shots
           git rm -rf . -q
