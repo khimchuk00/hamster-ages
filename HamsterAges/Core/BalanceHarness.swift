@@ -35,7 +35,8 @@ public enum BalanceHarness {
         var eras = 0
         for g in 0..<games {
             let sim = BattleSimulation(difficulty: StageDifficulty(stage: stage), playerMods: metaMods(level: meta),
-                                       seed: UInt64(stage * 1000 + meta * 100 + g + 1))
+                                       seed: UInt64(stage * 1000 + meta * 100 + g + 1),
+                                       startEra: ChapterStart.era(stage: stage))
             let bot = BattleAI(thinkInterval: 0.9, evolveDelay: 1.5, usesCards: true)
             if let weights { bot.weights = weights }
             sim.controllers[.player] = bot

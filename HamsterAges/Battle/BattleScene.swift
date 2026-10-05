@@ -367,7 +367,9 @@ final class BattleScene: SKScene {
     private func makeUnitNode(_ u: UnitEntity) -> SKNode {
         let container = SKNode()
         container.zPosition = CGFloat(-u.depth) + (u.role == .heavy ? -0.5 : 0)
-        let texture = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: controller?.skin ?? .classic))
+        let variant = sim?.state(u.side).loadout.variant(u.role)
+        let texture = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: controller?.skin ?? .classic,
+                                                  variant: variant))
         let body = SKSpriteNode(texture: texture)
         body.name = "body"
         body.anchorPoint = CGPoint(x: ArtFactory.unitAnchorX(u.role), y: 0.06)
@@ -449,7 +451,7 @@ final class BattleScene: SKScene {
         if u.role != .heavy {
             let skin = controller?.skin ?? .classic
             let open = texture
-            let shut = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: skin, face: .blink))
+            let shut = tex(ArtFactory.shared.unit(species(u.side), era: u.era, role: u.role, skin: skin, face: .blink, variant: variant))
             let first = Double((u.id * 53) % 30) / 10
             body.run(.sequence([.wait(forDuration: first),
                                 .repeatForever(.sequence([.setTexture(shut), .wait(forDuration: 0.12), .setTexture(open),
@@ -569,7 +571,8 @@ final class BattleScene: SKScene {
                     if role != .heavy, let body = bodies[id] {
                         body.removeAction(forKey: "blink")
                         body.texture = tex(ArtFactory.shared.unit(species(side), era: era, role: role,
-                                                                  skin: controller?.skin ?? .classic, face: .dead))
+                                                                  skin: controller?.skin ?? .classic, face: .dead,
+                                                                  variant: sim.state(side).loadout.variant(role)))
                     }
                     node.run(.sequence([.group([.fadeOut(withDuration: 0.25), .scale(to: 0.6, duration: 0.25),
                                                 .rotate(byAngle: side == .player ? 0.8 : -0.8, duration: 0.25)]),

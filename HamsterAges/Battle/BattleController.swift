@@ -80,6 +80,8 @@ final class BattleController {
 
     // Rats & orders
     let ratGeneral: RatGeneral
+    /// The player's squad (Army Workshop picks).
+    let loadout: Loadout
     /// Army order buttons (hidden in the very first battle to keep it simple).
     let stancesEnabled: Bool
     var stance: Stance = .charge
@@ -125,7 +127,8 @@ final class BattleController {
         if tutorial { mods.xpGain *= 1.5 }
         sim = BattleSimulation(difficulty: difficulty, playerMods: mods,
                                seed: mode == .challenge ? DailyChallenge.seed(for: today) : UInt64.random(in: 1...UInt64.max),
-                               mode: mode)
+                               mode: mode, playerLoadout: progress.loadout,
+                               startEra: mode == .survival || tutorial ? 0 : ChapterStart.era(stage: stage))
         if mode == .challenge {
             for id in DailyChallenge.startingCards(for: today) { sim.applyCard(id, to: .player) }
             sim.goal = DailyChallenge.goal(for: today)
@@ -133,6 +136,7 @@ final class BattleController {
         sim.setHeroAbility(general?.ability, for: .player)
         rerollsLeft = progress.level(.charm)
         ratGeneral = sim.ratGeneral
+        loadout = sim.state(.player).loadout
         stancesEnabled = !tutorial
         if progress.battlesPlayed == 1 && mode == .campaign { tipAt = 25 }
         isTutorial = tutorial

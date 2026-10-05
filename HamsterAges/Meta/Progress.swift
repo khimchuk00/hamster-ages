@@ -100,6 +100,9 @@ struct PlayerProgress: Codable {
     var hardStars: [Int: Int]?
     /// Chapter chests already opened, as "chapter-tier" keys (tier 0 = 15 stars, 1 = 30 stars).
     var chapterChests: [String]?
+    /// Army Workshop: variant levels (0/missing = locked; standard variants start at 1) and the equipped loadout.
+    var variantLevels: [String: Int]?
+    var loadoutIDs: [String]?
 
     var skin: FurSkin { equippedSkin.flatMap(FurSkin.init(rawValue:)) ?? .classic }
     func owns(_ s: FurSkin) -> Bool { s == .classic || (skins ?? []).contains(s.rawValue) }
@@ -112,6 +115,18 @@ struct PlayerProgress: Codable {
     var equipped: GeneralID? { equippedGeneral.flatMap(GeneralID.init(rawValue:)) }
 
     func level(_ u: MetaUpgrade) -> Int { upgrades[u.rawValue] ?? 0 }
+
+    func variantLevel(_ v: UnitVariant) -> Int { max(variantLevels?[v.rawValue] ?? 0, v.isStandard ? 1 : 0) }
+
+    /// Equipped variant per role (falls back to the standard one if the saved pick is locked or missing).
+    var loadout: Loadout {
+        let picks = UnitRole.allCases.map { role -> UnitVariant in
+            let saved = loadoutIDs.flatMap { $0.count > role.rawValue ? UnitVariant(rawValue: $0[role.rawValue]) : nil }
+            if let v = saved, v.role == role, variantLevel(v) > 0 { return v }
+            return UnitVariant.standard(role)
+        }
+        return Loadout(variants: picks, levels: picks.map(variantLevel))
+    }
 
     var battleModifiers: SideModifiers {
         var m = SideModifiers()
@@ -177,6 +192,46 @@ final class ProgressStore {
                 || (cloud.highestStage == progress.highestStage && cloud.battlesPlayed > progress.battlesPlayed) else { return }
         progress = cloud
         if let data = try? JSONEncoder().encode(progress) { UserDefaults.standard.set(data, forKey: key) }
+    }
+
+    // MARK: Army Workshop
+
+    func canUnlock(_ v: UnitVariant) -> Bool { progress.variantLevel(v) == 0 && progress.seeds >= v.unlockCost }
+
+    @discardableResult
+    func unlockVariant(_ v: UnitVariant) -> Bool {
+        guard canUnlock(v) else { return false }
+        progress.seeds -= v.unlockCost
+        progress.variantLevels = (progress.variantLevels ?? [:]).merging([v.rawValue: 1]) { $1 }
+        Analytics.log(.upgradeBought(id: "variant_" + v.rawValue, level: 1, cost: v.unlockCost))
+        save()
+        return true
+    }
+
+    func canUpgrade(_ v: UnitVariant) -> Bool {
+        let l = progress.variantLevel(v)
+        return l > 0 && l < UnitVariant.maxLevel && progress.seeds >= UnitVariant.upgradeCost(level: l)
+    }
+
+    @discardableResult
+    func upgradeVariant(_ v: UnitVariant) -> Bool {
+        guard canUpgrade(v) else { return false }
+        let l = progress.variantLevel(v)
+        let cost = UnitVariant.upgradeCost(level: l)
+        progress.seeds -= cost
+        progress.variantLevels = (progress.variantLevels ?? [:]).merging([v.rawValue: l + 1]) { $1 }
+        Analytics.log(.upgradeBought(id: "variant_" + v.rawValue, level: l + 1, cost: cost))
+        advanceQuest(.buyUpgrade, by: 1)
+        save()
+        return true
+    }
+
+    func equipVariant(_ v: UnitVariant) {
+        guard progress.variantLevel(v) > 0 else { return }
+        var ids = progress.loadout.variants.map(\.rawValue)
+        ids[v.role.rawValue] = v.rawValue
+        progress.loadoutIDs = ids
+        save()
     }
 
     // Upgrades
@@ -640,6 +695,8 @@ final class ProgressStore {
         var p = PlayerProgress()
         p.seeds = 2_340
         p.piggySeeds = 4_200
+        p.variantLevels = ["spearman": 3, "sniper": 2, "guardian": 1]
+        p.loadoutIDs = ["spearman", "archer", "brute"]
         p.stage = 12
         p.highestStage = 12
         p.wins = 14

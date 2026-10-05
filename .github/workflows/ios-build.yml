@@ -80,6 +80,8 @@ jobs:
           shot 24-art-rat-generals 6 -demo -screen artgen
           shot 28-map 6 -demo -screen map
           shot 29-share-card 6 -demo -screen artshare
+          shot 30-art-variants 6 -demo -screen artvar
+          shot 31-chapter2-battle 30 -demo -screen battle -autoplay -stage 12
           shot 25-taunt 4 -demo -screen battle -autoplay -stage 7
           shot 26-elites 34 -demo -screen battle -autoplay -stage 14 -era 1
           shot 27-boss 40 -demo -screen battle -autoplay -stage 10 -era 2

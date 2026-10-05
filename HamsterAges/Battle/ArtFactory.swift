@@ -52,20 +52,120 @@ final class ArtFactory {
     private var activeSkin: FurSkin = .classic
     private func pal(_ s: Species) -> Palette { ArtFactory.palette(s, skin: s == .hamster ? activeSkin : .classic) }
 
-    func unit(_ species: Species, era: Int, role: UnitRole, skin: FurSkin = .classic, face: Face = .normal) -> UIImage {
+    func unit(_ species: Species, era: Int, role: UnitRole, skin: FurSkin = .classic, face: Face = .normal,
+              variant: UnitVariant? = nil) -> UIImage {
         let skin = species == .hamster ? skin : .classic
-        return cached("u-\(species)-\(era)-\(role)-\(skin.rawValue)-\(face.rawValue)") {
+        let v = variant ?? UnitVariant.standard(role)
+        return cached("u-\(species)-\(era)-\(role)-\(skin.rawValue)-\(face.rawValue)-\(v.rawValue)") {
             activeSkin = skin
             defer { activeSkin = .classic }
             let size = role == .heavy ? CGSize(width: 96, height: 80) : ArtFactory.lightUnitSize   // extra width for raised blades
             return render(size) { ctx in
                 if role == .heavy {
+                    if v == .bombardier { self.drawMortar(era: era, species: species) }
                     self.drawHeavy(ctx, species, era)
+                    if v == .guardian { self.drawTowerShield(era: era, species: species) }
                 } else {
-                    self.drawCritter(ctx, species, era: era, at: .zero, scale: 1, hat: true, weapon: role, face: face)
+                    // Variants swap the era weapon for their signature gear.
+                    let ownWeapon: Bool = v == .spearman || v == .slinger || v == .sniper
+                    if v == .spearman { self.drawSpear(era: era) }
+                    self.drawCritter(ctx, species, era: era, at: .zero, scale: 1, hat: v != .berserker,
+                                     weapon: ownWeapon ? nil : role, face: face)
+                    switch v {
+                    case .berserker: self.drawWarBand(species)
+                    case .slinger: self.drawSling()
+                    case .sniper: self.drawLongRifle(era: era)
+                    default: break
+                    }
                 }
             }
         }
+    }
+
+    // MARK: Variant gear (drawn on top of / behind the standard sprites)
+
+    private func drawSpear(era: Int) {
+        let ol = ArtFactory.outline
+        let wood = UIColor(hex: era >= 3 ? 0x455A64 : 0x8D5A2B)
+        let shaft = UIBezierPath()
+        shaft.move(to: CGPoint(x: 30, y: 58)); shaft.addLine(to: CGPoint(x: 72, y: 12))
+        shaft.lineWidth = 4.2; shaft.lineCapStyle = .round
+        ol.setStroke(); shaft.stroke()
+        shaft.lineWidth = 2.4; wood.setStroke(); shaft.stroke()
+        let tip = UIBezierPath()
+        tip.move(to: CGPoint(x: 77, y: 5)); tip.addLine(to: CGPoint(x: 66, y: 13)); tip.addLine(to: CGPoint(x: 72, y: 19)); tip.close()
+        let steel = era == 4 ? UIColor(hex: 0x7DF9FF) : era == 0 ? UIColor(hex: 0x9E9E9E) : UIColor(hex: 0xCFD8DC)
+        fill(tip, steel, stroke: ol, width: 1.2)
+        if era == 4 {
+            let c = UIGraphicsGetCurrentContext()
+            c?.setShadow(offset: .zero, blur: 4, color: steel.cgColor)
+            fill(tip, steel)
+            c?.setShadow(offset: .zero, blur: 0, color: nil)
+        }
+    }
+
+    private func drawWarBand(_ s: Species) {
+        let ol = ArtFactory.outline
+        let red = UIColor(hex: s == .rat ? 0x37474F : 0xD84315)
+        let band = UIBezierPath()
+        band.move(to: CGPoint(x: 16, y: 27)); band.addQuadCurve(to: CGPoint(x: 46, y: 25), controlPoint: CGPoint(x: 31, y: 18))
+        band.addLine(to: CGPoint(x: 45, y: 30)); band.addQuadCurve(to: CGPoint(x: 17, y: 32), controlPoint: CGPoint(x: 31, y: 24))
+        band.close()
+        fill(band, red, stroke: ol, width: 1.1)
+        // fluttering tails
+        let tail = UIBezierPath()
+        tail.move(to: CGPoint(x: 17, y: 29)); tail.addLine(to: CGPoint(x: 6, y: 25)); tail.addLine(to: CGPoint(x: 9, y: 31))
+        tail.addLine(to: CGPoint(x: 3, y: 34)); tail.addLine(to: CGPoint(x: 17, y: 32)); tail.close()
+        fill(tail, red, stroke: ol, width: 1)
+        // war paint on the cheek
+        line(CGPoint(x: 40, y: 39), CGPoint(x: 47, y: 37), red, width: 1.6)
+        line(CGPoint(x: 41, y: 42), CGPoint(x: 48, y: 40), red, width: 1.6)
+    }
+
+    private func drawSling() {
+        let ol = ArtFactory.outline
+        let cord = UIBezierPath()
+        cord.move(to: CGPoint(x: 47, y: 47))
+        cord.addQuadCurve(to: CGPoint(x: 52, y: 14), controlPoint: CGPoint(x: 66, y: 30))
+        cord.lineWidth = 1.6; UIColor(hex: 0x6D4C41).setStroke(); cord.stroke()
+        fill(oval(47, 8, 10, 8), UIColor(hex: 0x8D6E63), stroke: ol, width: 1.1)
+        fill(circle(52, 11.5, 2.6), UIColor(hex: 0x9E9E9E), stroke: ol, width: 0.8)
+    }
+
+    private func drawLongRifle(era: Int) {
+        let ol = ArtFactory.outline
+        let barrel = UIColor(hex: era >= 4 ? 0xB0BEC5 : 0x37474F)
+        let stock = UIColor(hex: era >= 3 ? 0x455A64 : 0x6D4C41)
+        fill(UIBezierPath(roundedRect: CGRect(x: 30, y: 40, width: 16, height: 6), cornerRadius: 2.5), stock, stroke: ol, width: 1.1)
+        fill(UIBezierPath(roundedRect: CGRect(x: 44, y: 41, width: 33, height: 3.2), cornerRadius: 1.4), barrel, stroke: ol, width: 1)
+        // scope
+        fill(UIBezierPath(roundedRect: CGRect(x: 47, y: 35.5, width: 14, height: 4.5), cornerRadius: 2), UIColor(hex: 0x263238), stroke: ol, width: 1)
+        fill(circle(61, 37.7, 2), UIColor(hex: era >= 4 ? 0x7DF9FF : 0x80DEEA))
+    }
+
+    /// Big tower shield in front of a heavy unit (Guardian).
+    private func drawTowerShield(era: Int, species: Species) {
+        let ol = ArtFactory.outline
+        let team = ArtFactory.palette(species).team
+        let face = era >= 3 ? UIColor(hex: 0x78909C) : era >= 1 ? UIColor(hex: 0xB0BEC5) : UIColor(hex: 0x8D6E63)
+        let shield = UIBezierPath(roundedRect: CGRect(x: 66, y: 26, width: 24, height: 48), cornerRadius: 7)
+        gradient(shield, face.blend(.white, 0.3), face.blend(.black, 0.2))
+        stroke(shield, ol, 2)
+        fill(UIBezierPath(rect: CGRect(x: 75, y: 30, width: 6, height: 40)), team.withAlphaComponent(0.85))
+        fill(circle(78, 50, 4.5), UIColor(hex: 0xFFC83D), stroke: ol, width: 1.2)
+    }
+
+    /// Small mortar strapped behind a heavy unit (Bombardier).
+    private func drawMortar(era: Int, species: Species) {
+        let ol = ArtFactory.outline
+        let metal = era >= 4 ? UIColor(hex: 0x90A4AE) : UIColor(hex: 0x424242)
+        let tube = UIBezierPath()
+        tube.move(to: CGPoint(x: 6, y: 34)); tube.addLine(to: CGPoint(x: 18, y: 8)); tube.addLine(to: CGPoint(x: 30, y: 13))
+        tube.addLine(to: CGPoint(x: 22, y: 40)); tube.close()
+        gradient(tube, metal.blend(.white, 0.25), metal)
+        stroke(tube, ol, 1.8)
+        fill(oval(16, 6, 15, 8), UIColor(hex: 0x212121), stroke: ol, width: 1.4)
+        fill(UIBezierPath(roundedRect: CGRect(x: 2, y: 36, width: 26, height: 8), cornerRadius: 3), UIColor(hex: 0x6D4C41), stroke: ol, width: 1.3)
     }
 
     func base(_ species: Species, era: Int) -> UIImage {

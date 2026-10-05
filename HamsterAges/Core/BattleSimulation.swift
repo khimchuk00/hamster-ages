@@ -160,6 +160,8 @@ public struct SideState {
     public var turrets: [TurretSlot] = [TurretSlot(unlocked: true), TurretSlot(unlocked: false)]
     public var specialCooldown: Double = 8
     public var mods: SideModifiers
+    /// Unit variants and their levels (Army Workshop / rat general).
+    public var loadout = Loadout()
     public var cards: [CardID] = []
     public var lastStandUsed = false
     public var recruiterTimer: Double = 0
@@ -194,8 +196,9 @@ public struct SideState {
     }
     public var trainFraction: Double {
         guard let q = queue.first else { return 0 }
-        return min(1, trainProgress / GameConfig.eras[q.era].unit(q.role).trainTime)
+        return min(1, trainProgress / loadout.stats(era: q.era, role: q.role).trainTime)
     }
+    public func stats(era: Int, role: UnitRole) -> UnitStats { loadout.stats(era: era, role: role) }
 }
 
 // MARK: - Simulation
@@ -240,7 +243,8 @@ public final class BattleSimulation {
         return 1 + max(0, time - GameConfig.overtimeStart) / 60 * GameConfig.overtimeDamagePerMinute
     }
 
-    public init(difficulty: StageDifficulty, playerMods: SideModifiers, seed: UInt64, mode: BattleMode = .campaign) {
+    public init(difficulty: StageDifficulty, playerMods: SideModifiers, seed: UInt64, mode: BattleMode = .campaign,
+                playerLoadout: Loadout = Loadout(), startEra: Int = 0) {
         self.difficulty = difficulty
         self.mode = mode
         ratGeneral = mode == .survival ? .ratKing : RatGeneral.forStage(difficulty.stage)
@@ -252,12 +256,29 @@ public final class BattleSimulation {
             return SideState(food: GameConfig.startFood + m.startFood, baseHP: hp, baseMaxHP: hp, mods: m)
         }
         sides = [makeSide(playerMods), makeSide(enemyMods)]
+        sides[Side.player.rawValue].loadout = playerLoadout
+        sides[Side.enemy.rawValue].loadout = ratGeneral.loadout
+        if startEra > 0 { startBoth(atEra: startEra) }
         controllers[.enemy] = BattleAI(difficulty: difficulty, general: ratGeneral)
         if mode.hasStageRules { applyStageModifier(difficulty.modifier) }
         if difficulty.isBoss {
             // Bosses open with a free epic card.
             let epics = Card.all.filter { $0.rarity == .epic && $0.id != .lastStand }
             if let c = epics.randomElement(using: &rng) { applyCard(c.id, to: .enemy) }
+        }
+    }
+
+    /// Later chapters open further up the timeline: both sides start in `era` with a matching purse.
+    private func startBoth(atEra target: Int) {
+        let e = min(target, GameConfig.eras.count - 1)
+        for side in Side.allCases {
+            mutate(side) { s in
+                s.era = e
+                s.baseMaxHP = GameConfig.eras[e].baseHP * s.mods.baseHP
+                s.baseHP = s.baseMaxHP
+                s.xp = GameConfig.eras[e - 1].xpToEvolve ?? 0
+                s.food = (GameConfig.startFood + s.mods.startFood) * GameConfig.costScale[e]
+            }
         }
     }
 
@@ -312,7 +333,7 @@ public final class BattleSimulation {
 
     public func unitCost(_ role: UnitRole, for side: Side) -> Double {
         let s = state(side)
-        return (s.eraDef.unit(role).cost * s.mods.unitCost).rounded()
+        return (s.stats(era: s.era, role: role).cost * s.mods.unitCost).rounded()
     }
 
     public func turretCost(for side: Side) -> Double { state(side).eraDef.turret.cost }
@@ -561,7 +582,7 @@ public final class BattleSimulation {
     }
 
     private func spawn(_ role: UnitRole, era: Int, side: Side, boss: Bool = false, trait: RatTrait? = nil) {
-        let stats = GameConfig.eras[era].unit(role)
+        let stats = state(side).stats(era: era, role: role)
         let u = UnitEntity(id: nextID, side: side, role: role, era: era,
                            x: BattleSimulation.spawnX(side, width: stats.width * (boss ? 1.4 : 1)),
                            stats: stats, mods: state(side).mods, boss: boss, trait: trait)
@@ -660,7 +681,7 @@ public final class BattleSimulation {
     private func updateTraining(_ side: Side, _ dt: Double) {
         let s = state(side)
         guard let q = s.queue.first else { return }
-        let stats = GameConfig.eras[q.era].unit(q.role)
+        let stats = s.stats(era: q.era, role: q.role)
         let progress = min(stats.trainTime, s.trainProgress + dt * s.mods.trainSpeed)
         mutate(side) { $0.trainProgress = progress }
         if progress >= stats.trainTime, spawnClear(side, width: stats.width) {

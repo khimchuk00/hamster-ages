@@ -536,5 +536,39 @@ do {
     }
 }
 
+// MARK: Army Workshop & chapter starts
+do {
+    for role in UnitRole.allCases {
+        check(UnitVariant.of(role).count == 3 && UnitVariant.of(role).contains(UnitVariant.standard(role)), "3 variants per role")
+    }
+    let base = GameConfig.eras[0].unit(.melee)
+    let spear = UnitVariant.spearman.apply(base, level: 1)
+    check(spear.range > base.range * 4, "spearmen reach past the front rank")
+    check(UnitVariant.brawler.apply(base, level: 5).hp > base.hp * 1.19, "levels add HP")
+    let bomb = UnitVariant.bombardier.apply(GameConfig.eras[0].unit(.heavy), level: 1)
+    check(bomb.isRanged && !GameConfig.eras[0].unit(.heavy).isRanged, "bombardiers shoot from the Stone Age")
+    let slinger = Loadout(variants: [.brawler, .slinger, .brute], levels: [1, 1, 1])
+    let s = BattleSimulation(difficulty: StageDifficulty(stage: 3), playerMods: SideModifiers(), seed: 1, playerLoadout: slinger)
+    check(s.unitCost(.ranged, for: .player) < Double(GameConfig.eras[0].unit(.ranged).cost), "slingers are cheaper")
+    check(ChapterStart.era(stage: 1) == 0 && ChapterStart.era(stage: 11) == 1 && ChapterStart.era(stage: 31) == 3
+          && ChapterStart.era(stage: 99) == 4, "chapters start further up the timeline")
+    let c2 = BattleSimulation(difficulty: StageDifficulty(stage: 12), playerMods: SideModifiers(), seed: 2, startEra: 1)
+    check(c2.state(.player).era == 1 && c2.state(.enemy).era == 1 && c2.state(.player).baseHP == GameConfig.eras[1].baseHP,
+          "chapter 2 battles open in the Medieval age")
+    check(c2.state(.player).xpProgress == 0 && !c2.state(.player).canEvolve, "XP starts at the beginning of the age")
+    check(c2.state(.enemy).loadout == RatGeneral.forStage(12).loadout, "rats bring their general's troops")
+    MainActor.assumeIsolated {
+        UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+        let store = ProgressStore()
+        check(store.progress.loadout == Loadout(), "new players use the standard squad")
+        store.addSeeds(5000)
+        check(!store.upgradeVariant(.spearman) && store.unlockVariant(.spearman), "unlock before upgrading")
+        store.equipVariant(.spearman)
+        check(store.progress.loadout.variant(.melee) == .spearman, "equip a variant")
+        check(store.upgradeVariant(.spearman) && store.progress.loadout.levels[0] == 2, "upgrade raises the equipped level")
+        UserDefaults.standard.removeObject(forKey: "hamsterages.progress.v1")
+    }
+}
+
 print(failures == 0 ? "✅ All \(passed) checks passed" : "\(failures) failed, \(passed) passed")
 exit(failures == 0 ? 0 : 1)

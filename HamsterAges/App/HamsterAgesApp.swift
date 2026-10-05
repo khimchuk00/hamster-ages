@@ -112,6 +112,7 @@ struct RootView: View {
                 case "artbg": artSheet = .backgrounds
                 case "artgen": artSheet = .ratGenerals
                 case "artshare": artSheet = .shareCard
+                case "artvar": artSheet = .variants
                 default: artSheet = .units(.hamster)
                 }
             }

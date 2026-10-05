@@ -159,7 +159,7 @@ private struct BattleHUD: View {
             }
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(UnitRole.allCases, id: \.self) { role in
-                    UnitButton(role: role, era: c.era, skin: c.skin, cost: c.unitCosts[role.rawValue], affordable: c.food >= c.unitCosts[role.rawValue] && c.queue.count < GameConfig.maxQueue) {
+                    UnitButton(role: role, era: c.era, skin: c.skin, variant: c.loadout.variant(role), cost: c.unitCosts[role.rawValue], affordable: c.food >= c.unitCosts[role.rawValue] && c.queue.count < GameConfig.maxQueue) {
                         c.train(role)
                     }
                     .tutorialAnchor(role == .melee ? .unit : nil)
@@ -553,6 +553,7 @@ private struct UnitButton: View {
     let role: UnitRole
     let era: Int
     var skin: FurSkin = .classic
+    var variant: UnitVariant? = nil
     let cost: Int
     let affordable: Bool
     let action: () -> Void
@@ -560,7 +561,7 @@ private struct UnitButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin))
+                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin, variant: variant))
                     .resizable().scaledToFit()
                     .frame(height: 40)
                 Text("\(cost)")

@@ -31,7 +31,7 @@ struct HomeView: View {
                     .ignoresSafeArea()
 
                 // The player's army stands on the ground in the middle of the screen, led by their general.
-                HomeArmy(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), skin: p.skin,
+                HomeArmy(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), skin: p.skin, loadout: p.loadout,
                          general: p.equipped.flatMap { p.generalLevel($0) > 0 ? $0 : nil }, bob: bob)
                     // Stands in the gap between the farm widget and the stage panel.
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
@@ -247,7 +247,7 @@ struct HomeView: View {
                         HStack(spacing: 8) {
                             if p.wins >= 1 {
                             Button { showUpgrades = true } label: {
-                                Text("Upgrades").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
+                                Text("Army").lineLimit(1).minimumScaleFactor(0.5).frame(width: 86)
                             }
                             .buttonStyle(ChunkyButtonStyle(color: Theme.orange))
                             .overlay(alignment: .topTrailing) {
@@ -360,7 +360,10 @@ struct HomeView: View {
         .fullScreenCover(isPresented: $showMap) {
             ScaledUI { CampaignMapView(store: store) { stage, hard in onPlayStage(stage, hard) } }
         }
-        .sheet(isPresented: $showUpgrades) { UpgradesView(store: store).presentationSizing(.page) }
+        .sheet(isPresented: $showUpgrades) {
+            // New players start on the cheap base upgrades; once they own some, the Workshop leads.
+            UpgradesView(store: store, initialTab: store.progress.upgrades.isEmpty ? .upgrades : .units).presentationSizing(.page)
+        }
         .sheet(isPresented: $showDaily) { DailyRewardView(store: store).presentationSizing(.page) }
         .sheet(isPresented: $showShop) { ShopView(store: shop, progress: store, ads: ads).presentationSizing(.page) }
         .sheet(isPresented: $showGenerals) { GeneralsView(store: store, ads: ads).presentationSizing(.page) }
@@ -405,18 +408,29 @@ struct BalanceDebugView: View {
 }
 #endif
 
+/// Army screen: the Workshop (unit variants per role, levels, loadout) and the base Upgrades.
 struct UpgradesView: View {
+    enum Tab: Hashable { case units, upgrades }
     let store: ProgressStore
+    var initialTab: Tab = .units
     @Environment(\.dismiss) private var dismiss
+    @State private var tab: Tab?
 
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
+        let current = tab ?? initialTab
         ZStack {
             SheetBackdrop()
-            VStack(spacing: 12) {
-                HStack {
-                    OutlinedText(text: "Upgrades", size: 26, color: Theme.gold)
+            VStack(spacing: 10) {
+                HStack(spacing: 12) {
+                    OutlinedText(text: "Army", size: 26, color: Theme.gold)
+                    HStack(spacing: 2) {
+                        tabButton(.units, title: L10n.t("Units"), icon: "person.3.fill")
+                        tabButton(.upgrades, title: L10n.t("Upgrades"), icon: "arrow.up.circle.fill")
+                    }
+                    .padding(3)
+                    .background(Capsule().fill(Theme.panel))
                     Spacer()
                     CurrencyPill(icon: "🌻", value: store.progress.seeds)
                     Button { dismiss() } label: {
@@ -424,16 +438,135 @@ struct UpgradesView: View {
                             .frame(width: 36, height: 36).background(Circle().fill(Color.white.opacity(0.15)))
                     }
                 }
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(MetaUpgrade.allCases) { u in
-                            UpgradeCard(upgrade: u, store: store)
+                if current == .units {
+                    WorkshopGrid(store: store)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(MetaUpgrade.allCases) { u in
+                                UpgradeCard(upgrade: u, store: store)
+                            }
                         }
+                        .padding(.bottom, 12)
                     }
-                    .padding(.bottom, 12)
                 }
             }
             .padding(16)
+        }
+    }
+
+    private func tabButton(_ t: Tab, title: String, icon: String) -> some View {
+        let on = (tab ?? initialTab) == t
+        return Button {
+            withAnimation(.spring(response: 0.25)) { tab = t }
+            Haptics.tap()
+        } label: {
+            Label(title, systemImage: icon).font(Theme.font(13))
+                .foregroundStyle(on ? Theme.ink : .white)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Capsule().fill(on ? Theme.gold : Color.clear))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Three columns (melee / ranged / heavy), three variants each. Tap a card to field it; buy to unlock or level up.
+private struct WorkshopGrid: View {
+    let store: ProgressStore
+
+    var body: some View {
+        let p = store.progress
+        let era = CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage))
+        HStack(alignment: .top, spacing: 10) {
+            ForEach(UnitRole.allCases, id: \.self) { role in
+                VStack(spacing: 6) {
+                    Text(roleTitle(role).localizedUppercase).font(Theme.font(11)).foregroundStyle(.white.opacity(0.7))
+                    ForEach(UnitVariant.of(role), id: \.self) { v in
+                        VariantCard(variant: v, era: era, skin: p.skin, level: p.variantLevel(v),
+                                    equipped: p.loadout.variant(role) == v, store: store)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private func roleTitle(_ r: UnitRole) -> String {
+        switch r {
+        case .melee: return L10n.t("Melee")
+        case .ranged: return L10n.t("Ranged")
+        case .heavy: return L10n.t("Heavy")
+        }
+    }
+}
+
+private struct VariantCard: View {
+    let variant: UnitVariant
+    let era: Int
+    let skin: FurSkin
+    let level: Int
+    let equipped: Bool
+    let store: ProgressStore
+
+    var body: some View {
+        let locked = level == 0
+        HStack(spacing: 8) {
+            Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: variant.role, skin: skin, variant: variant))
+                .resizable().scaledToFit().frame(width: 50, height: 46)
+                .saturation(locked ? 0 : 1).opacity(locked ? 0.6 : 1)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(variant.title).font(Theme.font(13)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                    if !locked {
+                        Text("Lv \(level)").font(Theme.font(10)).foregroundStyle(Theme.gold).fixedSize()
+                    }
+                }
+                Text(variant.detail).font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.75)).lineLimit(2).minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
+                actionButton(locked: locked)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(7)
+        .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(equipped ? Theme.gold.opacity(0.16) : Color.white.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(equipped ? Theme.gold : .white.opacity(0.12), lineWidth: equipped ? 2.5 : 1))
+        .overlay(alignment: .topTrailing) {
+            if equipped {
+                Image(systemName: "checkmark.circle.fill").font(.system(size: 16)).foregroundStyle(Theme.gold)
+                    .background(Circle().fill(Theme.ink)).offset(x: 5, y: -5)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard !locked, !equipped else { return }
+            store.equipVariant(variant)
+            Haptics.tap()
+            Sound.shared.play(.tap)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(equipped ? .isSelected : [])
+    }
+
+    @ViewBuilder private func actionButton(locked: Bool) -> some View {
+        if locked {
+            Button {
+                if store.unlockVariant(variant) { store.equipVariant(variant); Haptics.success(); Sound.shared.play(.evolve) }
+                else { Haptics.fail() }
+            } label: {
+                Label("\(variant.unlockCost)", systemImage: "lock.open.fill").font(Theme.font(11))
+            }
+            .buttonStyle(ChunkyButtonStyle(color: store.canUnlock(variant) ? Theme.purple : Theme.disabled, cornerRadius: 9, depth: 2, compact: true))
+        } else if level >= UnitVariant.maxLevel {
+            Text("MAX").font(Theme.font(11)).foregroundStyle(Theme.gold)
+        } else {
+            Button {
+                if store.upgradeVariant(variant) { Haptics.success(); Sound.shared.play(.coin) } else { Haptics.fail() }
+            } label: {
+                Label("\(UnitVariant.upgradeCost(level: level))", systemImage: "arrow.up").font(Theme.font(11))
+            }
+            .buttonStyle(ChunkyButtonStyle(color: store.canUpgrade(variant) ? Theme.green : Theme.disabled, cornerRadius: 9, depth: 2, compact: true))
         }
     }
 }
@@ -541,13 +674,14 @@ struct DailyRewardView: View {
 private struct HomeArmy: View {
     let era: Int
     let skin: FurSkin
+    var loadout = Loadout()
     let general: GeneralID?
     let bob: Bool
 
     var body: some View {
         HStack(alignment: .bottom, spacing: -12) {
             ForEach(Array([UnitRole.ranged, .melee].enumerated()), id: \.offset) { i, role in
-                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin))
+                Image(uiImage: ArtFactory.shared.unit(.hamster, era: era, role: role, skin: skin, variant: loadout.variant(role)))
                     .resizable().scaledToFit()
                     .frame(height: 50)
                     .offset(y: bob == (i % 2 == 0) ? -4 : 0)

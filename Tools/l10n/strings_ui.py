@@ -152,3 +152,5 @@ T("Piggy Bank", "Скарбничка", "Sparschwein", "Hucha", "Tirelire", "Sal
 T("FULL", "ПОВНА", "VOLL", "LLENA", "PLEINE", "PIENO", "CHEIO", "満タン", "가득", "已满", "已滿", "DOLU")
 VERBATIM += ["%lld★"]
 T("TIP", "ПОРАДА", "TIPP", "CONSEJO", "ASTUCE", "SUGGERIMENTO", "DICA", "ヒント", "팁", "提示", "提示", "İPUCU")
+T("Army", "Армія", "Armee", "Ejército", "Armée", "Esercito", "Exército", "軍隊", "군대", "军队", "軍隊", "Ordu")
+T("Lv %lld", "Рів. %lld", "St. %lld", "Nv %lld", "Niv %lld", "Liv %lld", "Nv %lld", "Lv%lld", "Lv %lld", "%lld级", "%lld級", "Sv %lld")
