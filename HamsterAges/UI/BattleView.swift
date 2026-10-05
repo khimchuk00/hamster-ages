@@ -201,6 +201,35 @@ private struct BattleHUD: View {
 
 // MARK: - Share card
 
+/// Slowly turning golden rays behind the victory panel.
+private struct Sunburst: View {
+    @State private var spin = false
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<16, id: \.self) { i in
+                RayShape()
+                    .fill(LinearGradient(colors: [Theme.gold.opacity(0.45), Theme.gold.opacity(0)], startPoint: .center, endPoint: .top))
+                    .rotationEffect(.degrees(Double(i) * 22.5))
+            }
+            Circle().fill(RadialGradient(colors: [Theme.gold.opacity(0.35), .clear], center: .center, startRadius: 0, endRadius: 260))
+        }
+        .rotationEffect(.degrees(spin ? 360 : 0))
+        .onAppear { withAnimation(.linear(duration: 40).repeatForever(autoreverses: false)) { spin = true } }
+    }
+
+    private struct RayShape: Shape {
+        func path(in r: CGRect) -> Path {
+            var p = Path()
+            p.move(to: CGPoint(x: r.midX, y: r.midY))
+            p.addLine(to: CGPoint(x: r.midX - r.width * 0.06, y: r.minY))
+            p.addLine(to: CGPoint(x: r.midX + r.width * 0.06, y: r.minY))
+            p.closeSubpath()
+            return p
+        }
+    }
+}
+
 /// 1200×630 image for sharing a win: army, rival, stars and a challenge line.
 struct ShareCard: View {
     let result: BattleResult
@@ -992,6 +1021,9 @@ private struct ResultView: View {
     var body: some View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea()
+            if result.won || result.mode == .survival {
+                Sunburst().frame(width: 900, height: 900).frame(width: 1, height: 1).allowsHitTesting(false)
+            }
             VStack(spacing: 12) {
                 if result.mode == .survival {
                     OutlinedText(text: L10n.f("SURVIVED %@", clock(result.duration)), size: 36, color: Theme.gold)
