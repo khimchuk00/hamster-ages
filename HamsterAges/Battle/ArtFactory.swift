@@ -1,3 +1,4 @@
+import CoreImage
 import UIKit
 
 enum Species { case hamster, rat }
@@ -445,6 +446,23 @@ final class ArtFactory {
                 tail.lineWidth = 2; ol.setStroke(); tail.stroke()
                 self.fill(self.oval(14, 16, 10, 6), UIColor(white: 1, alpha: 0.45))
             }
+        }
+    }
+
+    /// Pre-blurred, small menu backdrop (blurring once here is far cheaper than a live SwiftUI blur on every sheet).
+    func blurredBackdrop(era: Int) -> UIImage {
+        cached("backdrop-\(era)") {
+            let src = render(CGSize(width: 640, height: 300), scale: 1) { ctx in
+                self.drawBackground(ctx, era: era, size: CGSize(width: 640, height: 300), groundHeight: 54)
+            }
+            guard let input = CIImage(image: src),
+                  let filter = CIFilter(name: "CIGaussianBlur") else { return src }
+            filter.setValue(input.clampedToExtent(), forKey: kCIInputImageKey)
+            filter.setValue(6, forKey: kCIInputRadiusKey)
+            let context = CIContext(options: [.useSoftwareRenderer: false])
+            guard let out = filter.outputImage?.cropped(to: input.extent),
+                  let cg = context.createCGImage(out, from: input.extent) else { return src }
+            return UIImage(cgImage: cg)
         }
     }
 

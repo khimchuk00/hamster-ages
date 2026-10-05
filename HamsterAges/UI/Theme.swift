@@ -155,11 +155,10 @@ struct SheetBackdrop: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Image(uiImage: ArtFactory.shared.background(era: SheetBackdrop.era, size: CGSize(width: 844, height: 390), groundHeight: 70))
+                Image(uiImage: ArtFactory.shared.blurredBackdrop(era: SheetBackdrop.era))
                     .resizable()
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
-                    .blur(radius: 7)
                     .clipped()
                 LinearGradient(colors: [Color(hex: 0x2B2140, opacity: 0.78), Color(hex: 0x1C1428, opacity: 0.9)],
                                startPoint: .top, endPoint: .bottom)
