@@ -63,7 +63,7 @@ jobs:
             shot 2-cards 7 -demo -screen battle -era 2
             shot 3-future 34 -demo -screen battle -autoplay -era 4
             shot 4-heroes 7 -demo -screen heroes
-            shot 5-rivals 5 -demo -screen battle -autoplay -stage 7
+            shot 5-rivals 6 -demo -screen battle -autoplay -stage 7
             shot 6-map 7 -demo -screen map
           done
           }

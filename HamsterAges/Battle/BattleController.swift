@@ -461,7 +461,7 @@ final class BattleController {
                 self?.taunt = line
                 Sound.shared.play(.squeak)
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.6) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) { [weak self] in
                 if self?.taunt == line { self?.taunt = nil }
             }
         }
