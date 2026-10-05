@@ -1451,8 +1451,8 @@ final class ArtFactory {
         let w = size.width, h = size.height, gy = h - groundHeight
         let space = CGColorSpace(name: CGColorSpace.sRGB)
         let zenith = UIColor(hex: top).blend(.black, era == 4 ? 0.2 : 0.12)
-        let mid = UIColor(hex: top).blend(UIColor(hex: bottom), 0.45)
-        if let g = CGGradient(colorsSpace: space, colors: [zenith.cgColor, mid.cgColor, UIColor(hex: bottom).cgColor] as CFArray,
+        let midSky = UIColor(hex: top).blend(UIColor(hex: bottom), 0.45)
+        if let g = CGGradient(colorsSpace: space, colors: [zenith.cgColor, midSky.cgColor, UIColor(hex: bottom).cgColor] as CFArray,
                               locations: [0, 0.55, 1]) {
             c.drawLinearGradient(g, start: .zero, end: CGPoint(x: 0, y: gy), options: [.drawsAfterEndLocation])
         }
