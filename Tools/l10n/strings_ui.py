@@ -154,3 +154,7 @@ VERBATIM += ["%lld★"]
 T("TIP", "ПОРАДА", "TIPP", "CONSEJO", "ASTUCE", "SUGGERIMENTO", "DICA", "ヒント", "팁", "提示", "提示", "İPUCU")
 T("Army", "Армія", "Armee", "Ejército", "Armée", "Esercito", "Exército", "軍隊", "군대", "军队", "軍隊", "Ordu")
 T("Lv %lld", "Рів. %lld", "St. %lld", "Nv %lld", "Niv %lld", "Liv %lld", "Nv %lld", "Lv%lld", "Lv %lld", "%lld级", "%lld級", "Sv %lld")
+T("YOUR SQUAD", "ТВІЙ ЗАГІН", "DEIN TRUPP", "TU ESCUADRA", "TON ESCOUADE", "LA TUA SQUADRA", "SEU ESQUADRÃO", "あなたの部隊", "내 부대", "你的小队", "你的小隊", "TİMİN")
+T("THEIR TROOPS", "ЇХНІ ВІЙСЬКА", "IHRE TRUPPEN", "SUS TROPAS", "LEURS TROUPES", "LE LORO TRUPPE", "TROPAS INIMIGAS", "敵の部隊", "적 부대", "敌方部队", "敵方部隊", "ONLARIN BİRLİKLERİ")
+T("Tap a unit to swap it for another one from your Workshop.", "Торкнись юніта, щоб замінити його іншим із Майстерні.", "Tippe auf eine Einheit, um sie gegen eine andere aus der Werkstatt zu tauschen.", "Toca una unidad para cambiarla por otra de tu taller.", "Touche une unité pour l'échanger contre une autre de ton atelier.", "Tocca un'unità per scambiarla con un'altra della tua officina.", "Toque em uma unidade para trocá-la por outra da sua oficina.", "ユニットをタップして工房の別のユニットと入れ替え。", "유닛을 눌러 공방의 다른 유닛으로 바꾸세요.", "点击单位，换成工坊里的其他单位。", "點擊單位，換成工坊裡的其他單位。", "Atölyendeki başka bir birimle değiştirmek için birime dokun.")
+T("FIGHT!", "У БІЙ!", "KÄMPFEN!", "¡A LUCHAR!", "AU COMBAT !", "COMBATTI!", "LUTAR!", "戦え！", "전투!", "开战！", "開戰！", "SAVAŞ!")

@@ -8,6 +8,7 @@ struct HomeView: View {
     /// Campaign map: play (or replay) a specific stage.
     var onPlayStage: (Int, Bool) -> Void = { _, _ in }
     @State private var showMap = false
+    @State private var showPrep = false
     @State private var showGenerals = false
     @State private var showQuests = false
     @State private var showUpgrades = false
@@ -237,7 +238,10 @@ struct HomeView: View {
                             }
                         }
 
-                        Button { onPlay(.campaign) } label: {
+                        Button {
+                            // From the 3rd battle on: scout the rival and set the squad first.
+                            if p.battlesPlayed >= 3 { showPrep = true } else { onPlay(.campaign) }
+                        } label: {
                             Label("BATTLE", systemImage: "flag.2.crossed.fill")
                                 .font(Theme.font(24))
                                 .frame(width: 200)
@@ -343,6 +347,7 @@ struct HomeView: View {
                 case "heroes": showGenerals = true
                 case "upgrades": showUpgrades = true
                 case "map": showMap = true
+                case "prep": showPrep = true
                 case "shop": showShop = true
                 case "quests": showQuests = true
                 case "pass": showPass = true
@@ -356,6 +361,9 @@ struct HomeView: View {
             withAnimation(.easeInOut(duration: 0.45).repeatForever()) { bob = true }
             // Don't greet brand-new players with a popup before their first battle.
             if store.progress.tutorialDone == true && store.dailyStatus().available { showDaily = true }
+        }
+        .fullScreenCover(isPresented: $showPrep) {
+            ScaledUI { BattlePrepView(store: store, stage: store.progress.stage) { onPlay(.campaign) } }
         }
         .fullScreenCover(isPresented: $showMap) {
             ScaledUI { CampaignMapView(store: store) { stage, hard in onPlayStage(stage, hard) } }
