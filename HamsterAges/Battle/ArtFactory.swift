@@ -516,6 +516,22 @@ final class ArtFactory {
         }
     }
 
+    /// 4-point impact flash (additive).
+    func impactStar() -> UIImage {
+        cached("impact-star") {
+            render(CGSize(width: 32, height: 32), scale: 2) { ctx in
+                ctx.cgContext.setShadow(offset: .zero, blur: 5, color: UIColor(hex: 0xFFE082).cgColor)
+                let p = UIBezierPath()
+                p.move(to: CGPoint(x: 16, y: 2))
+                p.addQuadCurve(to: CGPoint(x: 30, y: 16), controlPoint: CGPoint(x: 18, y: 14))
+                p.addQuadCurve(to: CGPoint(x: 16, y: 30), controlPoint: CGPoint(x: 18, y: 18))
+                p.addQuadCurve(to: CGPoint(x: 2, y: 16), controlPoint: CGPoint(x: 14, y: 18))
+                p.addQuadCurve(to: CGPoint(x: 16, y: 2), controlPoint: CGPoint(x: 14, y: 14))
+                self.fill(p, UIColor(hex: 0xFFF8E1))
+            }
+        }
+    }
+
     /// Falling leaf for ambient particles.
     func leaf(_ color: UIColor) -> UIImage {
         cached("leaf-\(color.description)") {

@@ -917,6 +917,8 @@ final class BattleScene: SKScene {
         shadow.zPosition = -1
         l.addChild(shadow)
         fxLayer.addChild(l)
+        l.setScale(1.45)
+        l.run(.scale(to: 1, duration: 0.12))
         l.run(.sequence([.group([.moveBy(x: CGFloat.random(in: -6...6), y: rise, duration: 0.6),
                                  .sequence([.wait(forDuration: 0.35), .fadeOut(withDuration: 0.25)])]),
                          .removeFromParent()]))
@@ -1009,6 +1011,16 @@ final class BattleScene: SKScene {
     }
 
     private func spark(at pos: CGPoint) {
+        // Quick star flash on contact, then a few embers.
+        let star = SKSpriteNode(texture: tex(ArtFactory.shared.impactStar()))
+        star.blendMode = .add
+        star.position = pos
+        star.zPosition = 56
+        star.setScale(0.35 * hScale)
+        star.zRotation = .random(in: 0...(.pi / 2))
+        fxLayer.addChild(star)
+        star.run(.sequence([.group([.scale(to: 0.85 * hScale, duration: 0.09), .rotate(byAngle: 0.4, duration: 0.14),
+                                    .sequence([.wait(forDuration: 0.05), .fadeOut(withDuration: 0.1)])]), .removeFromParent()]))
         let texture = tex(ArtFactory.shared.dot(.white, radius: 4))
         for _ in 0..<3 {
             let d = SKSpriteNode(texture: texture)
