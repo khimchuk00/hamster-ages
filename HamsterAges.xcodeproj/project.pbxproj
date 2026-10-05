@@ -273,7 +273,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8L4NS6FSJ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "HamsterAges-Info.plist";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data is used to show ads that are more relevant to you and keep Hamster Ages free.";
@@ -309,7 +309,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8L4NS6FSJ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "HamsterAges-Info.plist";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data is used to show ads that are more relevant to you and keep Hamster Ages free.";
