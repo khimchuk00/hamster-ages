@@ -594,6 +594,7 @@ final class BattleScene: SKScene {
         guard let body = bodies[id] else { return }
         if on {
             walking.insert(id)
+            body.removeAction(forKey: "breathe")
             // Bouncy hop: stretch on the way up, squash on landing.
             let sy = body.userData?["sy"] as? CGFloat ?? body.yScale
             let up = SKAction.group([.moveTo(y: 3.5 * hScale, duration: 0.16), .rotate(toAngle: 0.06, duration: 0.16),
@@ -608,6 +609,10 @@ final class BattleScene: SKScene {
             body.removeAction(forKey: "walk")
             let sy = body.userData?["sy"] as? CGFloat ?? body.yScale
             body.run(.group([.moveTo(y: 0, duration: 0.08), .rotate(toAngle: 0, duration: 0.08), .scaleY(to: sy, duration: 0.08)]))
+            // Idle breathing so a standing army doesn't look frozen.
+            let inhale = SKAction.scaleY(to: sy * 1.025, duration: 0.7), exhale = SKAction.scaleY(to: sy * 0.99, duration: 0.7)
+            inhale.timingMode = .easeInEaseOut; exhale.timingMode = .easeInEaseOut
+            body.run(.sequence([.wait(forDuration: Double.random(in: 0.1...0.6)), .repeatForever(.sequence([inhale, exhale]))]), withKey: "breathe")
         }
     }
 
@@ -898,6 +903,25 @@ final class BattleScene: SKScene {
         n.position = CGPoint(x: laneToScreen(p.x), y: startY)
         unitLayer.addChild(n)
         projectileNodes[p.id] = n
+        // Trails: smoke behind shells and cannonballs, a glowing streak behind Future bolts.
+        if p.isHeavy || (p.fromTurret && p.era >= 2) || p.era == 4 {
+            let glowing = p.era == 4
+            let dot = tex(ArtFactory.shared.dot(glowing ? ArtFactory.palette(species(p.side)).team.blend(.white, 0.4) : UIColor(white: 0.85, alpha: 1),
+                                                radius: glowing ? 3 : 4))
+            let emit = SKAction.run { [weak self, weak n] in
+                guard let self, let n, n.parent != nil else { return }
+                let s = SKSpriteNode(texture: dot)
+                s.position = n.position
+                s.zPosition = 29
+                s.alpha = glowing ? 0.8 : 0.45
+                if glowing { s.blendMode = .add }
+                s.setScale(self.hScale * (glowing ? 0.8 : 0.7))
+                self.unitLayer.addChild(s)
+                s.run(.sequence([.group([.fadeOut(withDuration: 0.35), .scale(to: self.hScale * (glowing ? 0.2 : 1.6), duration: 0.35),
+                                         .moveBy(x: 0, y: glowing ? 0 : 6, duration: 0.35)]), .removeFromParent()]))
+            }
+            n.run(.repeatForever(.sequence([emit, .wait(forDuration: 0.045)])))
+        }
     }
 
     // MARK: Juice helpers
