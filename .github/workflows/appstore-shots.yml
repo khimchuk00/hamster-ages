@@ -1,25 +1,28 @@
 name: App Store screenshots (all languages)
 
-# Run: Actions → "App Store screenshots" → Run workflow, or push any commit to the `shots` branch
+# Run: push any commit to the `shots` branch
 #   git push -f origin HEAD:shots
-# Raw 6.9" simulator captures per language land on the `appstore-shots` branch;
+# Raw simulator captures per language land on the `appstore-shots` branch;
 # Tools/aso/make_screenshots.py turns them into captioned App Store images.
+#
+# Split into parallel jobs (device × language group) so no single macOS runner has to grind through
+# 144 launches — the old single-job version regularly ran past its time limit.
 on:
   push:
     branches: [shots]
-  workflow_dispatch:
-    inputs:
-      languages:
-        description: "Space-separated languages"
-        default: "en uk de es fr it pt-BR ja ko zh-Hans zh-Hant tr"
 
 permissions:
   contents: write
 
 jobs:
-  shots:
+  capture:
     runs-on: macos-15
-    timeout-minutes: 170
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iphone, ipad]
+        langs: ["en uk de es", "fr it pt-BR ja", "ko zh-Hans zh-Hant tr"]
     steps:
       - uses: actions/checkout@v4
 
@@ -33,27 +36,36 @@ jobs:
             -configuration Debug CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || (tail -50 build.log; exit 1)
 
       - name: Capture
-        timeout-minutes: 100
+        timeout-minutes: 35
         env:
-          LANGS: ${{ github.event.inputs.languages || 'en uk de es fr it pt-BR ja ko zh-Hans zh-Hant tr' }}
+          LANGS: ${{ matrix.langs }}
+          DEVICE: ${{ matrix.device }}
         run: |
-          exec > >(tee -a capture.log) 2>&1
           set -x
-          date
-          xcrun simctl list devices available | grep -E "iPhone|iPad" | head -30
-          UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro Max \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          OUT=out/$([ "$DEVICE" = ipad ] && echo raw-ipad || echo raw)
+          if [ "$DEVICE" = ipad ]; then
+            UDID=$(xcrun simctl list devices available | grep -E "iPad Pro 13" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          else
+            UDID=$(xcrun simctl list devices available | grep -E "iPhone [0-9]+ Pro Max \(" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          fi
           xcrun simctl boot "$UDID"; perl -e 'alarm 300; exec @ARGV' xcrun simctl bootstatus "$UDID" -b || echo "boot timeout"
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --cellularBars 4 || true
           APP=$(find build/Build/Products -name "HamsterAges.app" -maxdepth 3 | head -1)
           xcrun simctl install "$UDID" "$APP"
+          if [ "$DEVICE" = ipad ]; then
+            # Landscape via the Simulator UI (best effort).
+            open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+            sleep 8
+            perl -e 'alarm 20; exec @ARGV' osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
+              -e 'tell application "System Events" to key code 124 using command down' || echo "rotate failed"
+            sleep 3
+          fi
           ID=com.valkhim.hamsterages
-          capture_all() { # output dir prefix
           for L in $LANGS; do
-            mkdir -p "$1/$L"
+            mkdir -p "$OUT/$L"
             loc=$(echo "$L" | tr '-' '_')
             shot() { # name, wait, args...
               local name=$1 wait=$2; shift 2
-              # Every simctl call is time-boxed: one wedged launch must not eat the whole job.
               perl -e 'alarm 30; exec @ARGV' xcrun simctl terminate "$UDID" $ID || true
               perl -e 'alarm 60; exec @ARGV' xcrun simctl launch "$UDID" $ID -AppleLanguages "($L)" -AppleLocale "$loc" "$@" || echo "launch timeout $L $name"
               sleep "$wait"
@@ -66,28 +78,28 @@ jobs:
             shot 5-rivals 6 -demo -screen battle -autoplay -stage 7
             shot 6-map 7 -demo -screen map
           done
-          }
-          OUT=raw; capture_all raw
-          # iPad Pro 13" (landscape via the Simulator UI)
-          IPAD=$(xcrun simctl list devices available | grep -E "iPad Pro 13" | tail -1 | grep -oE "[0-9A-F-]{36}")
-          if [ -n "$IPAD" ]; then
-            xcrun simctl shutdown "$UDID" || true
-            UDID=$IPAD
-            xcrun simctl boot "$UDID"; perl -e 'alarm 300; exec @ARGV' xcrun simctl bootstatus "$UDID" -b || true
-            xcrun simctl install "$UDID" "$APP"
-            open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
-            sleep 8
-            perl -e 'alarm 20; exec @ARGV' osascript -e 'tell application "Simulator" to activate' -e 'delay 1' \
-              -e 'tell application "System Events" to key code 124 using command down' || echo "rotate failed"
-            sleep 3
-            OUT=raw-ipad; capture_all raw-ipad
-          fi
 
-      - name: Publish to the appstore-shots branch
+      - uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: shots-${{ matrix.device }}-${{ strategy.job-index }}
+          path: out
+          retention-days: 3
+
+  publish:
+    needs: capture
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/parts
+      - name: Merge and push to appstore-shots
         run: |
-          mkdir -p /tmp/out && cp -R raw raw-ipad /tmp/out/ 2>/dev/null || true
-          cp capture.log /tmp/out/ 2>/dev/null || true
+          mkdir -p /tmp/out
+          for d in /tmp/parts/*/; do cp -R "$d". /tmp/out/; done
+          find /tmp/out -name "*.png" | wc -l
           git config user.name "ci-bot" && git config user.email "ci-bot@users.noreply.github.com"
           git checkout --orphan appstore-shots
           git rm -rf . -q
