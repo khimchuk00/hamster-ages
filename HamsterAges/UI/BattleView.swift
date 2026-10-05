@@ -772,9 +772,9 @@ private struct CardPickView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.55).ignoresSafeArea()
-            VStack(spacing: 12) {
-                OutlinedText(text: controller.cardOfferTitle, size: 24, color: Theme.gold)
+            Color.black.opacity(0.68).ignoresSafeArea()
+            VStack(spacing: 7) {
+                OutlinedText(text: controller.cardOfferTitle, size: 22, color: Theme.gold)
                 Text(controller.isTutorial && controller.ownedCards.isEmpty ? "Cards power up your army for this battle — pick any!" : "Choose one upgrade for this battle")
                     .font(Theme.font(13)).foregroundStyle(.white.opacity(0.85))
                 SetProgressRow(owned: controller.ownedCards)
@@ -848,8 +848,15 @@ private struct CardView: View {
                 .padding(.horizontal, 8).padding(.vertical, 2)
                 .background(Capsule().fill(rc))
             ZStack {
-                Circle().fill(rc.opacity(0.25)).frame(width: 64, height: 64)
-                Image(systemName: card.icon).font(.system(size: 30, weight: .bold)).foregroundStyle(rc.mix(with: .white, by: 0.2))
+                // Glossy medallion
+                Circle().fill(LinearGradient(colors: [rc.mix(with: .white, by: 0.35), rc.mix(with: .black, by: 0.25)],
+                                             startPoint: .top, endPoint: .bottom))
+                    .frame(width: 62, height: 62)
+                    .overlay(Circle().stroke(.white.opacity(0.7), lineWidth: 2))
+                    .overlay(Ellipse().fill(.white.opacity(0.28)).frame(width: 40, height: 18).offset(y: -16))
+                    .shadow(color: rc.opacity(0.7), radius: 8)
+                Image(systemName: card.icon).font(.system(size: 28, weight: .heavy)).foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.35), radius: 1, y: 1)
             }
             Text(card.title).font(Theme.font(16)).foregroundStyle(.white).multilineTextAlignment(.center)
             Text(card.detail).font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -872,9 +879,11 @@ private struct CardView: View {
                     .background(Capsule().fill(Color(hex: card.tag.color).opacity(0.5)))
             }
         }
-        .padding(12)
-        .frame(width: 168, height: 214)
-        .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: 0x2B2140)))
+        .padding(11)
+        .frame(width: 168, height: 200)
+        .background(RoundedRectangle(cornerRadius: 18).fill(LinearGradient(colors: [rc.mix(with: Color(hex: 0x2B2140), by: 0.55), Color(hex: 0x231A35)],
+                                                                            startPoint: .top, endPoint: .bottom)))
+        .overlay(RoundedRectangle(cornerRadius: 15).stroke(.white.opacity(0.12), lineWidth: 1).padding(4))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(rc, lineWidth: 3))
         .shadow(color: rc.opacity(card.rarity == .epic ? 0.7 : 0.3), radius: card.rarity == .epic ? 14 : 6)
         .contentShape(Rectangle())
