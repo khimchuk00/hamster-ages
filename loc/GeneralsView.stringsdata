@@ -1,0 +1,136 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/GeneralsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Generals",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hamster Crate",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Rare 70% · Epic 25% · Legendary 5%",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻 %lld",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Free",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Find in a crate",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@: %@",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Equipped",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 164
+        }
+      },
+      {
+        "comment": "",
+        "key": "Equip",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 164
+        }
+      },
+      {
+        "comment": "",
+        "key": "Already maxed — +%lld 🌻",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "Level %lld · %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 194
+        }
+      },
+      {
+        "comment": "",
+        "key": "NEW GENERAL!",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 182
+        }
+      },
+      {
+        "comment": "",
+        "key": "MAXED!",
+        "location": {
+          "startingColumn": 89,
+          "startingLine": 182
+        }
+      },
+      {
+        "comment": "",
+        "key": "LEVEL UP!",
+        "location": {
+          "startingColumn": 100,
+          "startingLine": 182
+        }
+      },
+      {
+        "comment": "",
+        "key": "Nice!",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 197
+        }
+      }
+    ]
+  },
+  "version": 1
+}

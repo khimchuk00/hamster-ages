@@ -1,0 +1,128 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/SettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Reset all progress?",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 26
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sound effects",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Music",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "Vibration",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "Screen shake",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 44
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reminders",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restoring…",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore Purchases",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Privacy Choices",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Privacy Policy",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Support",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset Progress",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset everything",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stages, seeds, upgrades and generals will be lost. Purchases can be restored.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 100
+        }
+      }
+    ]
+  },
+  "version": 1
+}

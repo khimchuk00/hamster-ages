@@ -1,0 +1,104 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/PassView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Earn pass XP by winning battles, clearing quests and challenges.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Season %lld · %lld days left",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hamster Pass",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 19
+        }
+      },
+      {
+        "comment": "",
+        "key": "FREE",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "GOLD",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Gold Pass active",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Unlock Gold Pass",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "· %@",
+        "location": {
+          "startingColumn": 89,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tier %lld/%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 139
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 190
+        }
+      },
+      {
+        "comment": "",
+        "key": "Skins",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 212
+        }
+      }
+    ]
+  },
+  "version": 1
+}

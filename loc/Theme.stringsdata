@@ -1,0 +1,16 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/Theme.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 108
+        }
+      }
+    ]
+  },
+  "version": 1
+}

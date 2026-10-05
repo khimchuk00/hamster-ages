@@ -1,0 +1,320 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/BattleView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%@, %@",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Can your hamsters do better?",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "HAMSTER AGES",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 246
+        }
+      },
+      {
+        "comment": "",
+        "key": "VS",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 392
+        }
+      },
+      {
+        "comment": "",
+        "key": "TIP",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "RAT KING",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 594
+        }
+      },
+      {
+        "comment": "",
+        "key": "FINAL AGE",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 629
+        }
+      },
+      {
+        "comment": "",
+        "key": "EVOLVE",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 611
+        }
+      },
+      {
+        "comment": "",
+        "key": "XP %lld%% → %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 621
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 650
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 712
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sell turret (50%)",
+        "location": {
+          "startingColumn": 68,
+          "startingLine": 722
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@: %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 784
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cards power up your army for this battle — pick any!",
+        "location": {
+          "startingColumn": 79,
+          "startingLine": 810
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose one upgrade for this battle",
+        "location": {
+          "startingColumn": 138,
+          "startingLine": 810
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reroll (%lld)",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 826
+        }
+      },
+      {
+        "comment": "",
+        "key": "Free Reroll",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 834
+        }
+      },
+      {
+        "comment": "",
+        "key": "Owned ×%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 898
+        }
+      },
+      {
+        "comment": "",
+        "key": "Watch a short video to restore 40% of your base and blast the rats at your gates.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 937
+        }
+      },
+      {
+        "comment": "",
+        "key": "YOUR BASE IS FALLING!",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 936
+        }
+      },
+      {
+        "comment": "",
+        "key": "Give up",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 941
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading…",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 951
+        }
+      },
+      {
+        "comment": "",
+        "key": "Revive",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 951
+        }
+      },
+      {
+        "comment": "",
+        "key": "Paused",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 973
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ — %@",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 975
+        }
+      },
+      {
+        "comment": "",
+        "key": "Surrender",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 991
+        }
+      },
+      {
+        "comment": "",
+        "key": "Resume",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 992
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upgrade your hamsters and try again!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1051
+        }
+      },
+      {
+        "comment": "",
+        "key": "VICTORY!",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 1037
+        }
+      },
+      {
+        "comment": "",
+        "key": "DEFEAT",
+        "location": {
+          "startingColumn": 62,
+          "startingLine": 1037
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld kills",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 1062
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 1095
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 1095
+        }
+      },
+      {
+        "comment": "",
+        "key": "+%lld 🌻",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 1089
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading…",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 1088
+        }
+      },
+      {
+        "comment": "",
+        "key": "×2 Seeds",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 1088
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 1111
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hamster Ages",
+        "location": {
+          "startingColumn": 80,
+          "startingLine": 1106
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,56 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/BattlePrepView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "BOSS",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "YOUR SQUAD",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap a unit to swap it for another one from your Workshop.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "THEIR TROOPS",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "FIGHT!",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lv %lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 123
+        }
+      }
+    ]
+  },
+  "version": 1
+}

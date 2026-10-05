@@ -1,0 +1,184 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/ShopView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "First purchase bonus: double seeds on any seed pack!",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "Shop",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "Seed Bag",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Seed Barrel",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "+33%",
+        "location": {
+          "startingColumn": 121,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Seed Cart",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "POPULAR",
+        "location": {
+          "startingColumn": 115,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "Seed Silo",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST VALUE",
+        "location": {
+          "startingColumn": 119,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Ads",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Removes interstitials forever",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Starter Pack",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "3,000 🌻 + 2 Hero Crates",
+        "location": {
+          "startingColumn": 75,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "×5 VALUE",
+        "location": {
+          "startingColumn": 68,
+          "startingLine": 44
+        }
+      },
+      {
+        "comment": "",
+        "key": "Free Seeds",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld 🌻 · %lld/%lld",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "FREE",
+        "location": {
+          "startingColumn": 81,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ 🌻",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 89
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore Purchases",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Piggy Bank",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 172
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ 🌻",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 173
+        }
+      },
+      {
+        "comment": "",
+        "key": "FULL",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 201
+        }
+      }
+    ]
+  },
+  "version": 1
+}

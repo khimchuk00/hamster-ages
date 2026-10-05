@@ -1,0 +1,120 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/QuestsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Daily Quests",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 13
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "Complete all 3 → free Hamster Crate",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "New quests every day at midnight",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ · Lv %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "NEW GENERAL!",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "LEVEL UP!",
+        "location": {
+          "startingColumn": 71,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Nice!",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻 %lld",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 103
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 126
+        }
+      },
+      {
+        "comment": "",
+        "key": "SEED FARM",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "Collect",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 142
+        }
+      },
+      {
+        "comment": "",
+        "key": "×2",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 152
+        }
+      }
+    ]
+  },
+  "version": 1
+}

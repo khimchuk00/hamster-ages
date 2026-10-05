@@ -1,0 +1,72 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/CampaignMapView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 102
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld★",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻 %lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 303
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ · %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 291
+        }
+      },
+      {
+        "comment": "",
+        "key": "BOSS",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 280
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,376 @@
+{
+  "source": "/Users/runner/work/hamster-ages/hamster-ages/HamsterAges/UI/HomeView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Hamsters vs rats, from the Stone Age to the stars",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "HAMSTER",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 49
+        }
+      },
+      {
+        "comment": "",
+        "key": "AGES",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Piggy Bank",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "HAMSTER PASS",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "STARTER PACK",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "BOSS",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Map",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 203
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stage %lld",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 205
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stage %lld",
+        "location": {
+          "startingColumn": 60,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "BATTLE",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "Army",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 257
+        }
+      },
+      {
+        "comment": "",
+        "key": "Spend seeds here!",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "Heroes",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 274
+        }
+      },
+      {
+        "comment": "",
+        "key": "Free hero crate!",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 280
+        }
+      },
+      {
+        "comment": "",
+        "key": "Daily Challenge unlocks after Stage %lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 320
+        }
+      },
+      {
+        "comment": "",
+        "key": "SURVIVAL",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 295
+        }
+      },
+      {
+        "comment": "",
+        "key": "DAILY",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 307
+        }
+      },
+      {
+        "comment": "",
+        "key": "Balance sim",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 327
+        }
+      },
+      {
+        "comment": "",
+        "key": "+5k seeds",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 328
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stage+5",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 329
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 330
+        }
+      },
+      {
+        "comment": "",
+        "key": "Army",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 438
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lv %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 532
+        }
+      },
+      {
+        "comment": "",
+        "key": "MAX",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 573
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 569
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 578
+        }
+      },
+      {
+        "comment": "",
+        "key": "MAX",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 617
+        }
+      },
+      {
+        "comment": "",
+        "key": "Lv %lld/%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 602
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻 %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 623
+        }
+      },
+      {
+        "comment": "",
+        "key": "Come back every day — the streak resets if you miss one.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 647
+        }
+      },
+      {
+        "comment": "",
+        "key": "Come back tomorrow!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 674
+        }
+      },
+      {
+        "comment": "",
+        "key": "Daily Seeds",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 646
+        }
+      },
+      {
+        "comment": "",
+        "key": "+%lld 🌻",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 665
+        }
+      },
+      {
+        "comment": "",
+        "key": "Awesome!",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 666
+        }
+      },
+      {
+        "comment": "",
+        "key": "Claim",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 668
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 675
+        }
+      },
+      {
+        "comment": "",
+        "key": "Day %lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 654
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 656
+        }
+      },
+      {
+        "comment": "",
+        "key": "🎁",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 655
+        }
+      },
+      {
+        "comment": "",
+        "key": "🌻",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 655
+        }
+      },
+      {
+        "comment": "",
+        "key": "CLAIM",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 753
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 755
+        }
+      },
+      {
+        "comment": "",
+        "key": "→ %lld 🌻",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 758
+        }
+      },
+      {
+        "comment": "",
+        "key": "→ 🎁 Crate",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 759
+        }
+      }
+    ]
+  },
+  "version": 1
+}
