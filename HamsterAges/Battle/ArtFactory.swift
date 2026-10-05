@@ -1373,6 +1373,17 @@ final class ArtFactory {
             gradient(door, UIColor(hex: 0x3A3D5A), UIColor(hex: 0x1C1E2E))
             stroke(door, UIColor(hex: 0x6E7A8A), 1.4)
         }
+        // Lighting pass over whatever was drawn: sunlit top, ambient occlusion where the base meets the ground.
+        let space = CGColorSpace(name: CGColorSpace.sRGB)
+        c.saveGState()
+        c.setBlendMode(.sourceAtop)
+        if let g = CGGradient(colorsSpace: space, colors: [UIColor(white: 1, alpha: 0.16).cgColor, UIColor(white: 1, alpha: 0).cgColor] as CFArray, locations: [0, 1]) {
+            c.drawLinearGradient(g, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 70, y: 90), options: [])
+        }
+        if let g = CGGradient(colorsSpace: space, colors: [UIColor(white: 0, alpha: 0).cgColor, UIColor(hex: 0x1C1210, alpha: 0.38).cgColor] as CFArray, locations: [0, 1]) {
+            c.drawLinearGradient(g, start: CGPoint(x: 0, y: 122), end: CGPoint(x: 0, y: 160), options: [])
+        }
+        c.restoreGState()
     }
 
     // MARK: Turrets (44x34, facing right)
