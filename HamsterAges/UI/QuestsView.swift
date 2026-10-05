@@ -120,13 +120,25 @@ struct SeedFarmWidget: View {
         TimelineView(.periodic(from: .now, by: 30)) { ctx in
             let amount = store.farmAmount(now: ctx.date)
             let cap = SeedFarm.capacity(highestStage: store.progress.highestStage)
+            // Two rows keep the widget narrow, so the army parade on Home has room next to it.
+            VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text("🌻").font(.system(size: 26))
+                Text("🌻").font(.system(size: 24))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SEED FARM").font(Theme.font(11)).foregroundStyle(Theme.gold)
                     Text(collected.map { L10n.f("+%lld collected!", $0) } ?? "\(amount) / \(cap)")
                         .font(Theme.font(13)).foregroundStyle(.white).monospacedDigit()
                 }
+            }
+            // Fill bar: how close the farm is to full.
+            Capsule().fill(.black.opacity(0.35)).frame(height: 5)
+                .overlay(alignment: .leading) {
+                    GeometryReader { g in
+                        Capsule().fill(Theme.gold)
+                            .frame(width: g.size.width * min(1, Double(amount) / Double(max(1, cap))))
+                    }
+                }
+            HStack(spacing: 6) {
                 Button("Collect") { collect(doubled: false) }
                     .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.green : Theme.disabled, cornerRadius: 10, depth: 3, compact: true))
                     .disabled(amount <= 0)
@@ -141,7 +153,8 @@ struct SeedFarmWidget: View {
                 .buttonStyle(ChunkyButtonStyle(color: amount > 0 ? Theme.purple : Theme.disabled, cornerRadius: 10, depth: 3, compact: true))
                 .disabled(amount <= 0)
             }
-            .padding(.horizontal, 10).padding(.vertical, 6)
+            }
+            .padding(.horizontal, 10).padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel))
             .fixedSize()
         }

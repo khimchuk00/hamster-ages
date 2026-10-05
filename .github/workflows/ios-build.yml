@@ -63,7 +63,7 @@ jobs:
             sleep "$wait"
             xcrun simctl io "$UDID" screenshot "shots/$name.png"
           }
-          shot 1-home 8 -demo
+          shot 1-home 14 -demo
           shot 2-card-pick 6 -demo -screen battle
           shot 3-battle-early 20 -demo -screen battle -autoplay
           sleep 35; xcrun simctl io "$UDID" screenshot shots/4-battle-mid.png

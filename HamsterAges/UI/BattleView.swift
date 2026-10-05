@@ -299,11 +299,12 @@ struct RatGeneralBadge: View {
 }
 
 /// Fall back / Hold / Charge — one army-wide order.
+/// A narrow vertical column at the screen edge: it only covers the player's own base, never the fight.
 private struct StanceControl: View {
     let c: BattleController
 
     var body: some View {
-        HStack(spacing: 2) {
+        VStack(spacing: 2) {
             ForEach(Stance.allCases, id: \.self) { s in
                 let on = c.stance == s
                 Button { c.setStance(s) } label: {

@@ -1567,7 +1567,7 @@ final class ArtFactory {
             var x: CGFloat = -10
             while x < w {
                 let bw = rnd(26, 60), bh = rnd(h * 0.12, h * 0.36)
-                fill(UIBezierPath(rect: CGRect(x: x, y: gy - bh, width: bw, height: bh)), UIColor(hex: far))
+                fill(UIBezierPath(rect: CGRect(x: x, y: gy - bh, width: bw, height: bh)), hazed(far, 0.3))
                 for wy in stride(from: gy - bh + 8, to: gy - 10, by: 12) {
                     for wx in stride(from: x + 5, to: x + bw - 6, by: 10) where rnd(0, 1) > 0.55 {
                         fill(UIBezierPath(rect: CGRect(x: wx, y: wy, width: 4, height: 5)), UIColor(hex: 0xFFE7A0, alpha: 0.55))
@@ -1603,7 +1603,46 @@ final class ArtFactory {
                               locations: [0, 1]) {
             c.drawLinearGradient(g, start: CGPoint(x: 0, y: gy - h * 0.3), end: CGPoint(x: 0, y: gy - 6), options: [])
         }
-        ridge(hazed(mid, 0.12), base: gy - 6, amp: h * 0.17, freq: 3.6, phase: 1.4)
+        if era == 3 {
+            // Second, closer skyline: darker and crisper than the hazy far one, so the city has depth
+            // instead of reading as one washed-out wall.
+            var bx: CGFloat = rnd(-30, 0)
+            while bx < w {
+                let bw = rnd(34, 74), bh = rnd(h * 0.1, h * 0.27)
+                let tone = UIColor(hex: 0x56677A).blend(UIColor(hex: 0x6E6A78), rnd(0, 1)).blend(horizon, 0.08)
+                let rect = CGRect(x: bx, y: gy - bh, width: bw, height: bh)
+                gradient(UIBezierPath(rect: rect), tone.blend(.white, 0.1), tone.blend(.black, 0.12),
+                         from: CGPoint(x: 0, y: rect.minY), to: CGPoint(x: 0, y: gy))
+                // Lit edge on the sun side and a darker roof cap
+                fill(UIBezierPath(rect: CGRect(x: rect.maxX - 3, y: rect.minY, width: 3, height: bh)), tone.blend(.white, 0.22))
+                fill(UIBezierPath(rect: CGRect(x: rect.minX - 1, y: rect.minY - 3, width: bw + 2, height: 3)), tone.blend(.black, 0.25))
+                for wy in stride(from: rect.minY + 9, to: gy - 8, by: 13) {
+                    for wx in stride(from: rect.minX + 6, to: rect.maxX - 8, by: 11) {
+                        let lit = rnd(0, 1) > 0.62
+                        fill(UIBezierPath(rect: CGRect(x: wx, y: wy, width: 5, height: 6)),
+                             lit ? UIColor(hex: 0xFFE08A, alpha: 0.85) : tone.blend(.black, 0.2))
+                    }
+                }
+                // Rooftop clutter: water tank or antenna with a red beacon
+                if rnd(0, 1) > 0.5 {
+                    let tx = rect.minX + rnd(6, bw - 20)
+                    fill(UIBezierPath(rect: CGRect(x: tx + 2, y: rect.minY - 9, width: 2, height: 6)), tone.blend(.black, 0.3))
+                    fill(UIBezierPath(rect: CGRect(x: tx + 10, y: rect.minY - 9, width: 2, height: 6)), tone.blend(.black, 0.3))
+                    fill(UIBezierPath(roundedRect: CGRect(x: tx, y: rect.minY - 19, width: 14, height: 11), cornerRadius: 3), UIColor(hex: 0x7B5A44))
+                } else {
+                    let ax = rect.minX + rnd(8, bw - 8)
+                    line(CGPoint(x: ax, y: rect.minY - 3), CGPoint(x: ax, y: rect.minY - 22), tone.blend(.black, 0.35), width: 1.5)
+                    c.saveGState()
+                    c.setShadow(offset: .zero, blur: 4, color: UIColor(hex: 0xFF4D4D).cgColor)
+                    fill(circle(ax, rect.minY - 23, 1.8), UIColor(hex: 0xFF5A5A))
+                    c.restoreGState()
+                }
+                bx += bw + rnd(4, 26)
+            }
+            ridge(hazed(mid, 0.12), base: gy - 4, amp: h * 0.05, freq: 3.6, phase: 1.4)
+        } else {
+            ridge(hazed(mid, 0.12), base: gy - 6, amp: h * 0.17, freq: 3.6, phase: 1.4)
+        }
 
         // Mid props
         func tree(_ x: CGFloat, _ s: CGFloat, _ col: UIColor) {
