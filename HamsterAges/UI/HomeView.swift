@@ -31,6 +31,9 @@ struct HomeView: View {
                     .resizable()
                     .ignoresSafeArea()
 
+                DriftingClouds(night: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)) == 4)
+                    .allowsHitTesting(false)
+
                 // The player's army stands on the ground in the middle of the screen, led by their general.
                 HomeArmy(era: CampaignMapView.era(ofChapter: CampaignMapView.chapter(of: p.stage)), skin: p.skin, loadout: p.loadout,
                          general: p.equipped.flatMap { p.generalLevel($0) > 0 ? $0 : nil }, bob: bob)
@@ -679,6 +682,32 @@ struct DailyRewardView: View {
 
 
 /// Compact Star Road progress: total stars → next milestone, tappable when ready.
+/// A few clouds sliding across the menu sky (same art as the battlefield).
+private struct DriftingClouds: View {
+    let night: Bool
+
+    var body: some View {
+        GeometryReader { geo in
+            TimelineView(.animation(minimumInterval: 1.0 / 20)) { ctx in
+                let t = ctx.date.timeIntervalSinceReferenceDate
+                ZStack {
+                    ForEach(0..<4, id: \.self) { i in
+                        let speed = 9 + Double(i) * 4
+                        let span = geo.size.width + 300
+                        let x = (Double(i) * 271 - t * speed).truncatingRemainder(dividingBy: span)
+                        Image(uiImage: ArtFactory.shared.cloud(i))
+                            .resizable().scaledToFit()
+                            .frame(width: 110 + CGFloat(i % 2) * 50)
+                            .opacity(night ? 0.12 : 0.85)
+                            .position(x: (x < 0 ? x + span : x) - 150, y: geo.size.height * (0.12 + 0.07 * Double(i % 3)))
+                    }
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
 private struct HomeArmy: View {
     let era: Int
     let skin: FurSkin
