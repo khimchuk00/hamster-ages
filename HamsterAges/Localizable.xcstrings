@@ -28432,6 +28432,9 @@
         }
       }
     },
+    "VS" : {
+      "shouldTranslate" : false
+    },
     "Vampire Bite" : {
       "extractionState" : "manual",
       "localizations" : {

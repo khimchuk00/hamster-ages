@@ -27,6 +27,12 @@ struct BattleView: View {
                         .transition(.move(edge: .leading).combined(with: .opacity))
                 }
 
+                if controller.versus {
+                    VersusSplash(general: controller.general, skin: controller.skin, rat: controller.ratGeneral,
+                                 stage: controller.stage, mode: controller.mode)
+                        .transition(.opacity)
+                }
+
                 if let tip = controller.tip, controller.result == nil, controller.eliteIntro == nil {
                     TipCard(text: tip)
                         .transition(.move(edge: .leading).combined(with: .opacity))
@@ -67,6 +73,7 @@ struct BattleView: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: controller.banner)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: controller.tutorialVisible)
             .animation(.spring(response: 0.35, dampingFraction: 0.75), value: controller.taunt)
+            .animation(.easeOut(duration: 0.2), value: controller.versus)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: controller.eliteIntro)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: controller.tip)
             .animation(.easeOut(duration: 0.2), value: controller.cardOffer == nil)
@@ -323,6 +330,50 @@ private struct TauntBubble: View {
             Spacer()
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Two portraits slam in from the sides with a big "VS".
+private struct VersusSplash: View {
+    let general: GeneralID?
+    let skin: FurSkin
+    let rat: RatGeneral
+    let stage: Int
+    let mode: BattleMode
+    @State private var inside = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Theme.teal.opacity(0.55), .clear, Theme.red.opacity(0.55)], startPoint: .leading, endPoint: .trailing)
+                .ignoresSafeArea()
+            HStack(spacing: 0) {
+                Group {
+                    if let g = general {
+                        Image(uiImage: ArtFactory.shared.general(g)).resizable().scaledToFit()
+                    } else {
+                        Image(uiImage: ArtFactory.shared.unit(.hamster, era: 1, role: .melee, skin: skin)).resizable().scaledToFit()
+                    }
+                }
+                .frame(width: 150, height: 150)
+                .offset(x: inside ? 0 : -400)
+                VStack(spacing: 2) {
+                    OutlinedText(text: "VS", size: 64, color: Theme.gold)
+                        .scaleEffect(inside ? 1 : 2.4)
+                    if mode == .campaign {
+                        Text(L10n.f("Stage %lld", stage)).font(Theme.font(14)).foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.6), radius: 2)
+                    }
+                }
+                .frame(width: 160)
+                VStack(spacing: 2) {
+                    RatGeneralBadge(general: rat, size: 140)
+                    Text(rat.name).font(Theme.font(14)).foregroundStyle(.white).shadow(color: .black.opacity(0.6), radius: 2)
+                }
+                .offset(x: inside ? 0 : 400)
+            }
+        }
+        .allowsHitTesting(false)
+        .onAppear { withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { inside = true } }
     }
 }
 

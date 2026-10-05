@@ -87,6 +87,8 @@ final class BattleController {
     var stance: Stance = .charge
     /// The rat general's speech bubble.
     var taunt: String?
+    /// "VS" splash at the start of a battle.
+    var versus = false
     /// "New elite rat" card shown the first time a trait appears this battle.
     var eliteIntro: RatTrait?
     @ObservationIgnored private var seenTraits = Set<RatTrait>()
@@ -457,11 +459,15 @@ final class BattleController {
         }
         if firstPick && !isTutorial {
             let line = ratGeneral.taunt
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            // Fighting-game style "VS" splash, then the rival's taunt.
+            versus = true
+            Sound.shared.play(.boom)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { [weak self] in self?.versus = false }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { [weak self] in
                 self?.taunt = line
                 Sound.shared.play(.squeak)
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 6.6) { [weak self] in
                 if self?.taunt == line { self?.taunt = nil }
             }
         }
