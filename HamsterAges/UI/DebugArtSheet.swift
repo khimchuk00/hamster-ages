@@ -80,7 +80,14 @@ struct DebugArtSheet: View {
                 VStack(spacing: 4) {
                     HStack(alignment: .bottom, spacing: 10) {
                         ForEach(0..<GameConfig.eras.count, id: \.self) { era in
-                            Image(uiImage: ArtFactory.shared.base(.hamster, era: era)).resizable().scaledToFit().frame(height: 170)
+                            // Damage states shown on alternate bases (none / cracked / wrecked).
+                            ZStack {
+                                Image(uiImage: ArtFactory.shared.base(.hamster, era: era)).resizable().scaledToFit()
+                                if era % 3 > 0 {
+                                    Image(uiImage: ArtFactory.shared.baseCracks(.hamster, era: era, level: era % 3)).resizable().scaledToFit()
+                                }
+                            }
+                            .frame(height: 170)
                         }
                     }
                     HStack(spacing: 18) {

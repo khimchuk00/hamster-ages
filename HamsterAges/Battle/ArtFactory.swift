@@ -1726,12 +1726,36 @@ final class ArtFactory {
             if era == 1 { // distant castle on a hill
                 for k in 0..<Int(w / 700) + 1 {
                     let cx = w * 0.3 + CGFloat(k) * 640, cy = gy - h * 0.2
-                    let col = UIColor(hex: far).blend(.black, 0.1)
-                    fill(UIBezierPath(rect: CGRect(x: cx, y: cy, width: 70, height: 50)), col)
-                    for i in 0..<4 { fill(UIBezierPath(rect: CGRect(x: cx + 4 + CGFloat(i) * 18, y: cy - 8, width: 10, height: 8)), col) }
-                    fill(UIBezierPath(rect: CGRect(x: cx + 26, y: cy - 34, width: 18, height: 34)), col)
-                    let roof = UIBezierPath(); roof.move(to: CGPoint(x: cx + 22, y: cy - 34)); roof.addLine(to: CGPoint(x: cx + 35, y: cy - 52)); roof.addLine(to: CGPoint(x: cx + 48, y: cy - 34)); roof.close()
-                    fill(roof, UIColor(hex: 0xB0605A).blend(UIColor(hex: far), 0.5))
+                    let col = hazed(far, 0.15).blend(.black, 0.06)
+                    let lit = col.blend(.white, 0.16), shade = col.blend(.black, 0.12)
+                    // Hill it stands on
+                    let hill = UIBezierPath()
+                    hill.move(to: CGPoint(x: cx - 60, y: cy + 60))
+                    hill.addQuadCurve(to: CGPoint(x: cx + 130, y: cy + 60), controlPoint: CGPoint(x: cx + 35, y: cy + 14))
+                    hill.close()
+                    fill(hill, hazed(mid, 0.25))
+                    // Curtain wall with two corner towers
+                    fill(UIBezierPath(rect: CGRect(x: cx, y: cy + 8, width: 70, height: 42)), col)
+                    fill(UIBezierPath(rect: CGRect(x: cx + 52, y: cy + 8, width: 18, height: 42)), shade)
+                    for i in 0..<4 { fill(UIBezierPath(rect: CGRect(x: cx + 4 + CGFloat(i) * 18, y: cy + 1, width: 10, height: 7)), col) }
+                    for tx in [cx - 8, cx + 66] {
+                        fill(UIBezierPath(rect: CGRect(x: tx, y: cy - 6, width: 14, height: 56)), tx < cx ? lit : shade)
+                        let cone = UIBezierPath(); cone.move(to: CGPoint(x: tx - 3, y: cy - 6)); cone.addLine(to: CGPoint(x: tx + 7, y: cy - 22)); cone.addLine(to: CGPoint(x: tx + 17, y: cy - 6)); cone.close()
+                        fill(cone, UIColor(hex: 0xB0605A).blend(horizon, 0.45))
+                    }
+                    // Keep
+                    fill(UIBezierPath(rect: CGRect(x: cx + 24, y: cy - 34, width: 22, height: 42)), lit)
+                    fill(UIBezierPath(rect: CGRect(x: cx + 38, y: cy - 34, width: 8, height: 42)), col)
+                    let roof = UIBezierPath(); roof.move(to: CGPoint(x: cx + 20, y: cy - 34)); roof.addLine(to: CGPoint(x: cx + 35, y: cy - 56)); roof.addLine(to: CGPoint(x: cx + 50, y: cy - 34)); roof.close()
+                    fill(roof, UIColor(hex: 0xB0605A).blend(horizon, 0.4))
+                    // Window slits, gate and a little pennant
+                    for (wx, wy) in [(cx + 31, cy - 24), (cx + 31, cy - 10), (cx + 10, cy + 18), (cx + 58, cy + 18)] {
+                        fill(UIBezierPath(roundedRect: CGRect(x: wx, y: wy, width: 3, height: 7), cornerRadius: 1.5), shade.blend(.black, 0.25))
+                    }
+                    fill(UIBezierPath(roundedRect: CGRect(x: cx + 28, y: cy + 32, width: 14, height: 18), cornerRadius: 7), shade.blend(.black, 0.2))
+                    line(CGPoint(x: cx + 35, y: cy - 56), CGPoint(x: cx + 35, y: cy - 70), shade.blend(.black, 0.2), width: 1)
+                    let flag = UIBezierPath(); flag.move(to: CGPoint(x: cx + 35, y: cy - 70)); flag.addLine(to: CGPoint(x: cx + 47, y: cy - 66)); flag.addLine(to: CGPoint(x: cx + 35, y: cy - 62)); flag.close()
+                    fill(flag, UIColor(hex: 0xE0A040).blend(horizon, 0.3))
                 }
             }
         case 2:
