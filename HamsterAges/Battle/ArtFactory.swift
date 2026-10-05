@@ -175,6 +175,71 @@ final class ArtFactory {
         }
     }
 
+    /// Cracks and chipped holes laid over a damaged base (level 1 = hurt, 2 = nearly destroyed).
+    /// Clipped to the base's own silhouette so they never spill into the sky.
+    func baseCracks(_ species: Species, era: Int, level: Int) -> UIImage {
+        cached("bc-\(species)-\(era)-\(level)") {
+            let baseImage = self.base(species, era: era)
+            return render(CGSize(width: 130, height: 160)) { ctx in
+                let c = ctx.cgContext
+                var r = SeededRandom(seed: UInt64(31 + era * 7 + level))
+                func rnd(_ a: CGFloat, _ b: CGFloat) -> CGFloat { CGFloat.random(in: a...b, using: &r) }
+                let dark = UIColor(hex: era == 4 ? 0x10122A : 0x2A1E18)
+                func crack(from start: CGPoint, segments: Int, heading: CGFloat, width: CGFloat) {
+                    let path = UIBezierPath()
+                    path.move(to: start)
+                    var p = start, a = heading
+                    for k in 0..<segments {
+                        a += rnd(-0.6, 0.6)
+                        let len = rnd(7, 14) * (1 - CGFloat(k) * 0.08)
+                        p = CGPoint(x: p.x + cos(a) * len, y: p.y + sin(a) * len)
+                        path.addLine(to: p)
+                        if rnd(0, 1) > 0.7 {
+                            let b = UIBezierPath(); b.move(to: p)
+                            let ba = a + (rnd(0, 1) > 0.5 ? 0.9 : -0.9)
+                            b.addLine(to: CGPoint(x: p.x + cos(ba) * rnd(5, 9), y: p.y + sin(ba) * rnd(5, 9)))
+                            b.lineWidth = width * 0.6; b.lineCapStyle = .round
+                            dark.withAlphaComponent(0.75).setStroke(); b.stroke()
+                        }
+                    }
+                    path.lineJoinStyle = .round; path.lineCapStyle = .round
+                    // Thin light lip under the crack sells the depth.
+                    c.saveGState(); c.translateBy(x: 0.8, y: 1)
+                    path.lineWidth = width * 0.7; UIColor(white: 1, alpha: 0.28).setStroke(); path.stroke()
+                    c.restoreGState()
+                    path.lineWidth = width; dark.withAlphaComponent(0.85).setStroke(); path.stroke()
+                }
+                let count = level >= 2 ? 6 : 3
+                for _ in 0..<count {
+                    crack(from: CGPoint(x: rnd(20, 112), y: rnd(30, 120)), segments: Int(rnd(3, 6.9)),
+                          heading: rnd(0, .pi * 2), width: rnd(1.6, 2.6))
+                }
+                if level >= 2 {
+                    // Chipped holes and soot.
+                    for _ in 0..<2 {
+                        let cx = rnd(30, 100), cy = rnd(40, 110), rad = rnd(5, 9)
+                        let hole = UIBezierPath()
+                        for k in 0..<7 {
+                            let a = CGFloat(k) / 7 * .pi * 2
+                            let rr = rad * rnd(0.7, 1.15)
+                            let pt = CGPoint(x: cx + cos(a) * rr, y: cy + sin(a) * rr)
+                            k == 0 ? hole.move(to: pt) : hole.addLine(to: pt)
+                        }
+                        hole.close()
+                        self.fill(hole, dark.withAlphaComponent(0.8))
+                    }
+                    if let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                          colors: [UIColor(white: 0.08, alpha: 0.35).cgColor, UIColor(white: 0.08, alpha: 0).cgColor] as CFArray,
+                                          locations: [0, 1]) {
+                        c.drawLinearGradient(g, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: 70), options: [])
+                    }
+                }
+                // Keep only what overlaps the base.
+                baseImage.draw(in: CGRect(x: 0, y: 0, width: 130, height: 160), blendMode: .destinationIn, alpha: 1)
+            }
+        }
+    }
+
     /// Where turret slots sit on the base image (in image points, origin top-left).
     static func turretAnchors(era: Int) -> [CGPoint] {
         let topY: [CGFloat] = [44, 30, 34, 74, 24]

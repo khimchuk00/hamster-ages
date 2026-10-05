@@ -67,6 +67,7 @@ final class BattleScene: SKScene {
     private let screenFX = SKNode()
     private var activeTokens = 0
     private var smokeTimer: TimeInterval = 0
+    private var crackLevel: [Side: Int] = [:]
     private var lastBaseHaptic: TimeInterval = 0
     private var lastCounterText: TimeInterval = 0
 
@@ -189,7 +190,10 @@ final class BattleScene: SKScene {
         return left + CGFloat(x / GameConfig.laneLength) * (right - left)
     }
 
-    private func unitY(_ depth: Double) -> CGFloat { groundY + CGFloat(depth) * 3 - 1 }
+    /// Units spread over a shallow band of ground (back rows a bit higher and smaller), so a crowd reads as
+/// an army instead of one overlapping conga line.
+    private func unitY(_ depth: Double) -> CGFloat { groundY + CGFloat(depth) * 6 * hScale - 1 }
+    private func depthScale(_ depth: Double) -> CGFloat { 1 - CGFloat(depth) * 0.04 }
 
     // MARK: Frame
 
@@ -498,7 +502,7 @@ final class BattleScene: SKScene {
         let body = SKSpriteNode(texture: texture)
         body.name = "body"
         body.anchorPoint = CGPoint(x: ArtFactory.unitAnchorX(u.role), y: 0.06)
-        body.setScale(unitScale * CGFloat(u.sizeScale))
+        body.setScale(unitScale * CGFloat(u.sizeScale) * depthScale(u.depth))
         if let tint = restingTint(u) {
             body.color = tint.color
             body.colorBlendFactor = tint.blend
@@ -507,7 +511,7 @@ final class BattleScene: SKScene {
         if u.side == .enemy { body.xScale = -abs(body.xScale) }
         body.userData = ["sy": body.yScale]
         let shadow = SKSpriteNode(texture: tex(ArtFactory.shared.groundShadow()))
-        let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * CGFloat(u.sizeScale)
+        let shadowW = (u.role == .heavy ? 70 : 40) * unitScale * CGFloat(u.sizeScale) * depthScale(u.depth)
         shadow.size = CGSize(width: shadowW, height: shadowW * 0.3)
         shadow.position = CGPoint(x: 0, y: 2)
         shadow.zPosition = -0.4
@@ -759,6 +763,9 @@ final class BattleScene: SKScene {
                 baseEra[side] = era
                 if let base = baseNodes[side] {
                     base.texture = tex(ArtFactory.shared.base(species(side), era: era))
+                    // A new age means a freshly built base: the old cracks go.
+                    base.childNode(withName: "cracks")?.removeFromParent()
+                    crackLevel[side] = 0
                     let s = baseScale
                     base.run(.sequence([.scaleY(to: s * 1.15, duration: 0.12), .scaleY(to: s, duration: 0.2)]))
                     puff(at: CGPoint(x: base.position.x, y: base.position.y + 60 * hScale),
@@ -1268,6 +1275,25 @@ final class BattleScene: SKScene {
             guard let base = baseNodes[side] else { continue }
             let st = sim.state(side)
             let f = st.baseHP / max(1, st.baseMaxHP)
+            // Cracks appear as the base takes damage (and stay at the worst level reached until it evolves).
+            let level = f <= 0 ? 2 : f < 0.3 ? 2 : f < 0.65 ? 1 : 0
+            if level > (crackLevel[side] ?? 0) {
+                crackLevel[side] = level
+                let cracks = (base.childNode(withName: "cracks") as? SKSpriteNode) ?? {
+                    let n = SKSpriteNode()
+                    n.name = "cracks"
+                    n.anchorPoint = CGPoint(x: 0.5, y: 0)
+                    n.zPosition = 0.5
+                    base.addChild(n)
+                    return n
+                }()
+                let image = ArtFactory.shared.baseCracks(species(side), era: baseEra[side] ?? 0, level: level)
+                cracks.texture = tex(image)
+                cracks.size = base.texture?.size() ?? image.size
+                cracks.alpha = 0
+                cracks.run(.fadeIn(withDuration: 0.25))
+                puff(at: CGPoint(x: base.position.x, y: base.position.y + 70 * hScale), color: UIColor(white: 0.75, alpha: 1), count: 8, spread: 40)
+            }
             guard f < 0.5, f > 0 else { continue }
             let p = CGPoint(x: base.position.x + CGFloat.random(in: -30...30) * hScale, y: base.position.y + CGFloat.random(in: 60...110) * hScale)
             let smoke = SKSpriteNode(texture: texture)
